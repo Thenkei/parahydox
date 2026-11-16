@@ -1,0 +1,13 @@
+; Le pont se traverse à pied, mais alors la dalle de l'ancre tombe et le retour par le fil finit dans le vide.
+name: L'ancre fragile
+world: 8
+tip: Sur un fil, tu ne pèses rien.
+hint: Ne traverse pas à pied : entre dans le fil depuis la dalle, elle sera encore là à ton retour.
+clones: 0
+solution: RERRRRRERRLLLLLLLLLLL
+
+z=0
+.#..........
+.E..........
+XE.@*====*.e
+####~~~~~###

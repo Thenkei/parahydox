@@ -1,0 +1,13 @@
+; Un plafond bas au-dessus du levier : impossible de le franchir sur la tête de l'autre.
+name: Deux fois
+world: 6
+tip: Ton clone bascule le levier. Toi aussi.
+hint: Laisse ton clone passer la porte, puis marche deux fois sur le levier.
+clones: 1
+solution: .RRRRRRRR|RR..RRRRRRRRRRR
+
+z=0
+......#....#..
+...#..E....A..
+@..e..E.a..A.X
+##############

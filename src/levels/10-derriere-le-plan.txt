@@ -1,0 +1,26 @@
+name: Derrière le plan
+world: 2
+tip: Rien dans cette coupe. Et derrière ?
+hint: Déplie la profondeur sur le cube et suis le chemin.
+clones: 0
+solution: RRERUUURRRDDRRUU
+
+z=0
+..........
+@.^.......
+####......
+
+z=1
+..........
+..........
+...#..###.
+
+z=2
+..........
+..........
+...#..#.#.
+
+z=3
+..........
+........X.
+...####.#.

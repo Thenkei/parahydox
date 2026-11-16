@@ -1,0 +1,13 @@
+name: L'élan
+world: 9
+flow: true
+tip: Maintiens → pour courir, ↑ ou Espace pour sauter. Plus tu appuies longtemps, plus le saut porte.
+hint: Saute au bord du trou, pas avant, et garde la touche enfoncée.
+tape: R26 RJ22 R27 RJ20 R10 RJ24 R100
+
+z=0
+....................
+....................
+@.......##.........X
+###..#####..########
+###..#####..########

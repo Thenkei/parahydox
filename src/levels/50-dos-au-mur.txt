@@ -1,0 +1,14 @@
+name: Dos au mur
+world: 7
+tip: Un mur derrière toi.
+hint: Appuyer contre le mur ne te déplace pas, mais ton reflet, lui, avance.
+clones: 1
+mirror: true
+solution: LL|RRRRRR
+
+z=0
+...........
+..........X
+...#...####
+...#@..####
+###########

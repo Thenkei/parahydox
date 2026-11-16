@@ -1,0 +1,25 @@
+{
+  "name": "parahydox",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Prototype de casse-têtes dimensionnels : coupes 1D/2D/3D d'une même grille, et clones qui rejouent des inputs.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "play": "vite build --ssr tools/play.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/play.js",
+    "solve": "vite build --ssr tools/solve.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/solve.js",
+    "flow": "vite build --ssr tools/flow.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/flow.js",
+    "check": "npm run typecheck && npm run test && vite build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}

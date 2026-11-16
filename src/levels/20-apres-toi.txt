@@ -1,0 +1,14 @@
+; La plaque est au bout d'un couloir bas : un clone posé dessus bouche le passage. Le toit est épais : même depuis la tête du clone, on ne saute pas dessus.
+name: Après toi
+world: 3
+tip: Dans ce couloir, on ne se double pas. T retient ton clone d'un pas (et coûte une action).
+hint: Ton clone doit arriver après toi. En boucle 2, retiens-le avec T (plusieurs fois s'il le faut) et passe devant.
+clones: 1
+solution: ..RRRRRRRR|RRRRRRRRRRRR
+
+z=0
+..........#..
+....#####.#..
+....#####.A..
+@.......a.A.X
+#############

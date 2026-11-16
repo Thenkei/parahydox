@@ -1,0 +1,22 @@
+; Aucun seuil ici : seuls les fils changent de coupe.
+name: Le fil qui s'enfonce
+world: 2
+tip: Un fil peut quitter ta coupe.
+hint: Le fil t'emmène dans une autre coupe. Marche jusqu'au second fil et reviens par lui.
+clones: 0
+solution: RRREUUERRRREDDERR
+
+z=0
+..........
+@..*...*.X
+####...###
+
+z=1
+..........
+...=...=..
+..........
+
+z=2
+..........
+...*...*..
+...#####..

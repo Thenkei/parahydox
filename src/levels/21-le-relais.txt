@@ -1,0 +1,12 @@
+name: Le relais
+world: 3
+tip: Espace : tu attends un pas, gratuitement. T : c'est ton clone qui attend, pour une action.
+hint: Le clone doit tenir la première plaque assez longtemps, puis aller sur la seconde. Enregistre son trajet d'une traite et retiens-le avec T tant que tu n'es pas passé, ou enregistre directement ses attentes.
+clones: 1
+solution: RR.....RR|RRRRRRRRRRRRR
+
+z=0
+#.......#..#...
+#.......A..B...
+#@.a.b..A..B..X
+###############

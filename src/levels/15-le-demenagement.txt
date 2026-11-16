@@ -1,0 +1,28 @@
+; Le mur ne fait deux cases de haut que dans la coupe de devant ; un bloc barre le chemin direct de la caisse.
+name: Le déménagement
+world: 2
+tip: Une caisse se pousse dans quatre directions.
+hint: Pousse la caisse le long du fond, puis vers l'avant, au pied du mur.
+clones: 0
+solution: REURRRRUDLDRRRR
+
+z=0
+.........
+........X
+......###
+@^.#..###
+#########
+
+z=1
+.........
+......###
+......###
+..o...###
+#########
+
+z=2
+.........
+......###
+......###
+......###
+#########

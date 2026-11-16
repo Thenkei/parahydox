@@ -1,0 +1,13 @@
+; Quatre cases de vide. Un saut porte deux cases plus loin, à condition d'y trouver un appui. Deux têtes immobiles font l'affaire (23 actions) ; une seule tête qui avance sous le saut aussi (18 actions) : c'est la solution trois étoiles, trouvée par la recherche exhaustive.
+name: Le pont de singes
+world: 5
+tip: Ce fil donne sur le vide, mais il peut porter quelqu'un. Deux clones suffisent. Un seul aussi, s'il avance au bon moment.
+hint: Avec deux clones : ils s'arrêtent sur le fil (le second laisse partir le premier), tu sautes sur une tête, puis encore depuis une tête. Avec un seul : il s'arrête au milieu, puis avance de deux cases pendant que tu es en l'air au-dessus de lui.
+clones: 2
+solution: RRER.RR|.RRRURRURRRRR
+
+z=0
+............
+............
+.@.*===*...X
+####....####

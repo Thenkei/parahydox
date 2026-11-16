@@ -1,0 +1,13 @@
+name: Le passeur
+world: 8
+tip: Tant que quelqu'un s'y tient, la dalle tient.
+hint: Ton clone s'arrête sur la seconde dalle et t'attend : saute sur sa tête. Ensuite seulement, il te rejoint au pied du mur.
+clones: 1
+solution: RRR.RRRR|RRRR.RRRRRR
+
+z=0
+............
+...........X
+.........###
+.@.......###
+####~~######

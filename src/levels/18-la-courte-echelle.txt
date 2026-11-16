@@ -1,0 +1,13 @@
+name: La courte échelle
+world: 3
+tip: Ce mur est trop haut pour toi seul. Marcher contre un clone, c'est lui monter dessus.
+hint: Un clone immobile au pied du mur fait une bonne marche.
+clones: 1
+solution: RRRR|RRRRRRRRR
+
+z=0
+...........
+#.........X
+#.....#####
+#@....#####
+###########

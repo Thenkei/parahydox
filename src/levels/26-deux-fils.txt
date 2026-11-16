@@ -1,0 +1,13 @@
+name: Deux fils
+world: 4
+tip: Une plaque peut se trouver sur un fil.
+hint: Ton clone s'arrête sur la plaque du fil de gauche ; toi, tu prends le fil de droite.
+clones: 1
+glyph: ! = wire + door a
+glyph: _ = wire + plate a
+solution: LELLL|RERRRRRRER
+
+z=0
+...............
+*=_==*@*==!==*X
+#....###.....##

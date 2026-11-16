@@ -1,0 +1,28 @@
+name: Le funambule
+world: 4
+tip: Sur un fil, on tient aussi une plaque.
+hint: Ton clone s'arrête sur la plaque du fil ; toi, tu passes la porte par la profondeur.
+clones: 1
+glyph: _ = wire + plate a
+solution: RRERR|RERUURRRRRRRRRDD
+
+z=0
+............
+............
+@^*=_=*....X
+###...#..###
+###...#..###
+
+z=1
+............
+............
+............
+###......###
+###......###
+
+z=2
+....#.......
+....A.......
+....A.......
+############
+############

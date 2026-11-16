@@ -1,0 +1,17 @@
+; Un seul reflet ne peut pas tenir les deux plaques : celui qui descend sur la première n'en ressort pas. Les deux reflets partent du même point : sous le plafond, le second ne peut pas monter sur le premier et perd sa première touche.
+name: Deux reflets
+world: 7
+tip: Deux plaques. La première est au fond d'un trou, et le plafond est bas.
+hint: Le premier reflet tombe dans le trou et y reste, sur sa plaque. Le second lui marche sur la tête pour atteindre l'autre plaque, mais il part gêné : sous ce plafond, il ne peut pas monter sur le premier et sa première touche est perdue. Fais-le attendre un pas avant de partir.
+clones: 2
+mirror: true
+solution: RR|.RRRR|RRR.RRR
+
+z=0
+.......#.#...
+.......#.#...
+.####..A.B...
+.b...@.A.B.X.
+###.#########
+###a#########
+#############

@@ -1,0 +1,13 @@
+name: Le grand saut
+world: 7
+tip: Parfois, il faut tomber.
+hint: Ton reflet a besoin de deux pas à gauche. Fais-en deux à droite, même si le sol s'arrête.
+clones: 1
+mirror: true
+solution: RR|LLLLL
+
+z=0
+.#......
+.A......
+XA.a.@..
+#######.

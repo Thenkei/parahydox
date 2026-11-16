@@ -1,0 +1,16 @@
+name: Saute-mouton
+world: 6
+tip: Ce levier ne se prend qu'en tombant dessus.
+hint: Fais attendre ton clone sur le levier et passe sur sa tête : un seul de vous deux doit le toucher.
+clones: 1
+solution: RRR.RRRRRR|RRRRRRRRRRRRRR
+
+z=0
+...............
+...............
+@..............
+###............
+###e...#....#..
+####...E....A..
+####...E.a..A.X
+###############

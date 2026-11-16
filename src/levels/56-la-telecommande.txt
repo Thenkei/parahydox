@@ -1,0 +1,16 @@
+; Dos au mur, en grand : le trou de gauche sert de cabine de pilotage. Toute touche vers la droite t'approche du vide ; tout pas vers la droite jette ton reflet dans le trou.
+name: La télécommande
+world: 7
+tip: Pour ton reflet, le chemin commence par un saut. Pour toi, ce saut finit dans le vide.
+hint: Au fond du trou, tes touches ne te déplacent plus, mais ton reflet les entend toujours. Descends-y d'abord, puis joue son trajet : un pas pour revenir, le saut, et la marche jusqu'à la plaque.
+clones: 1
+mirror: true
+solution: LRURRRR|RURRR.RRR
+
+z=0
+..........#...
+..........A...
+.a...@....A.X.
+####.##.######
+####.##.######
+#######.######

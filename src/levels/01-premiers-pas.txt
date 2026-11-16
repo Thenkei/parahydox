@@ -1,0 +1,15 @@
+; Sauter un trou d'une case, grimper une marche, se laisser tomber.
+name: Premiers pas
+world: 1
+tip: ← → pour avancer, ↑ pour sauter. Une marche d'une case se grimpe toute seule.
+hint: Saute le trou (↑ puis deux fois →), grimpe les marches, et laisse-toi tomber de l'autre côté.
+clones: 0
+solution: RURRRRRRRRRRRRR
+
+z=0
+................
+..........##....
+#.......####....
+#@...#######...X
+###.############
+###.############

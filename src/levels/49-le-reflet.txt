@@ -1,0 +1,13 @@
+name: Le reflet
+world: 7
+tip: Ton reflet inverse la gauche et la droite.
+hint: Pour envoyer ton reflet à gauche, marche à droite.
+clones: 1
+mirror: true
+solution: RRR|RRRRR
+
+z=0
+........#..
+........A..
+..a..@..A.X
+###########

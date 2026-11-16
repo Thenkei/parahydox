@@ -1,0 +1,17 @@
+; La caisse doit tomber en bas, où elle servira de marche ou de tremplin vers le mur.
+name: Par-dessus
+world: 1
+tip: Pour pousser, il faut être du bon côté.
+hint: Le fil passe par-dessus la caisse : prends-le pour arriver derrière elle et la pousser dans le vide.
+clones: 0
+solution: ULLRRRRURRRRRR
+
+z=0
+=====.......
+=...=.......
+*.o@*.......
+#####.......
+...........X
+.......#####
+.......#####
+############

@@ -1,0 +1,16 @@
+; La porte du bas vient avant celle du haut, mais sa plaque est après la descente : un seul clone ne peut pas tenir la plaque du haut après celle du bas. Il faut donc trois voyageurs sur deux dalles. (L'ancienne version se finissait avec un seul clone qui marchait sans s'arrêter.)
+name: La caravane
+world: 8
+tip: Deux dalles, trois voyageurs. Et là-bas, on ne remonte pas.
+hint: Une dalle tient tant que quelqu'un s'y tient. Personne ne quitte la sienne avant que les suivants ne lui soient passés sur la tête. Le premier arrivé en bas tient la plaque du bas ; le dernier à quitter le pont tient celle du haut.
+clones: 2
+solution: RRR.....RRRR|...RRRRRRRRRR|.RRRR.....RRRRRRRRRRR
+
+z=0
+.................
+.............#.#.
+.@......a....#.#.
+####~~####...#.#.
+####..####...B.A.
+####..####.b.B.AX
+####..###########

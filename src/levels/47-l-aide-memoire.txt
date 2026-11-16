@@ -1,0 +1,14 @@
+name: L'aide-mémoire
+world: 6
+tip: Le levier est au fond d'un trou.
+hint: Enregistre ta marche contre la porte fermée. En boucle 2, saute sur le levier : ton clone passera.
+clones: 1
+solution: RRRRRR|LL....LL
+
+z=0
+.......#.....
+.......E.....
+....@..E..bb.
+##.##########
+XBe##########
+#############

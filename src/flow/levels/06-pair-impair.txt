@@ -1,0 +1,12 @@
+name: Pair, impair
+world: 9
+flow: true
+tip: Un levier bascule quand on pose le pied dessus. Deux leviers, une porte.
+hint: Marche sur le premier, saute par-dessus le second : en l'air, on ne touche à rien.
+tape: R68 RJ22 R100
+
+z=0
+...........#...
+...........E...
+@..e...e...E..X
+###############

@@ -1,0 +1,12 @@
+name: Pair, impair
+world: 6
+tip: Chaque passage bascule le levier.
+hint: Deux leviers pour une porte : n'en touche qu'un. Un saut passe par-dessus.
+clones: 0
+solution: RRRRRRURRRRRRRR
+
+z=0
+...........#...
+...........E...
+@..e...e...E..X
+###############

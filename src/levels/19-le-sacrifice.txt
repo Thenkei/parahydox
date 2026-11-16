@@ -1,0 +1,15 @@
+; Un clone peut aller là d'où l'on ne revient pas : c'est lui qui reste, pas toi.
+name: Le sacrifice
+world: 3
+tip: Qui descend dans ce trou n'en ressort pas.
+hint: La plaque est au fond du trou. Envoie ta première boucle s'y poser, rembobine, et passe sur sa tête.
+clones: 1
+solution: RRR|RRRRRRRRRR
+
+z=0
+#.......#...
+#.......A...
+#@......A..X
+####.#######
+####a#######
+############

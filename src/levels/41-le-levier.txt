@@ -1,0 +1,12 @@
+name: Le levier
+world: 6
+tip: Un levier reste basculé.
+hint: Marche sur le levier : la porte reste ouverte derrière toi.
+clones: 0
+solution: RRRRRRRRRR
+
+z=0
+.......#...
+.......E...
+@..e...E..X
+###########

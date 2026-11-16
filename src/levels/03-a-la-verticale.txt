@@ -1,0 +1,17 @@
+; Un fil ignore la gravité : il sert aussi d'ascenseur.
+name: À la verticale
+world: 1
+tip: Un fil ne tombe pas.
+hint: Suis le fil vers le haut, puis vers la droite.
+clones: 0
+solution: RREUUUURRRRRRERR
+
+z=0
+.............
+...======*.X.
+...=.....####
+...=.....####
+#..=.....####
+#@.*.....####
+#############
+#############

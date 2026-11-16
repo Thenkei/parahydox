@@ -1,0 +1,21 @@
+name: Trois coupes
+world: 2
+tip: Trois coupes, deux fils.
+hint: Replie-toi sur la coupe du fond, traverse par le fil, puis reviens vers l'avant par le second fil.
+clones: 0
+solution: REUUERRERRRRRRERREDDERR
+
+z=0
+..............
+@^.........*.X
+####......####
+
+z=1
+..............
+...........=..
+###...........
+
+z=2
+..............
+.^.*=====*.*..
+####.....###..

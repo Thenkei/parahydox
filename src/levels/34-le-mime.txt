@@ -1,0 +1,13 @@
+; Marcher contre une porte fermée en boucle 1, c'est la franchir en boucle 2 si quelqu'un la tient ouverte.
+name: Le mime
+world: 5
+tip: Deux portes, un seul clone, et tu ne peux pas être partout.
+hint: Un clone rejoue tes touches, pas tes déplacements : marche contre la porte fermée.
+clones: 1
+solution: RRRRRRRR|RR...LLLLL
+
+z=0
+.#......#....
+.B......A....
+XB.@.a..A..bb
+#############

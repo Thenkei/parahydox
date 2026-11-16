@@ -1,0 +1,11 @@
+name: La dalle
+world: 8
+tip: Cette dalle ne tient qu'une fois.
+hint: Traverse sans t'arrêter : chaque dalle tombe derrière toi.
+clones: 0
+solution: RRRRRRRR
+
+z=0
+..........
+@.......X.
+##~~~~~###

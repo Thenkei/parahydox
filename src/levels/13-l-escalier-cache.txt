@@ -1,0 +1,20 @@
+name: L'escalier caché
+world: 2
+tip: Un mur de deux cases, vu de côté.
+hint: Derrière le plan, une marche mène en haut du mur.
+clones: 0
+solution: RRERRRURRRRRRD
+
+z=0
+............
+...........X
+......######
+@.^...######
+############
+
+z=1
+............
+............
+......######
+.....#######
+############

@@ -1,0 +1,17 @@
+name: Le va-et-vient
+world: 1
+tip: Ce qui tombe d'en haut peut servir en bas.
+hint: Traverse en bas, monte l'escalier, reviens par le fil du haut et pousse la caisse au pied du mur.
+clones: 0
+solution: RRRRERRRRRERRRRRELLLLLLLLLLLELLLLLL
+
+z=0
+..................
+....o.*==========*
+...####..........#
+................##
+X..............###
+##............####
+##.@...*====*#####
+########....######
+########....######

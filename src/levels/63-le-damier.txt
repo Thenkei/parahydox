@@ -1,0 +1,25 @@
+name: Le damier
+world: 8
+tip: Tout le sol est fragile.
+hint: Passe par le levier sans jamais revenir sur tes pas.
+clones: 0
+glyph: $ = start + threshold
+solution: ERRUURRDRRU
+
+z=0
+.......
+.......
+$......
+#~~~~~#
+
+z=1
+......#
+......E
+......E
+..~.~~#
+
+z=2
+.......
+.....#.
+..e..#X
+.~~~~##

@@ -1,0 +1,16 @@
+; Le fil arrive sur une corniche : il ne se prend que dans le sens du retour.
+name: L'un ou l'autre
+world: 6
+tip: Ce levier ouvre une porte et ferme une grille.
+hint: Bascule le levier, puis reviens par le fil : la grille s'est refermée derrière toi.
+clones: 0
+glyph: % = gate e
+solution: LLLLLLLREUURRRRRERRRRRRR
+
+z=0
+...............
+...............
+..=====*.......
+..=..%.#...E...
+.e*..%..@..E..X
+###############

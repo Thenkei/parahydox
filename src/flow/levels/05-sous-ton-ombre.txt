@@ -1,0 +1,14 @@
+name: Sous ton ombre
+world: 9
+flow: true
+clones: 1
+tip: En haut, les plaques. En bas, les portes. Ton clone ne t'attendra pas.
+hint: Première course : saute le trou et cours en haut jusqu'au bout. Seconde course : laisse-toi tomber dans le trou et cours en bas sans t'arrêter ; chaque porte s'ouvre quand ton clone passe au-dessus.
+tape: RJ16 R260 | R330
+
+z=0
+......................
+@.......aa.....bb....#
+#.####################
+.......A......B......X
+######################

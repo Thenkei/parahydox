@@ -1,0 +1,14 @@
+name: Le coup de main
+world: 3
+tip: Un clone peut faire deux choses, l'une après l'autre.
+hint: Ton clone te fait la courte échelle, attend un pas, puis retourne tenir la plaque.
+clones: 1
+solution: R.LLL|RRRRRRRR
+
+z=0
+.........#...
+.........A...
+.........A..X
+......#######
+..a.@.#######
+#############
