@@ -1,0 +1,18 @@
+; Deux murs trop hauts, et pas une marche. Mais le trou et le vide à leur pied n'ont pas de fond : qui tombe le long d'un mur en poussant vers lui revient par le ciel et passe au-dessus. Un mur se monte en tombant à côté.
+name: La dérive
+world: 16
+wrap: y
+tip: Une chute se dirige, et celle-ci ne finit que là où tu la poses.
+hint: Laisse-toi tomber dans le trou en maintenant ← : tu reviens par le ciel et tu te poses sur la tour. Continue vers la gauche et tombe dans le vide sans lâcher ← : tu glisses contre le mur, et quand tu repasses en haut tu te poses dessus, à côté de la sortie.
+tape: L160
+
+z=0
+#.............#
+#X............#
+###...........#
+###...........#
+###...........#
+###....##.....#
+###....##.....#
+###....##...@.#
+###....##.#####

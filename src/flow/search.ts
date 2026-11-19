@@ -59,11 +59,16 @@ function keyOf(world: FlowWorld, timed: boolean, grain: number): string {
     // The volume has two more axes to get lost in: tell its states apart more coarsely.
     const wide = b.dim === 3 ? 1.5 : 1;
     const fine = (mine ? 0.2 : 0.3) * grain * wide;
-    parts.push(b.dim, q(b.x, fine), q(b.y, fine), q(b.z, b.dim === 3 ? fine : 0.5));
+    parts.push(b.dim, q(b.x, fine), q(b.y, fine), q(b.z, b.dim === 3 ? fine : 0.5), b.slick ? 1 : 0);
     if (b.wire !== null) parts.push(b.wire.id, q(b.wire.s, 0.25));
-    if (mine) parts.push(q(b.vx, 2.6 * grain * wide), q(b.vy, 3.5 * grain * wide), q(b.vz, 2.6 * grain * wide), b.grounded ? 1 : 0, b.jumpHeld ? 1 : 0, !b.grounded && b.coyote > 0 ? 1 : 0);
+    // Without grip a decision changes the speed by half a cell a second: at the usual grain
+    // every way of holding the keys on ice would look like standing still.
+    const pace = b.slick ? 0.4 * grain : 2.6 * grain * wide;
+    if (mine) parts.push(q(b.vx, pace), q(b.vy, 3.5 * grain * wide), q(b.vz, pace), b.grounded ? 1 : 0, b.jumpHeld ? 1 : 0, !b.grounded && b.coyote > 0 ? 1 : 0);
   }
-  for (const c of world.crates) parts.push(q(c.x, 0.3 * grain), q(c.y, 0.3 * grain), q(c.z, 0.3 * grain));
+  // A crate sliding on ice is not the crate at rest in the same place, however slowly it goes.
+  const sliding = (v: number): number => Math.sign(v) * Math.ceil(Math.abs(v) / (1.3 * grain));
+  for (const c of world.crates) parts.push(q(c.x, 0.3 * grain), q(c.y, 0.3 * grain), q(c.z, 0.3 * grain), sliding(c.vx), sliding(c.vz));
   parts.push(world.toggled.join(''), world.broken.join('.'));
   return parts.join(',');
 }

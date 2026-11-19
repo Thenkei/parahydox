@@ -1,0 +1,15 @@
+; Le levier est au plafond, bien plus loin que le bout de ton île. Le clone ne court jamais plus que toi, sauf si son terrain le retient pendant que tu recules : la stalactite l'arrête, pas toi, et tout l'élan que tu prends vers la gauche lui est rendu vers la droite.
+name: À reculons
+world: 17
+clones: 1
+antipode: true
+tip: Le levier est pour lui, mais ton île s'arrête avant. Regarde ce qui le retient, lui, si tu pars à gauche.
+hint: Première course : cours à gauche jusqu'à la porte ; là-haut, la stalactite le bloque tout de suite. Puis cours à droite jusqu'au bord de l'île et arrête-toi : il aura couru aussi loin que toi, mais en partant de la stalactite. Seconde course : attends devant la porte.
+tape: L135 R150 | L280
+
+z=0
+########################
+.#.........#...........e
+.#.........#............
+XE...........@..........
+################........

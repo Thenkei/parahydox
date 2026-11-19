@@ -1,0 +1,17 @@
+; Le clone pousse la caisse depuis le fond ; sur la glace elle traverse tout le couloir, et c'est toi, descendu par le puits de gauche, qui l'arrêtes sur b. Puis le clone saute dans la fosse de c, derrière une marche qu'aucune caisse ne monte : la sortie demande la caisse et lui à la fois.
+name: Le renvoi
+world: 14
+clones: 1
+tip: Une caisse lancée sur la glace s'arrête contre le premier qui se trouve sur son chemin.
+hint: Première course : descends par le puits de droite, pousse la caisse vers la gauche, puis saute sur la marche et laisse-toi tomber dans la fosse. Seconde course : descends par le puits de gauche et attends au pied de la porte : la caisse arrive et s'arrête contre toi, sur la plaque. Sors par la gauche.
+tape: R80 _10 L24 R8 RJ20 R60 | L48 _270 L40
+
+z=0
+##################
+#.......@......###
+####.#########.###
+####.########....#
+####.########....#
+#XCB.b.......o.#.#
+#####iiiiiiii###c#
+##################

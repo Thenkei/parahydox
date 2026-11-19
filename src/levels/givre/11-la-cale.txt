@@ -1,0 +1,15 @@
+; La plaque a est au bout de la glace, contre le mur : le clone qui s'y arrête ouvre la réserve, et sert aussi de cale. Poussée sur la glace, la caisse irait sinon jusqu'au mur, sur a ; arrêtée contre lui, elle reste sur b. Le retour passe par les deux portes : il faut les deux plaques tenues à la fois.
+name: La cale
+world: 14
+clones: 1
+tip: Sur la glace, une caisse poussée ne s'arrête que contre quelque chose : un mur, ou quelqu'un.
+hint: Première course : glisse jusqu'au mur du fond et restes-y : tu tiens la plaque de la réserve. Seconde course : entre dans la réserve, saute par-dessus la caisse et pousse-la sur la glace. Elle s'arrête contre ton clone, sur l'autre plaque. Reviens vers la sortie.
+tape: R120 | _90 L30 LJ22 L18 _10 R118 L60 _150 L40
+
+z=0
+####################
+###.....#..........#
+###.....#..........#
+###.....#..........#
+#XB..o..A@.......ba#
+##########iiiiiiiii#

@@ -1,0 +1,19 @@
+; Dans un puits d'une case, la paire n'a besoin de personne pour tenir : chaque saut la monte d'une case, et ton antipode n'a qu'à ne pas sauter. Trois sauts t'amènent face à la niche ; tu y entres, et lui, lâché, monte au plafond du puits, sur la plaque qui t'ouvre la porte.
+name: Le palan
+world: 18
+clones: 1
+antipode: true
+tip: Dans un puits, la paire ne peut pas se perdre : chaque fois que tu sautes, elle monte d'une case.
+hint: Première course : file à gauche sous la dalle, jusqu'au bout, et garde ← enfoncé sept secondes. Seconde course : grimpe à droite, reviens par le dessus jusqu'à la trappe ; une fois dans le puits avec lui, saute trois fois, entre à droite dans la niche et attends que la porte s'ouvre.
+tape: L420 | R50 RJ14 R12 RJ14 _8 L6 LJ12 L155 J16 _24 J16 _24 J16 _24 R40 _60 R30
+
+z=0
+###############
+#b...######...#
+#....BX####...#
+#.#########...#
+#a............#
+#AA########...#
+#A#########..##
+#.......@...###
+###############

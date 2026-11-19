@@ -1,0 +1,17 @@
+; Son saut descend. Sous un plafond en escalier, chaque marche est un mur pour qui court au plafond : le clone ne passe dessous qu'en sautant, vers le bas. Ton sol est plat à cet endroit : ces sauts-là, tu les fais pour lui.
+name: L'escalier renversé
+world: 17
+clones: 1
+antipode: true
+tip: Quand tu sautes, ton clone saute aussi : vers le bas. C'est ainsi qu'il descend les marches du plafond.
+hint: Première course : saute ton bloc, puis saute encore chaque fois que tu passes sous une marche du plafond, et cours jusqu'à la porte. Rien ne presse : contre sa marche, ton clone attend que tu sautes. Rembobine, et attends devant la porte.
+tape: R18 RJ16 R60 RJ16 R40 RJ16 R140 | R18 RJ16 R220
+
+z=0
+#######################
+.........##############
+.............##########
+................a#..#..
+....................#..
+@...#...............A.X
+#######################

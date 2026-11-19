@@ -1,0 +1,13 @@
+; Deux caisses en file, deux plaques au bout : la dalle de pierre garde la première caisse qui l'atteint, et la seconde s'arrête contre elle, sur l'autre plaque. Lancée la première, la caisse de devant bute contre celle de derrière et les deux restent collées pour toujours : il faut passer par-dessus et envoyer d'abord la plus lointaine.
+name: La file indienne
+world: 13
+tip: Une caisse qui glisse ne pousse rien : elle s'arrête contre ce qu'elle rencontre, une autre caisse comme un mur.
+hint: Saute par-dessus la première caisse et pousse la seconde : elle file jusqu'à la dalle de pierre. Reviens en sautant par-dessus la première, puis pousse-la : elle s'arrête contre l'autre, sur la seconde plaque. Les deux portes s'ouvrent.
+tape: R6 RJ16 R40 _70 L66 LJ16 L60 R46 L210
+
+z=0
+.##................
+.##................
+.##................
+XAB@..o....o...ba..
+####ii#iiiiiiiii#ii

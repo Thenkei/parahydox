@@ -18,8 +18,51 @@
   color-scheme: dark;
 }
 
-/* Hardcore: the same interface, at the embers. Game-meaning colours stay what they are. */
-#game[data-campaign='hardcore'] {
+/*
+ * A campaign dresses the same interface in its own colours; game-meaning colours stay what
+ * they are. `data-campaign` is the one being played or listed. `data-announces` is worn by
+ * whatever tells the player a campaign has just opened, before they are in it.
+ */
+
+/* Le givre: frost on glass, white going to cyan. */
+#game[data-campaign='givre'],
+[data-announces='givre'] {
+  --glass: rgba(12, 24, 38, 0.7);
+  --glass-edge: rgba(206, 238, 255, 0.28);
+  --accent: #d4f3ff;
+  --accent-glow: rgba(170, 228, 255, 0.36);
+  --title-from: #ffffff;
+  --title-to: #86d9ff;
+  --veil: rgba(6, 15, 26, 0.9);
+}
+
+/* Le tore: gold thread on indigo. */
+#game[data-campaign='tore'],
+[data-announces='tore'] {
+  --glass: rgba(22, 16, 58, 0.74);
+  --glass-edge: rgba(255, 208, 110, 0.28);
+  --accent: #ffcb52;
+  --accent-glow: rgba(255, 196, 70, 0.34);
+  --title-from: #ffd76a;
+  --title-to: #8f7dff;
+  --veil: rgba(11, 8, 38, 0.9);
+}
+
+/* L'envers: mint on one side, rose on the other. */
+#game[data-campaign='envers'],
+[data-announces='envers'] {
+  --glass: rgba(14, 26, 28, 0.72);
+  --glass-edge: rgba(255, 158, 196, 0.28);
+  --accent: #7df0c2;
+  --accent-glow: rgba(110, 236, 186, 0.32);
+  --title-from: #7df0c2;
+  --title-to: #ff8fb8;
+  --veil: rgba(8, 16, 18, 0.9);
+}
+
+/* Hardcore: at the embers. */
+#game[data-campaign='hardcore'],
+[data-announces='hardcore'] {
   --glass: rgba(26, 10, 12, 0.72);
   --glass-edge: rgba(255, 150, 96, 0.26);
   --accent: #ff7a3c;
@@ -289,6 +332,12 @@ kbd {
   }
 }
 
+/* The level list hangs from the top: the tabs stay where they are whichever campaign is listed, two chapters or eight. */
+#select {
+  justify-content: flex-start;
+  padding-top: clamp(24px, 5.5vh, 64px);
+}
+
 .select-grid {
   display: flex;
   flex-direction: column;
@@ -360,12 +409,17 @@ kbd {
 
 /* ------------------------------------------------------------------- campaigns */
 
+/* One row while there is room for the five of them, then they wrap: every campaign stays in sight, none behind a scroll. */
 .tabs {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 8px;
+  max-width: 100%;
   padding: 5px;
   border: 1px solid var(--glass-edge);
-  border-radius: 999px;
+  /* Half the height of one row: a pill while they fit on one, a rounded box once they wrap. */
+  border-radius: 24px;
   background: var(--glass);
 }
 
@@ -373,16 +427,17 @@ kbd {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  padding: 7px 20px;
+  padding: 7px 18px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--paper);
   font: inherit;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
   opacity: 0.55;
   transition:
@@ -410,6 +465,7 @@ kbd {
 }
 
 .pitch {
+  max-width: 100%;
   margin: 0;
   font-size: 15px;
   opacity: 0.85;
@@ -462,17 +518,22 @@ kbd {
   font-weight: 700;
 }
 
-/* The card that announces a campaign: it wears that campaign's colours before the player is in it. */
+/* The card that announces a campaign: it wears that campaign's colours (see `data-announces`) before the player is in it. */
 .card.unlock {
-  border-color: #ff7a3c;
+  border-color: var(--accent);
   box-shadow:
-    0 0 0 3px rgba(255, 110, 50, 0.3),
-    0 0 60px rgba(255, 90, 40, 0.35);
+    0 0 0 3px var(--accent-glow),
+    0 0 60px var(--accent-glow);
 }
 
 .card.unlock .eyebrow {
-  color: #ffb347;
+  color: var(--title-from);
   font-size: 15px;
+}
+
+/* The line that says a campaign opened while play goes on: its colour, on an otherwise ordinary card. */
+.stats.note[data-announces] {
+  color: var(--accent);
 }
 
 @keyframes pop {
@@ -491,7 +552,53 @@ kbd {
   opacity: 0.7;
 }
 
+/* Five tabs in one row need about a thousand pixels; four of them carry a padlock on a fresh save. */
+@media (max-width: 1040px) {
+  .tab {
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* Below that they are laid out rather than left to wrap where they may: three to a row, the rest sharing the next. */
+@media (max-width: 860px) {
+  .tabs {
+    width: min(100%, 620px);
+    border-radius: 22px;
+  }
+
+  .tab {
+    flex: 1 1 30%;
+    justify-content: center;
+    padding: 6px 8px;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+}
+
 @media (max-width: 720px) {
+  .pitch {
+    font-size: 14px;
+  }
+
+  /* The chapter's name goes above its levels, which take two rows of four: eight abreast leave no room for a name. */
+  .select-world {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .select-world > :first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .select-levels {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .keys {
     display: none;
   }
@@ -503,6 +610,21 @@ kbd {
   .hud-meters {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+}
+
+/* Phone width: a third of the row is too narrow for a name and its count side by side. */
+@media (max-width: 480px) {
+  .tab {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 5px 4px;
+    font-size: 12px;
+  }
+
+  .tab .tab-count {
+    font-size: 11px;
   }
 }
 
@@ -592,9 +714,9 @@ kbd {
   color: var(--wire);
 }
 
-/* In hardcore the chapter line burns: one glance says which game this is. */
-#game[data-campaign='hardcore'] .hud-title .eyebrow,
-#game[data-campaign='hardcore'] .banner .eyebrow {
+/* Outside the main campaign the chapter line takes the campaign's colour: one glance says which game this is. */
+#game[data-campaign]:not([data-campaign='main']) .hud-title .eyebrow,
+#game[data-campaign]:not([data-campaign='main']) .banner .eyebrow {
   color: var(--accent);
   opacity: 1;
 }

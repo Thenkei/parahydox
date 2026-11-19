@@ -1,0 +1,15 @@
+; Une corniche flotte à deux cases au-dessus de la patinoire, loin de tout mur : il faut une tête pour l'atteindre, et rien n'arrête le clone à cet endroit que sa propre glissade. Une tête ne glisse pas : dessus, on s'arrête net et on repart à pleine vitesse.
+name: Le perchoir
+world: 14
+clones: 1
+tip: La glace ne retient personne. Une tête, si : dessus, tu t'arrêtes net et tu sautes comme sur la pierre.
+hint: Première course : glisse vers la droite et lâche assez tôt pour t'arrêter un peu avant la corniche, pas dessous. Seconde course : refais la même glissade, saute sur place pour retomber sur la tête de ton clone, puis cours et saute vers la corniche.
+tape: R75 _100 | R75 _100 J18 _10 RJ20 R20
+
+z=0
+...................#
+...................#
+............X......#
+...........###.....#
+@..................#
+##iiiiiiiiiiiiiiiii#

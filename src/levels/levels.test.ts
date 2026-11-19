@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest';
 import type { Level } from '../core/types';
 import { outcomeOfFlow, playerOfFlow } from '../flow/physics';
 import { parseTape, runTape } from '../flow/tape';
-import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, chapterLabel, loadLevels } from './index';
+import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, chapterLabel, levelIndexOf, levelLabels, loadLevels } from './index';
 
 const levels = loadLevels();
 const entries = levels.map((level, i) => ({ id: LEVEL_SOURCES[i]?.id ?? '', campaign: LEVEL_SOURCES[i]?.campaign ?? 'main', level }));
 const levelsOf = (campaign: CampaignId): Level[] => entries.filter((e) => e.campaign === campaign).map((e) => e.level);
 /** Eight levels per chapter, chapter after chapter. */
 const eightEach = (campaign: CampaignId): number[] => campaignById(campaign).chapters.flatMap((chapter) => Array.from({ length: 8 }, () => chapter.world));
+/** The campaigns built on one new rule each; the main campaign and hardcore know none of the three. */
+const SIDE: readonly CampaignId[] = ['givre', 'tore', 'envers'];
 const named = (slug: string): Level => {
   const found = entries.find((e) => e.id.endsWith(slug));
   if (!found) throw new Error(`No level "${slug}"`);
@@ -27,26 +29,80 @@ describe('the campaigns', () => {
     expect(levelsOf('main').map((level) => level.world)).toEqual(eightEach('main'));
   });
 
-  it('hardcore is four chapters of eight levels, played after the main campaign and opened by it', () => {
+  it('hardcore is four chapters of eight levels, opened by the whole main campaign', () => {
     const hardcore = campaignById('hardcore');
     expect(hardcore.chapters).toHaveLength(4);
-    expect(hardcore.requires).toBe('main');
+    expect(hardcore.requires).toEqual({ campaign: 'main', solved: levelsOf('main').length });
     expect(levelsOf('hardcore').map((level) => level.world)).toEqual(eightEach('hardcore'));
-    // Play order is one list: every main level comes before the first hardcore one.
-    expect(entries.map((e) => e.campaign)).toEqual([...levelsOf('main').map(() => 'main'), ...levelsOf('hardcore').map(() => 'hardcore')]);
+  });
+
+  it.each(SIDE)('%s is two chapters of eight levels', (id) => {
+    expect(campaignById(id).chapters).toHaveLength(2);
+    expect(levelsOf(id).map((level) => level.world)).toEqual(eightEach(id));
+  });
+
+  it('plays and lists them in one order: main, the three side campaigns as they open, hardcore last', () => {
+    expect(CAMPAIGNS.map((campaign) => campaign.id)).toEqual(['main', 'givre', 'tore', 'envers', 'hardcore']);
+    // Play order is one list, a campaign after the other: `?level=<n>` counts along it.
+    expect(entries.map((e) => e.campaign)).toEqual(CAMPAIGNS.flatMap((campaign) => levelsOf(campaign.id).map(() => campaign.id)));
+  });
+
+  it('opens them along the main campaign, each at a count that can be reached', () => {
+    expect(CAMPAIGNS.map((campaign) => campaign.requires)).toEqual([
+      null,
+      { campaign: 'main', solved: 24 },
+      { campaign: 'main', solved: 40 },
+      { campaign: 'main', solved: 56 },
+      { campaign: 'main', solved: 64 },
+    ]);
+    for (const { id, requires } of CAMPAIGNS) {
+      if (requires === null) continue;
+      expect(requires.solved, id).toBeGreaterThan(0);
+      // Asking for more levels than there are would shut a campaign for good.
+      expect(requires.solved, id).toBeLessThanOrEqual(levelsOf(requires.campaign).length);
+    }
   });
 
   it('numbers its chapters once across campaigns, and counts them from one in each', () => {
     const worlds = CAMPAIGNS.flatMap((campaign) => campaign.chapters.map((chapter) => chapter.world));
     expect(new Set(worlds).size).toBe(worlds.length);
-    expect(chapterLabel(3)).toBe('3');
-    expect(chapterLabel(9)).toBe('H1');
-    expect(chapterLabel(12)).toBe('H4');
+    expect(new Set(CAMPAIGNS.map((campaign) => campaign.tag)).size).toBe(CAMPAIGNS.length);
+    expect([1, 3, 8].map(chapterLabel)).toEqual(['1', '3', '8']);
+    expect([9, 10, 11, 12].map(chapterLabel)).toEqual(['H1', 'H2', 'H3', 'H4']);
+    expect([13, 14].map(chapterLabel)).toEqual(['G1', 'G2']);
+    expect([15, 16].map(chapterLabel)).toEqual(['T1', 'T2']);
+    expect([17, 18].map(chapterLabel)).toEqual(['E1', 'E2']);
   });
 
-  it('saves progress under ids that tell the campaigns apart', () => {
+  it('labels a level by its chapter and its place in it, one label each', () => {
+    expect(levelLabels([{ world: 1 }, { world: 1 }, { world: 13 }, { world: 14 }, { world: 14 }, { world: 9 }])).toEqual(['1-1', '1-2', 'G1-1', 'G2-1', 'G2-2', 'H1-1']);
+    const labels = levelLabels(levels);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels.slice(0, 9)).toEqual(['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '2-1']);
+    expect(labels[entries.findIndex((e) => e.campaign === 'hardcore')]).toBe('H1-1');
+    expect(labels.at(-1)).toBe('H4-8');
+  });
+
+  it('finds the level a link names, by its place in play order or by its label', () => {
+    const labels = ['1-1', '1-2', 'G1-1', 'G1-2', 'H1-1', 'H2-5'];
+    // A number counts from one along the play order, and stays inside the list.
+    expect(['1', '4', '6', '0', '-3', '99', '', '2.9'].map((asked) => levelIndexOf(asked, labels))).toEqual([0, 3, 5, 0, 0, 5, 0, 1]);
+    // A label is what the HUD shows, whatever the case it is typed in.
+    expect(['1-2', 'G1-2', 'g1-2', 'H2-5', 'h2-5', ' h1-1 '].map((asked) => levelIndexOf(asked, labels))).toEqual([1, 3, 3, 5, 5, 4]);
+    // What names nothing opens nothing: no level is a better guess than another.
+    expect(['T1-1', 'G1-3', 'H2', 'givre', '1-'].map((asked) => levelIndexOf(asked, labels))).toEqual([-1, -1, -1, -1, -1]);
+    expect(levelIndexOf('1', [])).toBe(-1);
+    // In the real list a label survives what a number does not: campaigns placed before it.
+    expect(entries[levelIndexOf('h2-5', levelLabels(levels))]?.id).toMatch(/^hardcore\/13-/);
+    expect(entries[levelIndexOf('3-2', levelLabels(levels))]?.id).toMatch(/^18-/);
+  });
+
+  it('saves progress under ids that tell the campaigns apart: the file name, behind its folder', () => {
     expect(new Set(entries.map((e) => e.id)).size).toBe(entries.length);
-    for (const e of entries) expect(e.id.startsWith('hardcore/')).toBe(e.campaign === 'hardcore');
+    for (const e of entries) {
+      if (e.campaign === 'main') expect(e.id).not.toContain('/');
+      else expect(e.id.startsWith(`${e.campaign}/`), e.id).toBe(true);
+    }
   });
 
   it('gives every level a name of its own, an opening line and a hint', () => {
@@ -69,6 +125,33 @@ describe('the campaigns', () => {
     for (const level of hardcore.filter((l) => l.world === 9)) expect(level.maxClones, level.name).toBe(0);
     for (const level of hardcore.filter((l) => l.world === 11)) expect(level.mirror, level.name).toBe(true);
     for (const level of hardcore.filter((l) => l.world === 12)) expect(level.cells.some((cell) => cell.fragile), level.name).toBe(true);
+  });
+
+  it('le givre: ice in every level, and la glissade is slid alone', () => {
+    const givre = levelsOf('givre');
+    for (const level of givre) expect(level.cells.some((cell) => cell.ice === true), level.name).toBe(true);
+    for (const level of givre.filter((l) => l.world === 13)) expect(level.maxClones, level.name).toBe(0);
+  });
+
+  it('le tore: every level is sewn edge to edge, along one axis at least', () => {
+    for (const level of levelsOf('tore')) expect(level.wrap.x || level.wrap.y, level.name).toBe(true);
+  });
+
+  it("l'envers: every level has its antipodes, and a clone to send there", () => {
+    for (const level of levelsOf('envers')) {
+      expect(level.antipode, level.name).toBe(true);
+      expect(level.maxClones, level.name).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('keeps ice, sewn edges and antipodes out of every other campaign', () => {
+    const elsewhere = entries.filter((e) => !SIDE.includes(e.campaign));
+    expect(elsewhere.length).toBeGreaterThan(0);
+    for (const { id, level } of elsewhere) {
+      expect(level.cells.some((cell) => cell.ice === true), `${id}: ice`).toBe(false);
+      expect(level.wrap.x || level.wrap.y, `${id}: wrap`).toBe(false);
+      expect(level.antipode, `${id}: antipode`).toBe(false);
+    }
   });
 });
 

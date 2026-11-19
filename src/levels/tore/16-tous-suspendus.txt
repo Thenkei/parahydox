@@ -1,0 +1,22 @@
+; Trois corps, chacun suspendu à un autre. Le clone du fil bute contre une barrière que seule ta plaque ouvre ; au bout du fil, il tient la dernière porte et ferme la grille du puits, où le clone qui tombait sans fin se pose enfin, sur la plaque de la première porte.
+name: Tous suspendus
+world: 16
+clones: 2
+wrap: y
+glyph: ! = wire + door a
+glyph: & = anchor + plate b
+glyph: % = gate b
+tip: Trois plaques, trois corps. Celui qui tombe sans fin attend qu'on lui ferme la grille.
+hint: Première course : saute dans le puits de gauche et laisse-toi tomber, sans fin. Deuxième : tombe par le bord droit, attrape l'ancre avec E et maintiens → contre la barrière, cinq bonnes secondes. Troisième : tombe sans E en maintenant → jusqu'à la plaque de la galerie et restes-y : ton second clone passe la barrière, ferme la grille au bout du fil, et ton premier s'y pose. Cours alors aux deux portes.
+tape: L40 | R42 E1 R300 | R60 _50 R140
+
+z=0
+#.####*=!==&#####
+#...........#####
+#...........#.#.#
+#...........#.#.#
+#......aa...A.BX#
+#a.....##########
+#%.....##########
+#......##########
+#..@...##########

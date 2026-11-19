@@ -1,0 +1,17 @@
+; Une chaîne à travers les deux terrains : la caisse, que seul un antipode peut pousser, tombe sur une plaque que seule une caisse peut tenir, et cette plaque ouvre au plafond la porte du second clone, qui tient la tienne. Sur la dalle on ne redescend pas, d'où les deux clones, et le premier doit y monter par le bout de droite pour pousser la caisse vers la gauche.
+name: Le colis
+world: 17
+clones: 2
+antipode: true
+tip: Une caisse tombe toujours vers le bas. Ton clone, lui, va la pousser là où tu ne vas pas.
+hint: Un clone pour la caisse, un pour la plaque du plafond. Première course : cours à droite contre le mur et tiens → encore un instant : il sort de sous la dalle et monte dessus. Puis tiens ← : il pousse la caisse jusqu'au bout de gauche, d'où elle tombe sur sa plaque. Deuxième course : tiens ← ; ce clone attend devant la porte du plafond qu'elle s'ouvre, puis va tenir l'autre plaque. Troisième : tiens ← jusqu'à la sortie.
+tape: R70 L230 | L290 | L290
+
+z=0
+###############
+##....o.......#
+##.##########.#
+##a.#bA.......#
+###.#.A......##
+###XB....@...##
+###############

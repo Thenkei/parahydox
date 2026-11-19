@@ -8,6 +8,7 @@ export type Sound =
   | 'land'
   | 'bump'
   | 'push'
+  | 'slide'
   | 'fall'
   | 'wait'
   | 'to1d'
@@ -88,7 +89,7 @@ export class Audio {
     return Math.sqrt(samples.reduce((sum, v) => sum + v * v, 0) / samples.length);
   }
 
-  /** Each chapter sings in its own key: brighter worlds in major, burnt ones in minor. */
+  /** Each chapter sings in its own key: brighter worlds in major, burnt ones in minor, frozen ones in major pitched high. */
   setKey(root: number, mode: Mode): void {
     this.root = root;
     this.scale = SCALES[mode];
@@ -127,7 +128,7 @@ export class Audio {
     osc.stop(start + options.duration + 0.02);
   }
 
-  private noise(duration: number, gain: number, cutoff: number, delay = 0): void {
+  private noise(duration: number, gain: number, cutoff: number, delay = 0, filterType: BiquadFilterType = 'lowpass'): void {
     const { ctx, master } = this;
     if (!ctx || !master) return;
     const length = Math.max(1, Math.floor(ctx.sampleRate * duration));
@@ -137,7 +138,7 @@ export class Audio {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
+    filter.type = filterType;
     filter.frequency.value = cutoff;
     const amp = ctx.createGain();
     amp.gain.value = gain;
@@ -145,7 +146,8 @@ export class Audio {
     source.start(ctx.currentTime + delay);
   }
 
-  play(sound: Sound, delay = 0): void {
+  /** `strength` (0..1) is how hard the thing is done, for the sounds that have a soft and a loud way of being made. */
+  play(sound: Sound, delay = 0, strength = 1): void {
     const r = this.root;
     switch (sound) {
       case 'step':
@@ -164,6 +166,11 @@ export class Audio {
         break;
       case 'push':
         this.noise(0.16, 0.18, 500, delay);
+        break;
+      case 'slide':
+        // Ice under soles or under a crate: a thin hiss, all in the high end, played again while the slide lasts.
+        this.noise(0.22, 0.03 + 0.07 * strength, 4200 + 2600 * strength, delay, 'bandpass');
+        this.tone({ freq: r * 8, to: r * 7.6, duration: 0.2, gain: 0.006 + 0.012 * strength, delay });
         break;
       case 'fall':
         this.tone({ freq: r * 3, to: r * 0.5, duration: 0.5, type: 'triangle', gain: 0.16, delay, echo: true });

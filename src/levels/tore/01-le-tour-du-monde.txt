@@ -1,0 +1,14 @@
+; La sortie est à un pas sur la gauche, derrière un mur qui monte jusqu'en haut. Le monde est un ruban : le seul chemin lui tourne le dos et fait tout le tour.
+name: Le tour du monde
+world: 15
+wrap: x
+tip: Ce monde est un ruban : qui sort par la droite revient par la gauche.
+hint: Tourne le dos à la sortie et cours vers la droite, jusqu'au bord de l'écran et au-delà : tu reviens par la gauche, de l'autre côté du mur.
+tape: R250
+
+z=0
+..#.....................
+..#.....................
+..#.....................
+.X#@....................
+########################

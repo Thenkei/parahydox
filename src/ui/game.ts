@@ -5,10 +5,12 @@ import {
   FPS,
   type FlowWorld,
   type FrameInput,
+  HEIGHT,
   IDLE,
   type Transition,
   cellOfBody,
   doorClosed,
+  fallOf,
   initialFlow,
   liveChannels,
   outcomeOfFlow,
@@ -19,10 +21,10 @@ import {
 import { type FlowSession, inputsAtFlow, newFlowSession, parseTape, rewindFlow } from '../flow/tape';
 import type { Assets } from './assets';
 import type { Audio } from './audio';
-import type { Hud, LevelEntry } from './hud';
+import { type Hud, type LevelEntry, cloneWord } from './hud';
 import { type Camera, type Viewport, approach, cameraTarget } from './render/camera';
 import { Effects, drawBackdrop } from './render/fx';
-import type { ActorPose, CratePose } from './render/motion';
+import type { ActorPose, CratePose, Slide } from './render/motion';
 import { type LevelGeometry, type SceneView, buildGeometry, drawScene } from './render/scene';
 import { COLORS, themeFor } from './themes';
 
@@ -53,10 +55,20 @@ export function targetSeconds(level: Level): number | null {
   return Math.ceil((frames / FPS) * 1.4 + 1 + (tape.value.length - 1) * 1.5);
 }
 
+/** How fast something is carried along the ice, as the scene reads it. */
+const slideOf = (moving: { readonly vx: number; readonly vz: number }): Slide => ({ x: moving.vx, z: moving.vz });
+
+/** The grid cell a body is drawn in: whoever has left by the bottom, or by the top, stays in the last row. */
 const cellOf = (level: Level, body: Body): Vec3 => {
   const cell = cellOfBody(level, body);
-  return vec(cell.x, Math.max(0, cell.y), cell.z);
+  return vec(cell.x, Math.min(level.size.h - 1, Math.max(0, cell.y)), cell.z);
 };
+
+/** A fall this fast is longer than any drop inside a level: it has been through the seam. */
+const PLUNGE_PACE = 15;
+
+/** Below this pace nothing is said to slide: it has all but stopped. */
+const SLIDE_PACE = 0.5;
 
 /**
  * Plays a level: reads held keys into one input per frame, steps the physics at a fixed
@@ -82,6 +94,7 @@ export class Game {
   private flash = 0;
   private stepAt = 0;
   private pushAt = 0;
+  private slideAt = 0;
   private pendingWin: number | null = null;
   private pendingShift = false;
   private fallTimer: number | null = null;
@@ -111,7 +124,7 @@ export class Game {
   start(entry: LevelEntry): void {
     this.entry = entry;
     this.session = newFlowSession(entry.level);
-    this.geometry = buildGeometry(entry.level);
+    this.geometry = buildGeometry(entry.level, themeFor(entry.level.world).ceiling !== null);
     this.elapsedMs = 0;
     this.pendingWin = null;
     this.help = 0;
@@ -270,6 +283,7 @@ export class Game {
   /** Sounds and dust, read off the difference between two frames. */
   private cues(before: FlowWorld, next: FlowWorld, now: number): void {
     const theme = themeFor(next.level.world);
+    let sliding = 0;
     for (const body of next.bodies) {
       const was = before.bodies[body.id];
       if (!was || was.status !== 'active') continue;
@@ -278,13 +292,21 @@ export class Game {
         if (mine) this.audio.play('fall', 0.02);
         continue;
       }
+      // The soles: under the box for most, on top of it for whoever falls upward.
+      const up = fallOf(next.level, body) > 0 ? -1 : 1;
+      const soles = up > 0 ? body.y : body.y + HEIGHT;
       if (was.grounded && !body.grounded && body.vy > 4 && mine) this.audio.play('hop');
       if (!was.grounded && body.grounded) {
         this.landedAt.set(body.id, now);
-        this.effects.dust(body.x, body.y, body.z, theme.haze);
+        this.effects.dust(body.x, soles, body.z, body.slick ? COLORS.ice : theme.haze, up);
         if (mine) this.audio.play('land');
       }
-      if (mine && body.grounded && Math.abs(body.vx) + Math.abs(body.vz) > 2 && now - this.stepAt > 230) {
+      const pace = Math.abs(body.vx) + Math.abs(body.vz);
+      if (body.slick && body.grounded && body.dim !== 1 && pace > SLIDE_PACE) {
+        // No grip: the soles cut the ice and throw it up behind them.
+        sliding = Math.max(sliding, mine ? pace : pace * 0.5);
+        if (next.tick % 3 === 0) this.effects.speck(body.x - Math.sign(body.vx) * 0.2, soles, body.z, next.tick % 2 === 0 ? COLORS.ice : COLORS.iceDeep, -Math.sign(body.vx) * 0.6, up);
+      } else if (mine && body.grounded && pace > 2 && now - this.stepAt > 230) {
         this.stepAt = now;
         this.audio.play('step');
       }
@@ -297,13 +319,24 @@ export class Game {
     for (const crate of next.crates) {
       const was = before.crates.find((c) => c.id === crate.id);
       if (!was) continue;
+      const carried = crate.grounded && Math.abs(crate.vx) + Math.abs(crate.vz) > SLIDE_PACE;
       if (!was.grounded && crate.grounded) {
         this.effects.dust(crate.x, crate.y, crate.z, theme.haze);
         this.audio.play('land');
+      } else if (carried) {
+        // On ice a crate is not pushed along, it goes by itself: a hiss, not the scrape of stone.
+        sliding = Math.max(sliding, Math.abs(crate.vx) + Math.abs(crate.vz));
+        if (next.tick % 3 === 0) this.effects.speck(crate.x - Math.sign(crate.vx) * 0.45, crate.y, crate.z, next.tick % 2 === 0 ? COLORS.ice : COLORS.iceDeep, -Math.sign(crate.vx) * 0.6);
       } else if ((was.x !== crate.x || (was.z !== crate.z && crate.grounded)) && now - this.pushAt > 260) {
         this.pushAt = now;
         this.audio.play('push');
       }
+      // Stopped dead by a wall or by stone after a slide: it knocks.
+      if (crate.grounded && Math.abs(was.vx) + Math.abs(was.vz) > 1.5 && crate.vx === 0 && crate.vz === 0) this.audio.play('bump');
+    }
+    if (sliding > 0 && now - this.slideAt > 150) {
+      this.slideAt = now;
+      this.audio.play('slide', 0, Math.min(1, sliding / 5));
     }
     if (next.toggled.join() !== before.toggled.join()) this.audio.play('lever');
     if (next.broken.length > before.broken.length) this.audio.play('crumble');
@@ -344,12 +377,16 @@ export class Game {
   private refreshHud(): void {
     if (!this.entry || !this.session || !this.world) return;
     const { level } = this.session;
-    const other = level.mirror ? 'reflet' : 'clone';
+    const other = cloneWord(level);
     const outcome = this.outcome;
     const hero = playerOfFlow(this.world);
     const transition = outcome === 'playing' ? transitionAt(level, hero) : null;
     const action = transition === null ? null : ACTIONS[transition];
     const fresh = this.session.current.length === 0;
+    // An antipode that has run past the end of its ceiling is gone for this loop, and it happens off screen.
+    const lost = level.antipode ? this.world.bodies.filter((body) => body.role === 'clone' && body.status === 'fallen').length : 0;
+    // How the clones set off: a reflection the other way round, an antipode toward the sky.
+    const manner = `${level.mirror ? (level.antipode ? ', en miroir,' : ", à l'envers") : ''}${level.antipode ? ' et tombe vers le haut' : ''}`;
 
     const [message, tone] = ((): [string, '' | 'fallen' | 'hint'] => {
       if (outcome === 'fallen') return ['Tombé dans le vide. La boucle recommence.', 'fallen'];
@@ -357,9 +394,10 @@ export class Game {
       if (this.help === 1 && level.tip !== null) return [level.tip, ''];
       if (this.help === 2 || (this.help === 1 && level.tip === null)) return [level.hint ?? level.tip ?? '', 'hint'];
       if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. H donne un indice.`, ''];
-      if (fresh && this.session.loops.length > 0) return [`Ton ${other} part à ta première touche${level.mirror ? ", à l'envers" : ''}.`, ''];
+      if (fresh && this.session.loops.length > 0) return [`Ton ${other} part à ta première touche${manner}.`, ''];
       if (this.session.current.length < TIP_FRAMES && this.session.loops.length === 0 && level.tip !== null) return [level.tip, ''];
       if (action !== null) return [`E : ${action}`, ''];
+      if (lost > 0) return [`${lost > 1 ? 'Des antipodes sont tombés' : 'Ton antipode est tombé'} dans le ciel, au bout de ${lost > 1 ? 'leur' : 'son'} plafond.`, ''];
       return ['', ''];
     })();
 
@@ -441,22 +479,38 @@ export class Game {
 
     const time = now / 1000;
     const poses: ActorPose[] = current.bodies
-      .filter((b) => b.status !== 'fallen' || b.y > -3)
-      .map((b: Body) => ({
-        id: b.id,
-        role: b.role,
-        dim: b.dim,
-        // Before the first key everyone stands on the start: fan the clones out behind the hero.
-        x: b.x - 0.5 - (current.tick === 0 ? (current.bodies.length - 1 - b.id) * 0.22 : 0),
-        y: b.y,
-        z: b.z - 0.5,
-        cell: cellOf(level, b),
-        alpha: b.status === 'fallen' ? 0.5 : 1,
-        stride: b.grounded && Math.abs(b.vx) + Math.abs(b.vz) > 0.6 ? (((b.x + b.z) * 1.1) % 1 + 1) % 1 : null,
-        airborne: !b.grounded && b.dim !== 1,
-        heading: (Math.sign(b.vx) || 0) as -1 | 0 | 1,
-      }));
-    const crates: CratePose[] = current.crates.map((c, i) => ({ id: c.id, x: c.x - 0.5, y: c.y, z: c.z - 0.5, cell: scene.crates[i] ?? vec(0, 0, 0) }));
+      // Whoever has fallen out is drawn as far as the edge of the void, below or, for an antipode, above.
+      .filter((b) => b.status !== 'fallen' || (b.y > -3 && b.y < size.h + 3))
+      .map((b: Body) => {
+        const up = fallOf(level, b) > 0 ? -1 : 1;
+        const pace = Math.abs(b.vx) + Math.abs(b.vz);
+        return {
+          id: b.id,
+          role: b.role,
+          dim: b.dim,
+          // Before the first key everyone stands on the start: fan the clones out behind the hero.
+          x: b.x - 0.5 - (current.tick === 0 ? (current.bodies.length - 1 - b.id) * 0.22 : 0),
+          // The soles: an antipode's are at the top of its box. A rider is a point on its wire.
+          y: up < 0 && b.dim !== 1 ? b.y + HEIGHT : b.y,
+          z: b.z - 0.5,
+          up,
+          cell: cellOf(level, b),
+          alpha: b.status === 'fallen' ? 0.5 : 1,
+          stride: b.grounded && pace > 0.6 ? (((b.x + b.z) * 1.1) % 1 + 1) % 1 : null,
+          airborne: !b.grounded && b.dim !== 1,
+          heading: (Math.sign(b.vx) || 0) as -1 | 0 | 1,
+          slide: b.slick && b.grounded && b.dim !== 1 && pace > SLIDE_PACE ? slideOf(b) : null,
+          plunge: level.wrap.y && !b.grounded && b.dim !== 1 && Math.abs(b.vy) > PLUNGE_PACE ? b.vy : 0,
+        };
+      });
+    const crates: CratePose[] = current.crates.map((c, i) => ({
+      id: c.id,
+      x: c.x - 0.5,
+      y: c.y,
+      z: c.z - 0.5,
+      cell: scene.crates[i] ?? vec(0, 0, 0),
+      slide: c.grounded && Math.abs(c.vx) + Math.abs(c.vz) > SLIDE_PACE ? slideOf(c) : null,
+    }));
 
     const theme = themeFor(level.world);
     const tiles = this.assets.tiles[(level.world - 1) % this.assets.tiles.length];
@@ -482,7 +536,7 @@ export class Game {
       }),
       doorOpen: (cell) => this.doors.get(cell) ?? (level.cells[cell]?.door ? 0 : 1),
     });
-    this.effects.draw(ctx, cam);
+    this.effects.draw(ctx, cam, level);
     if (this.flash > 0.01) {
       ctx.fillStyle = `rgba(255, 220, 160, ${this.flash * 0.25})`;
       ctx.fillRect(0, 0, view.width, view.height);

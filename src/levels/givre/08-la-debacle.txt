@@ -1,0 +1,28 @@
+; Tout se tient. La caisse du couloir, lancée, ne s'arrête sur sa plaque que contre toi, posé là par le fil qu'on attrape en glissant derrière elle. L'autre caisse, poussée de côté jusqu'au bloc puis vers l'avant jusqu'au bord du volume, finit sur la plaque voisine ; poussée trop tôt dans le couloir, elle y barre le chemin de la première.
+name: La débâcle
+world: 13
+glyph: ! = anchor + crate
+tip: Tout ce que la glace t'a appris : une caisse file jusqu'à ce qu'on l'arrête, un fil te pose immobile, la pierre et les murs arrêtent le reste.
+hint: Pousse la caisse du couloir, attrape l'ancre en glissant, suis le fil et attends-la au bout : elle s'arrête contre toi. Saute le trou et déplie la profondeur. Par le fond, va jusqu'à la dalle de pierre de gauche et pousse l'autre caisse vers la droite ; puis, depuis le fond, pousse-la vers l'avant. Les deux portes s'ouvrent.
+tape: R40 _30 E1 U24 R151 D24 E1 _70 R20 RJ14 R20 _10 E1 U30 L175 D14 R14 _40 U40 R112 _30 D12 _20 U50 L158
+
+z=0
+###................#
+###==============..#
+###=############=..#
+#@.!..........ab*.^#
+#iiiiiiiiiiiiiiii.##
+
+z=1
+###................#
+###................#
+###................#
+###.o..........#...#
+####iiiiiiiiiii#####
+
+z=2
+###................#
+###................#
+###................#
+XAB................#
+####################

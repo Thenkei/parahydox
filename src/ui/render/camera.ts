@@ -1,5 +1,6 @@
 import { cellAt } from '../../core/grid';
 import type { Dim, Level, Vec3 } from '../../core/types';
+import { GHOST_CELLS } from './seam';
 
 /**
  * One projection serves the three dimensions. The world is always drawn as an oblique
@@ -53,8 +54,9 @@ const MIN_CELL = 18;
 export function cellSizeFor(level: Level, view: Viewport): number {
   const { w, h, d } = level.size;
   const deep = d > 1;
-  const spanX = w + (deep ? DEPTH_X * d : 0) + 2;
-  const spanY = h + (deep ? DEPTH_Y * d : 0) + 3.2;
+  // Past a joined edge the far side of the level is shown again: leave it room.
+  const spanX = w + (deep ? DEPTH_X * d : 0) + 2 + (level.wrap.x ? GHOST_CELLS : 0);
+  const spanY = h + (deep ? DEPTH_Y * d : 0) + 3.2 + (level.wrap.y ? GHOST_CELLS : 0);
   return Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(view.width / spanX, view.height / spanY))));
 }
 

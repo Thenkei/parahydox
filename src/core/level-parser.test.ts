@@ -60,6 +60,59 @@ z=1
     expect(parsed.value.wires[0]?.cells).toEqual([vec(1, 1, 0), vec(1, 1, 1)]);
   });
 
+  it('reads ice as a block of its own, built in or stacked in a custom glyph', () => {
+    const parsed = parseLevel(`
+name: frost
+glyph: % = ice
+z=0
+@..X
+#i%~
+`);
+    if (!parsed.ok) throw new Error('expected a valid level');
+    const floor = [0, 1, 2, 3].map((x) => cellAt(parsed.value, vec(x, 0, 0)));
+    expect(floor.map((cell) => cell?.solid)).toEqual([true, true, true, true]);
+    expect(floor.map((cell) => cell?.ice)).toEqual([false, true, true, false]);
+    expect(floor.map((cell) => cell?.fragile)).toEqual([false, false, false, true]);
+  });
+
+  it('a level has neither antipodes nor seams unless its header says so', () => {
+    const plain = parseLevel('name: x\nz=0\n@..X\n####');
+    if (!plain.ok) throw new Error('expected a valid level');
+    expect(plain.value.antipode).toBe(false);
+    expect(plain.value.wrap).toEqual({ x: false, y: false });
+  });
+
+  it('reads the antipode and wrap headers, alongside mirror', () => {
+    const level = (headers: string) => {
+      const parsed = parseLevel(`name: x\n${headers}\nz=0\n....\n....\n@..X\n####`);
+      if (!parsed.ok) throw new Error(`expected a valid level: ${parsed.error.map((e) => e.message).join(', ')}`);
+      return parsed.value;
+    };
+    expect(level('antipode: true\nmirror: true')).toMatchObject({ antipode: true, mirror: true });
+    expect(level('antipode: false').antipode).toBe(false);
+    expect(level('wrap: x').wrap).toEqual({ x: true, y: false });
+    expect(level('wrap: y').wrap).toEqual({ x: false, y: true });
+    expect(level('wrap: xy').wrap).toEqual({ x: true, y: true });
+  });
+
+  it.each([
+    ['an antipode header that is not a boolean', 'name: x\nantipode: yes\nz=0\n@.X\n###', 'antipode must be true or false'],
+    ['a wrap along depth', 'name: x\nwrap: z\nz=0\n@..X\n####', 'wrap must be x, y or xy'],
+    ['an empty wrap', 'name: x\nwrap:\nz=0\n@..X\n####', 'wrap must be x, y or xy'],
+    ['a wrapped x shorter than four cells', 'name: x\nwrap: x\nz=0\n...\n...\n@.X\n###', 'at least 4 cells wide, this one is 3'],
+    ['a wrapped y shorter than four cells', 'name: x\nwrap: xy\nz=0\n....\n@..X\n####', 'at least 4 cells high, this one is 3'],
+    ['ice with an argument', 'name: x\nglyph: % = ice a\nz=0\n@.X\n###', 'Feature "ice" takes no argument'],
+    ['ice that carries something else', 'name: x\nglyph: % = ice + exit\nz=0\n@.X\n##%', 'a block cannot carry other features'],
+    ['a second meaning for i', 'name: x\nglyph: i = block\nz=0\n@.X\n###', 'Glyph "i" is already defined'],
+  ])('rejects %s', (_label, source, expected) => {
+    expect(messages(source).join('\n')).toContain(expected);
+  });
+
+  it('pins a wrap that is too short to the line of its header', () => {
+    const parsed = parseLevel('name: x\nwrap: x\nz=0\n@.X\n###');
+    expect(parsed.ok ? [] : parsed.error.map((e) => e.line)).toEqual([2]);
+  });
+
   it.each([
     ['a missing start', 'name: x\nz=0\n..X\n###', 'exactly one player start'],
     ['a missing exit', 'name: x\nz=0\n@..\n###', 'at least one exit'],

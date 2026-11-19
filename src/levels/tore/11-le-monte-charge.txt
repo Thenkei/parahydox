@@ -1,0 +1,17 @@
+; La plaque est sur un toit que rien n'atteint. Mais une caisse poussée dans le vide revient par le ciel et se pose sur ce qu'il y a dessous : le premier trou la monte sur la passerelle, le bout de la passerelle la monte sur le toit.
+name: Le monte-charge
+world: 16
+wrap: y
+tip: Une caisse qui tombe revient par le ciel, comme toi, et se pose sur ce qu'elle trouve dessous.
+hint: Pousse la caisse dans le premier trou : elle retombe sur la passerelle. Suis-la, descends derrière elle et pousse-la au bout de la passerelle : elle tombe par le second trou et retombe sur la plaque du toit. Redescends et passe la porte.
+tape: R60 _30 L14 _6 R220
+
+z=0
+#.................#
+#.......a...#.....#
+#.......#...#.....#
+#...........#.....#
+#..#####....#.....#
+#...........#.....#
+#@.o........A...X.#
+####.###.##########

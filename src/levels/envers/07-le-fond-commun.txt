@@ -1,0 +1,22 @@
+; En profondeur, ↑ et ↓ vous mènent tous deux du même côté : seuls les murs diffèrent. Le plafond de devant s'ouvre là où ton sol du fond s'effondre, puis l'inverse : pour vous séparer, appuie-toi contre un pilier qui n'arrête que toi, une fois pour l'envoyer au fond, une fois pour le faire revenir.
+name: Le fond commun
+world: 17
+clones: 1
+antipode: true
+glyph: S = start + threshold
+tip: Ton seuil est au sol, le sien au plafond. Dépliés, ↑ et ↓ vous emmènent tous les deux en profondeur ; les murs, eux, ne sont pas les mêmes.
+hint: Première course : attends que ton clone soit au plafond, E, avance jusqu'au premier pilier (il est au fond, à côté de toi) et appuie sur ↑ : lui passe au fond, pas toi. Cours jusqu'avant le second pilier, ↑ pour passer au fond à ton tour, avance à côté de ce pilier et appuie sur ↓ : il revient devant, pas toi. Cours jusqu'à la porte. Seconde course : le même trajet, sans les deux appuis.
+tape: D25 E1 R25 U20 R85 U20 R20 D20 R80 | D25 E1 R140 U20 R90
+
+z=0
+######....#########
+.^..............a##
+............##...##
+.S..........##...##
+##############...##
+z=1
+###############..##
+.................#.
+...##............#.
+...##............AX
+######....#########

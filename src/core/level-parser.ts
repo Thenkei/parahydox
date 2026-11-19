@@ -23,13 +23,16 @@ import type { Cell, Channel, Level, Size, Vec3, Wire } from './types';
  *   a–d  plate      A–D  door held open by the plate of the same letter
  *   e–h  lever      E–H  door switched by the lever of the same letter
  *   ~  fragile block (crumbles once a character has walked off it)
+ *   i  ice block (no grip: slow to start, slow to stop, and crates pushed on it slide)
  *
  * `glyph:` declares an extra character for a cell that carries several features at once
- * (block, start, exit, anchor, wire, threshold, crate, fragile, plate x, door x, lever x,
- * and gate x: a door that is open by default and shuts while its channel is live).
+ * (block, start, exit, anchor, wire, threshold, crate, fragile, ice, plate x, door x,
+ * lever x, and gate x: a door that is open by default and shuts while its channel is live).
  *
- * Other headers: world, tip, hint, clones, mirror (clones replay left as right), and tape
- * (the intended run, in the notation of src/flow/tape.ts).
+ * Other headers: world, tip, hint, clones, mirror (clones replay left as right), antipode
+ * (true: clones fall upward), wrap (x, y or xy: the grid has no edge along that axis, which
+ * must then be at least 4 cells long; wires never cross the seam), and tape (the intended
+ * run, in the notation of src/flow/tape.ts).
  */
 
 export interface LevelError {
@@ -39,10 +42,12 @@ export interface LevelError {
 }
 
 type Feature =
-  | { readonly kind: 'block' | 'start' | 'exit' | 'anchor' | 'wire' | 'threshold' | 'crate' | 'fragile' }
+  | { readonly kind: 'block' | 'start' | 'exit' | 'anchor' | 'wire' | 'threshold' | 'crate' | 'fragile' | 'ice' }
   | { readonly kind: 'plate' | 'door' | 'gate' | 'lever'; readonly channel: Channel };
 
 const MAX_CLONES = 3;
+/** Across a seam a body feels the nearest copy of everything: a shorter axis would make that ambiguous. */
+const MIN_WRAP = 4;
 const CHANNELS = ['a', 'b', 'c', 'd'] as const;
 const LEVER_CHANNELS = ['e', 'f', 'g', 'h'] as const;
 
@@ -56,6 +61,7 @@ const BUILTIN_GLYPHS: ReadonlyMap<string, readonly Feature[]> = new Map<string, 
   ['^', [{ kind: 'threshold' }]],
   ['o', [{ kind: 'crate' }]],
   ['~', [{ kind: 'fragile' }]],
+  ['i', [{ kind: 'ice' }]],
   ...LEVER_CHANNELS.map((c): [string, readonly Feature[]] => [c, [{ kind: 'lever', channel: c }]]),
   ...LEVER_CHANNELS.map((c): [string, readonly Feature[]] => [c.toUpperCase(), [{ kind: 'door', channel: c }]]),
   ...CHANNELS.map((c): [string, readonly Feature[]] => [c, [{ kind: 'plate', channel: c }]]),
@@ -79,6 +85,7 @@ interface Draft {
   inverted: boolean;
   lever: Channel | null;
   fragile: boolean;
+  ice: boolean;
 }
 
 const emptyDraft = (): Draft => ({
@@ -92,6 +99,7 @@ const emptyDraft = (): Draft => ({
   inverted: false,
   lever: null,
   fragile: false,
+  ice: false,
 });
 
 export function parseLevel(source: string): Result<Level, readonly LevelError[]> {
@@ -104,6 +112,9 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
   let tip: string | null = null;
   let hint: string | null = null;
   let mirror = false;
+  let antipode = false;
+  let wrap = { x: false, y: false };
+  let wrapLine: number | null = null;
   let tape: string | null = null;
   const glyphs = new Map(BUILTIN_GLYPHS);
   const layers: Layer[] = [];
@@ -151,6 +162,17 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
         if (value.trim() !== 'true' && value.trim() !== 'false') fail(line, 'mirror must be true or false');
         else mirror = value.trim() === 'true';
         break;
+      case 'antipode':
+        if (value.trim() !== 'true' && value.trim() !== 'false') fail(line, 'antipode must be true or false');
+        else antipode = value.trim() === 'true';
+        break;
+      case 'wrap':
+        if (!['x', 'y', 'xy'].includes(value.trim())) fail(line, 'wrap must be x, y or xy');
+        else {
+          wrap = { x: value.includes('x'), y: value.includes('y') };
+          wrapLine = line;
+        }
+        break;
       case 'hint':
         hint = value.trim() || null;
         break;
@@ -189,6 +211,8 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
   const first = byZ[0];
   const size: Size = { w: first?.rows[0]?.text.length ?? 0, h: first?.rows.length ?? 0, d: byZ.length };
   if (size.w === 0 || size.h === 0) fail(first?.line ?? null, 'A layer cannot be empty');
+  if (wrap.x && size.w < MIN_WRAP) fail(wrapLine, `wrap: a level that wraps along x must be at least ${MIN_WRAP} cells wide, this one is ${size.w}`);
+  if (wrap.y && size.h < MIN_WRAP) fail(wrapLine, `wrap: a level that wraps along y must be at least ${MIN_WRAP} cells high, this one is ${size.h}`);
   for (const layer of byZ) {
     if (layer.rows.length !== size.h) fail(layer.line, `Layer z=${layer.z} has ${layer.rows.length} rows, expected ${size.h}`);
     for (const row of layer.rows) {
@@ -256,6 +280,10 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
               draft.solid = true;
               draft.fragile = true;
               break;
+            case 'ice':
+              draft.solid = true;
+              draft.ice = true;
+              break;
           }
         }
         if (draft.solid && features.length > 1) fail(row.line, `Glyph "${char}": a block cannot carry other features`);
@@ -292,10 +320,11 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
     inverted: draft.inverted,
     lever: draft.lever,
     fragile: draft.fragile,
+    ice: draft.ice,
     wire: wireRefs.get(i) ?? null,
   }));
 
-  return ok({ name, world, tip, hint, maxClones, mirror, tape, size, cells, start, crates, wires: traced.value, plates });
+  return ok({ name, world, tip, hint, maxClones, mirror, antipode, wrap, tape, size, cells, start, crates, wires: traced.value, plates });
 }
 
 function parseGlyph(value: string): Result<{ char: string; features: readonly Feature[] }, string> {
@@ -313,6 +342,7 @@ function parseGlyph(value: string): Result<{ char: string; features: readonly Fe
       case 'wire':
       case 'threshold':
       case 'crate':
+      case 'ice':
         if (channel !== undefined) return err(`Feature "${kind}" takes no argument`);
         features.push({ kind });
         break;

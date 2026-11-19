@@ -2,8 +2,8 @@
  * The static side of the domain: a level is one immutable 3D grid, and the three
  * "dimensions" are three ways of moving through that same data (see src/flow/physics.ts).
  *
- * Axes: x runs left → right, y runs bottom → top (gravity pulls toward y = 0),
- * z runs from the front plane toward the back.
+ * Axes: x runs left → right, y runs bottom → top (gravity pulls toward y = 0, except on
+ * the clones of an antipode level), z runs from the front plane toward the back.
  */
 
 export type Dim = 1 | 2 | 3;
@@ -38,6 +38,8 @@ export interface Cell {
   readonly lever: Channel | null;
   /** A solid block that crumbles once a character who stood on it has walked away. */
   readonly fragile: boolean;
+  /** A solid block with no grip: whoever has stood on it neither starts nor stops quickly. */
+  readonly ice: boolean;
   readonly wire: WireRef | null;
 }
 
@@ -65,6 +67,10 @@ export interface Level {
   readonly maxClones: number;
   /** Clones are reflections: they replay left as right and right as left. */
   readonly mirror: boolean;
+  /** Clones are antipodes: they fall upward and walk the ceilings. */
+  readonly antipode: boolean;
+  /** Axes along which the grid has no edge: what leaves by one side arrives by the other. Depth never wraps. */
+  readonly wrap: { readonly x: boolean; readonly y: boolean };
   /** The intended run in tape notation (see src/flow/tape.ts): proof that the level can be finished, and the time to beat. */
   readonly tape: string | null;
   readonly size: Size;

@@ -30,7 +30,7 @@ export interface LevelEntry {
   readonly id: string;
   readonly campaign: CampaignId;
   readonly level: Level;
-  /** "2-3": chapter and position within it; "H2-3" in hardcore. */
+  /** "2-3": chapter and position within it; "G2-3" in Le givre, "H2-3" in hardcore. Also what `?level=` accepts. */
   readonly label: string;
 }
 
@@ -46,13 +46,27 @@ export interface CampaignTab {
 
 /** What follows a win, which decides what the card says and where Enter leads. */
 export type WinSequel =
-  | { readonly kind: 'next' }
-  /** This win finished what `campaign` was waiting for. */
-  | { readonly kind: 'unlocked'; readonly campaign: Campaign }
-  /** The last level of its campaign, with `remaining` levels of it still unsolved; `opens` is the campaign waiting behind it. */
-  | { readonly kind: 'end'; readonly remaining: number; readonly opens: Campaign | null };
+  /** The next level of the same campaign. `opened` lists what this win opened on the way: said in one line, without taking the player out of the campaign. */
+  | { readonly kind: 'next'; readonly opened: readonly Campaign[] }
+  /** Nothing follows in this campaign, and this win opened `opened` (never empty): the card is theirs, and Enter shows the first. */
+  | { readonly kind: 'unlocked'; readonly opened: readonly Campaign[] }
+  /**
+   * The last level of its campaign, with `remaining` levels of it still unsolved. `waiting` is the
+   * campaign closest to opening behind it and the solves it lacks; `finished` says the whole game is solved.
+   */
+  | { readonly kind: 'end'; readonly remaining: number; readonly waiting: { readonly campaign: Campaign; readonly missing: number } | null; readonly finished: boolean };
+
+/** What clones are called in a level: the rule they follow is in their name. An antipode that is also a reflection is first of all an antipode. */
+export const cloneWord = (level: Pick<Level, 'mirror' | 'antipode'>): string => (level.antipode ? 'antipode' : level.mirror ? 'reflet' : 'clone');
 
 const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? 'x' : ''}`;
+
+/** "A", "A et B", "A, B et C". */
+const listed = (names: readonly string[]): string => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}`);
+
+/** The line a win card carries when the win opened campaigns and play goes on where it was. */
+export const openedLine = (opened: readonly Campaign[]): string =>
+  `${listed(opened.map((campaign) => campaign.name))} ${opened.length > 1 ? 'sont ouverts' : 'est ouvert'} : Échap pour y aller.`;
 
 export interface PlayStatus {
   readonly dim: Dim;
@@ -120,9 +134,13 @@ export class Hud {
   /** Status of the level being played: where, in which dimension, with how many clones. */
   update(entry: LevelEntry, status: PlayStatus): void {
     const { level } = entry;
-    const other = level.mirror ? 'reflet' : 'clone';
-    // A level played with reflections says so: the clone rule is not the same.
-    this.worldName.textContent = `${entry.label} · ${chapterName(level.world)}${level.mirror ? ' · reflets' : ''}`;
+    const other = cloneWord(level);
+    // A level played with reflections or antipodes says so: the clone rule is not the same.
+    // Unless the chapter is already named after it: "Les antipodes · antipodes" says it twice.
+    const chapter = chapterName(level.world);
+    const rule = level.antipode ? (level.mirror ? 'antipodes en miroir' : 'antipodes') : level.mirror ? 'reflets' : '';
+    const said = rule === '' || chapter.toLowerCase().endsWith(rule);
+    this.worldName.textContent = `${entry.label} · ${chapter}${said ? '' : ` · ${rule}`}`;
     this.levelName.textContent = level.name;
     for (const pip of this.dims.children) {
       const dim = (pip as HTMLElement).dataset.dim;
@@ -166,13 +184,18 @@ export class Hud {
     const [eyebrow, next, extra] = ((): [string, string, string] => {
       switch (sequel.kind) {
         case 'next':
-          return ['Niveau terminé', 'niveau suivant', ''];
-        case 'unlocked':
-          return [`${sequel.campaign.name} débloqué`, `découvrir ${sequel.campaign.name}`, sequel.campaign.pitch];
+          return ['Niveau terminé', 'niveau suivant', sequel.opened.length > 0 ? openedLine(sequel.opened) : ''];
+        case 'unlocked': {
+          const [first, ...others] = sequel.opened;
+          const names = listed(sequel.opened.map((campaign) => campaign.name));
+          // Several at once is a list of names; one alone has room for its pitch.
+          return [`${names} ${others.length > 0 ? 'débloqués' : 'débloqué'}`, `découvrir ${first?.name ?? ''}`, others.length > 0 ? '' : (first?.pitch ?? '')];
+        }
         case 'end': {
-          const left = plural(sequel.remaining, 'niveau');
-          if (sequel.remaining > 0) return ['Dernier niveau terminé', 'retour aux niveaux', sequel.opens === null ? `Encore ${left} à terminer.` : `Encore ${left} à terminer pour ouvrir ${sequel.opens.name}.`];
-          return ['Dernier niveau terminé', 'retour aux niveaux', sequel.opens === null ? 'Il ne reste rien. Vraiment rien.' : ''];
+          if (sequel.remaining === 0) return ['Dernier niveau terminé', 'retour aux niveaux', sequel.finished ? 'Il ne reste rien. Vraiment rien.' : ''];
+          const { waiting } = sequel;
+          const more = waiting === null ? `Encore ${plural(sequel.remaining, 'niveau')} à terminer.` : `Encore ${plural(waiting.missing, 'niveau')} à terminer pour ouvrir ${waiting.campaign.name}.`;
+          return ['Dernier niveau terminé', 'retour aux niveaux', more];
         }
       }
     })();
@@ -186,6 +209,13 @@ export class Hud {
     note.textContent = extra;
     note.hidden = extra === '';
     element('win-next').textContent = next;
+    // Whatever announces a campaign wears its colours: the whole card when it is about nothing else, the one line otherwise.
+    const announced = sequel.kind === 'end' ? undefined : sequel.opened[0]?.id;
+    const wearer = sequel.kind === 'unlocked' ? this.win : note;
+    for (const node of [this.win, note]) {
+      if (node === wearer && announced !== undefined) node.dataset.announces = announced;
+      else delete node.dataset.announces;
+    }
     this.win.classList.toggle('unlock', sequel.kind === 'unlocked');
     this.win.hidden = false;
   }

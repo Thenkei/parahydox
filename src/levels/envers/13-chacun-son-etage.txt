@@ -1,0 +1,18 @@
+; La paire file au-dessus du vide ; au-dessus d'elle flotte un îlot de plafond, sous elle un sol, et la plaque de ton antipode est sous l'îlot. Lâche ← au bon endroit : il continue seul, monte se coller sous l'îlot et court tenir la porte, tandis que tu tombes sur ton sol, juste à côté. Trop tôt, il s'envole ; trop tard, il dépasse l'îlot et s'envole aussi.
+name: Chacun son étage
+world: 18
+clones: 1
+antipode: true
+tip: Lâche ta touche et ton antipode, qui continue, te quitte : il remonte vers son plafond, tu retombes vers ton sol.
+hint: Première course : file à gauche sous la dalle et garde ← enfoncé sept secondes. Seconde course : ouvre la trappe sans lâcher ←, puis lâche ← quand vous passez au-dessus du sol, un peu avant l'îlot : il monte dessous et va sur sa plaque, tu tombes. Va à la porte.
+tape: L420 | R30 RJ14 _10 LJ20 L40 LJ14 L103 _60 L120
+
+z=0
+####..........##########
+####..........#........#
+####...###....#........#
+####..#b......#a.......#
+####...........AA##....#
+#.XB...........A#####..#
+#############.#.....@.##
+#############.##########

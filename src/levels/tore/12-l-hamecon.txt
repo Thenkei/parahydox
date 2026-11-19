@@ -1,0 +1,21 @@
+; Le sol de la salle est la rangée du haut, où court le fil : qui sort par le bord droit tombe aussitôt dans l'ancre, et E l'attrape au vol. La barrière du fil tient à une plaque que seule une chute dirigée atteint, et la plaque de la porte est au bout du fil : qui tient l'une ne peut pas prendre l'autre.
+name: L'hameçon
+world: 16
+clones: 1
+wrap: y
+glyph: ! = wire + door a
+glyph: & = anchor + plate b
+tip: Le sol de cette salle est tout en haut, et l'ancre aussi. Tombe par le bord et appuie sur E en passant l'ancre : tu attrapes le fil au vol.
+hint: Première course : tombe par le bord droit, attrape l'ancre avec E et maintiens → contre la barrière, quatre bonnes secondes. Seconde course : tombe sans E en maintenant → pour te poser sur la plaque, et restes-y le temps que ton clone passe la barrière. Au bout du fil, il te tient la porte : cours à la sortie.
+tape: R50 E1 R240 | R72 _40 R110
+
+z=0
+######*===!==&###
+#...........#####
+#...........#...#
+#...........#...#
+#......aa...B.X.#
+#......##########
+#......##########
+#......##########
+#.@....##########

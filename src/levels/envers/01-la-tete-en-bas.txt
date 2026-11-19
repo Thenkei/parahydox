@@ -1,0 +1,15 @@
+; La règle, sans rien d'autre : la plaque est au plafond, hors de portée d'un saut. Le clone qui rejoue la course tombe vers le haut, court sous le plafond et bute contre le linteau, sur la plaque.
+name: La tête en bas
+world: 17
+clones: 1
+antipode: true
+tip: Ici, ton clone tombe vers le haut : il court au plafond. La plaque est pour lui.
+hint: Cours vers la droite jusqu'à la porte, puis rembobine (R). Ton clone monte au plafond, refait ta course là-haut et s'arrête sur la plaque : passe la porte.
+tape: R170 | R215
+
+z=0
+####################
+.........a#....#....
+...............#....
+@..............A..X.
+####################

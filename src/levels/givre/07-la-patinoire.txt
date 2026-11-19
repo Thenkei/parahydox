@@ -1,0 +1,26 @@
+; Rien n'arrête la première caisse dans la colonne de sa plaque : c'est la seconde, poussée d'abord vers l'avant jusqu'à sa dalle de pierre, qui lui sert de butée ; la première file alors de côté contre elle, puis vers le fond, que le volume arrête. Dans un autre ordre, une caisse prend la place de l'autre, ou tombe dans le trou.
+name: La patinoire
+world: 13
+tip: En profondeur aussi, ce qui glisse va tout droit jusqu'à ce que quelque chose l'arrête : un mur, une caisse, la pierre, ou le fond du volume.
+hint: Déplie la profondeur. Va tout au fond, dans le coin de droite, derrière la caisse de droite, et pousse-la vers l'avant : la pierre la garde sur sa plaque. Depuis la dalle de pierre de gauche, pousse l'autre caisse vers la droite : elle bute contre la première. Enfin, depuis l'avant, pousse-la vers le fond.
+tape: R12 _6 E1 R14 U56 R40 D40 L90 D9 R14 _30 D44 R33 U12 _30 D24 L78
+
+z=0
+.##.......
+XBA.@^..##
+##########
+
+z=1
+..........
+###.o...b#
+####iiii##
+
+z=2
+..........
+###.....o#
+###iiiiii#
+
+z=3
+..........
+###....a.#
+###ii.i#i#

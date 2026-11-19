@@ -1,0 +1,19 @@
+; Un reflet la tête en bas, c'est un demi-tour : le couloir tourne autour du départ. Ton trou dans le sol est son trou dans le plafond, ta marche est sa stalactite ; en courant à gauche, tu lui fais faire, à droite, exactement ta course, jusque sous la trappe. Toi, tu n'y arrives que par le dessus.
+name: Le demi-tour
+world: 18
+clones: 1
+mirror: true
+antipode: true
+tip: Ton reflet est aussi la tête en bas : quand tu cours à gauche, il court à droite, au plafond. Ce qui est sous tes pieds d'un côté est au-dessus de sa tête de l'autre.
+hint: Première course : cours à gauche, saute le trou, monte la marche et garde ← enfoncé huit secondes : ton reflet fait la même course, retournée, jusque sous la trappe. Seconde course : refais ce chemin, grimpe au bout, reviens à droite par le dessus en sautant le trou, et cours sur la trappe sans lâcher → ; au bout du vide, saute sur le palier.
+tape: L34 LJ12 L22 LJ12 L420 | L34 LJ12 L22 LJ12 L20 LJ14 L4 RJ16 R120 RJ14 R125 RJ16 R30
+
+z=0
+########################
+#..................#...#
+#..................#...#
+#..#######........a#..X#
+##........####.##AA...##
+####......@......#A...##
+######.####........#..##
+######.###########.#..##
