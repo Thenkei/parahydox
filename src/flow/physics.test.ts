@@ -45,6 +45,12 @@ describe('running and jumping', () => {
     expect((b - a) * 2).toBeLessThan(6);
   });
 
+  it('a tape too long to be a run is refused, not built', () => {
+    expect(parseTape('R999999999').ok).toBe(false);
+    expect(parseTape('R20000 | L20000').ok).toBe(false);
+    expect(parseTape('R600 | L600').ok).toBe(true);
+  });
+
   it('is deterministic: the same tape ends in the same place', () => {
     expect(run(flat, 'R40 RJ20 L30 J8 R12')).toEqual(run(flat, 'R40 RJ20 L30 J8 R12'));
   });

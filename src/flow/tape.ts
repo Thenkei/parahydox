@@ -2,6 +2,9 @@ import { type Result, err, ok } from '../core/result';
 import type { Level } from '../core/types';
 import { type FlowWorld, type FrameInput, IDLE, initialFlow, outcomeOfFlow, stepFlow } from './physics';
 
+/** Ten minutes of play: far beyond any run, small enough to hold in memory. */
+const MAX_TAPE_FRAMES = 60 * 600;
+
 /**
  * A run written down: what is held, and for how many frames.
  *
@@ -16,6 +19,7 @@ import { type FlowWorld, type FrameInput, IDLE, initialFlow, outcomeOfFlow, step
  */
 export function parseTape(text: string): Result<FrameInput[][], string> {
   const loops: FrameInput[][] = [[]];
+  let total = 0;
   for (const token of text.split(/\s+/).filter((t) => t !== '')) {
     if (token === '|') {
       loops.push([]);
@@ -30,6 +34,9 @@ export function parseTape(text: string): Result<FrameInput[][], string> {
       jump: keys.includes('J'),
       shift: keys.includes('E'),
     };
+    // A tape can come from a URL: refuse one long enough to hang the page instead of building it.
+    total += Number(match[2]);
+    if (total > MAX_TAPE_FRAMES) return err(`Tape longer than ${MAX_TAPE_FRAMES} frames`);
     const current = loops[loops.length - 1];
     for (let i = 0; i < Number(match[2]); i++) current?.push(input);
   }
