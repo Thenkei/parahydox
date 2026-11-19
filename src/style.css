@@ -169,142 +169,6 @@ kbd {
   white-space: nowrap;
 }
 
-/* The timeline: one row per tape, every row on the same steps, so a column is a moment. */
-.tapes {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.tape {
-  display: grid;
-  grid-template-columns: 62px 34px repeat(22, 19px);
-  align-items: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--clone);
-}
-
-.tape.player {
-  color: var(--player);
-}
-
-.tape.ruler {
-  color: var(--paper);
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.tape.ruler .tape-label {
-  opacity: 0.8;
-}
-
-.mark {
-  height: 12px;
-  overflow: visible;
-  opacity: 0.6;
-  line-height: 12px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* A tick on every fifth step, so that a run of waits can be counted at a glance. */
-.mark.numbered {
-  border-right: 1px solid rgba(255, 248, 234, 0.35);
-  padding-right: 2px;
-  text-align: right;
-}
-
-.mark.now {
-  color: var(--exit);
-  font-size: 14px;
-  opacity: 1;
-}
-
-.tape-label {
-  white-space: nowrap;
-}
-
-.tape-dim {
-  justify-self: start;
-  padding: 0 5px;
-  border-radius: 6px;
-  background: rgba(255, 248, 234, 0.14);
-  color: var(--paper);
-  font-size: 10px;
-}
-
-.tape-dim.blank {
-  visibility: hidden;
-}
-
-.tape-dim.away {
-  outline: 1px dashed var(--paper);
-  opacity: 0.75;
-}
-
-.key {
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 20px;
-  border-radius: 4px;
-  background: rgba(255, 248, 234, 0.12);
-  color: var(--paper);
-  font-size: 13px;
-  line-height: 1;
-}
-
-.key.wait {
-  font-size: 11px;
-}
-
-.key.idle {
-  background: none;
-}
-
-/* The present, on a tape that has nothing there: the column stays readable. */
-.key.idle.now {
-  box-shadow: inset 0 0 0 1px rgba(255, 248, 234, 0.25);
-}
-
-.key.cursor {
-  background: none;
-  box-shadow: inset 0 0 0 2px var(--player);
-  animation: blink 1.1s steps(2, start) infinite;
-}
-
-.key.done {
-  opacity: 0.5;
-}
-
-.key.ahead {
-  opacity: 0.9;
-}
-
-.key.next {
-  background: currentColor;
-  box-shadow: 0 0 0 2px rgba(255, 248, 234, 0.6);
-  color: var(--ink);
-}
-
-.tape.clone .key.next {
-  background: var(--clone);
-}
-
-.key.lost {
-  background: rgba(255, 107, 107, 0.3);
-  color: #ff8f8f;
-  text-decoration: line-through;
-}
-
-.slice {
-  align-self: center;
-  padding: 0 8px 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.85 !important;
-}
 
 .message {
   align-self: center;
@@ -612,14 +476,6 @@ kbd {
   color: var(--exit);
 }
 
-.clone-bar.miss {
-  animation: miss 0.45s ease-out;
-}
-
-.clone-bar.miss .fill {
-  background: #ff6b6b;
-}
-
 @keyframes miss {
   20% {
     transform: translateX(-4px);
@@ -635,21 +491,4 @@ kbd {
 /* The clock of the attempt, under the action counter. */
 .clock {
   color: var(--wire);
-}
-
-/* The beat of real time: fills up until the world takes a step by itself. */
-.beat {
-  display: block;
-  height: 3px;
-  margin-top: 4px;
-  border-radius: 2px;
-  background: rgba(255, 248, 234, 0.12);
-  overflow: hidden;
-}
-
-.beat span {
-  display: block;
-  width: 0;
-  height: 100%;
-  background: var(--clone);
 }

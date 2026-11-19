@@ -1,9 +1,8 @@
 name: Trois coupes
 world: 2
 tip: Trois coupes, deux fils.
-hint: Replie-toi sur la coupe du fond, traverse par le fil, puis reviens vers l'avant par le second fil.
-clones: 0
-solution: REUUERRERRRRRRERREDDERR
+hint: Replie-toi sur la coupe du fond, traverse par le premier fil, puis reviens vers l'avant par le second.
+tape: R6 _6 E6 U12 RU12 E6 R18 E6 R66 E6 R18 _6 E6 D24 E6 R18 _2
 
 z=0
 ..............

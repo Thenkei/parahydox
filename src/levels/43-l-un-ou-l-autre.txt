@@ -1,0 +1,13 @@
+; Le premier levier ouvre la porte, là-bas, mais ferme la grille juste devant. Il faut le laisser tranquille et prendre le second.
+name: L'un ou l'autre
+world: 6
+glyph: % = gate e
+tip: Une grille est une porte à l'envers : ouverte au repos, fermée quand le levier est basculé.
+hint: Ne touche pas au premier levier : saute par-dessus, passe la grille tant qu'elle est ouverte, et bascule le second.
+tape: R30 RJ6 R132 _2
+
+z=0
+.......#.....#..
+.......%.....E..
+@..e...%..e..E.X
+################

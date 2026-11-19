@@ -1,0 +1,17 @@
+; Le fil est bouché par une caisse. Le clone ne le sait pas : il rejoue ses touches, et si la caisse n'y est plus, il passe.
+name: Le mime sur le fil
+world: 5
+clones: 1
+glyph: % = wire + crate
+tip: Le fil est bouché. Ton clone ne le sait pas.
+hint: Première course : prends le fil, maintiens → très longtemps contre la caisse, puis E, puis → encore. Seconde course : descends, monte l'escalier et pousse la caisse dans le vide ; ton clone finit sa course jusqu'aux plaques. Reviens à la porte.
+tape: R24 E1 R300 E1 R80 | R52 J6 RJ6 _6 RJ6 J6 R12 R60 _6 L330
+
+z=0
+....................#
+.@.*=====%======*.bb#
+####....###.....#####
+.#.....#.............
+.B....##.............
+XB...###.............
+#####################

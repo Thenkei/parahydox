@@ -1,17 +1,16 @@
-; La caisse doit tomber en bas, où elle servira de marche ou de tremplin vers le mur.
+; Sous ce toit on ne saute pas par-dessus la caisse, et elle doit partir vers la droite. Le fil passe par-dessus le toit et dépose derrière elle.
 name: Par-dessus
 world: 1
-tip: Pour pousser, il faut être du bon côté.
-hint: Le fil passe par-dessus la caisse : prends-le pour arriver derrière elle et la pousser dans le vide.
-clones: 0
-solution: ULLRRRRURRRRRR
+tip: Pour pousser, il faut être du bon côté. Et sous ce toit, on ne saute pas.
+hint: Prends le fil de droite : il passe par-dessus le toit et te dépose derrière la caisse. Pousse-la jusqu'au vide, redescends, et pousse-la encore jusqu'au pied du mur : elle te servira de marche.
+tape: R24 E1 U25 L94 D25 E1 R190 _12 L10 LJ24 L6 _6 R150 J6 _6 R6 J6 RJ6 R29
 
 z=0
-=====.......
-=...=.......
-*.o@*.......
-#####.......
-...........X
-.......#####
-.......#####
-############
+..=========..........
+..=#######=..........
+.#*..o..@.*..........
+.##########..........
+...................X.
+.................####
+.................####
+#####################

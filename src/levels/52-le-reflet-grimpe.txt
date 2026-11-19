@@ -1,0 +1,16 @@
+; Le fil monte : un miroir n'inverse ni le haut ni le bas, seulement la gauche et la droite.
+name: Le reflet grimpe
+world: 7
+clones: 1
+mirror: true
+tip: Un miroir n'inverse pas le haut et le bas. Et ton reflet aussi prend les fils.
+hint: Première course, dans l'ordre et en maintenant chaque touche longtemps : →, puis E, puis ↑, puis →, puis E, puis →. Toi, tu piétines contre la porte ; lui prend le fil, monte, et va jusqu'à la plaque.
+tape: R50 E1 U50 R40 E1 R30 _20 | _126 R54
+
+z=0
+#............
+#a*==........
+####=.....#..
+...#=.....A..
+...#*..@..A.X
+#############

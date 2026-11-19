@@ -1,0 +1,17 @@
+; Le levier est au fond d'un puits au bord de la corniche : on y tombe en avançant, on le survole en sautant par-dessus le muret. Le mur au-dessus de la porte monte jusqu'en haut : on ne passe pas par les toits.
+name: Saute-mouton
+world: 6
+clones: 1
+tip: Ton clone a déjà basculé ce levier. Si tu y retombes, tu refermes sa porte.
+hint: Première course : laisse-toi tomber dans le puits, sur le levier, puis va tenir la plaque. Seconde course : saute par-dessus le muret, sans toucher au levier.
+tape: R6 RJ12 R18 _6 R65 _30 | R20 RJ20 R130
+
+z=0
+.......#.......
+.......#.......
+@...#..#.......
+###.#..#.......
+###e...#....#..
+####...E....A..
+####...E.a..A.X
+###############

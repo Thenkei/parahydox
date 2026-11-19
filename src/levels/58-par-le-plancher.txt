@@ -1,0 +1,14 @@
+; La première dalle couvre le vide, la seconde couvre la sortie : il faut la casser, puis revenir tomber dans son trou.
+name: Par le plancher
+world: 8
+tip: Une dalle ne disparaît que derrière toi. La sortie est sous le plancher.
+hint: Passe sur la seconde dalle, fais demi-tour, et laisse-toi tomber dans le trou qu'elle a laissé.
+tape: R48 RJ12 R12 RJ6 _24 R11
+
+z=0
+...........
+@..........
+####~##~###
+####.##..##
+####.##.X##
+####.######

@@ -1,28 +1,27 @@
-; Le mur ne fait deux cases de haut que dans la coupe de devant ; un bloc barre le chemin direct de la caisse.
+; Le mur ne fait deux cases de haut que dans la coupe de devant, où un pilier barre le chemin direct de la caisse. Les couloirs du fond s'arrêtent avant le mur.
 name: Le déménagement
 world: 2
 tip: Une caisse se pousse dans quatre directions.
-hint: Pousse la caisse le long du fond, puis vers l'avant, au pied du mur.
-clones: 0
-solution: REURRRRUDLDRRRR
+hint: Pousse la caisse le long du fond jusqu'au bout du couloir, passe derrière elle et pousse-la vers l'avant, puis jusqu'au pied du mur.
+tape: R8 E1 _4 U14 _6 R84 _4 U12 R11 _4 D24 _12 L16 _4 D16 _4 R100 J6 _6 RJ6 RUJ6 R30
 
 z=0
-.........
-........X
-......###
-@^.#..###
-#########
+.............
+............X
+...#......###
+@^.#......###
+#############
 
 z=1
-.........
-......###
-......###
-..o...###
-#########
+.............
+..........###
+..........###
+..o.......###
+######....###
 
 z=2
-.........
-......###
-......###
-......###
-#########
+.............
+..........###
+..........###
+..........###
+######....###

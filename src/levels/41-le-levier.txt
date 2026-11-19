@@ -1,9 +1,8 @@
 name: Le levier
 world: 6
-tip: Un levier reste basculé.
-hint: Marche sur le levier : la porte reste ouverte derrière toi.
-clones: 0
-solution: RRRRRRRRRR
+tip: Un levier bascule quand on pose le pied dessus, et reste basculé.
+hint: Marche sur le levier : la porte s'ouvre et le reste.
+tape: R112
 
 z=0
 .......#...

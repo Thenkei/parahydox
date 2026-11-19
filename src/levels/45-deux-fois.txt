@@ -1,13 +1,13 @@
-; Un plafond bas au-dessus du levier : impossible de le franchir sur la tête de l'autre.
+; Un plafond bas au-dessus du levier : impossible de le survoler. Le clone le bascule, le joueur le rebascule : il lui faut donc y passer deux fois.
 name: Deux fois
 world: 6
-tip: Ton clone bascule le levier. Toi aussi.
-hint: Laisse ton clone passer la porte, puis marche deux fois sur le levier.
 clones: 1
-solution: .RRRRRRRR|RR..RRRRRRRRRRR
+tip: Sous ce plafond, on ne saute pas : chacun bascule le levier en passant. Ton clone. Toi aussi.
+hint: Première course : passe le levier et va tenir la plaque. Seconde course : après ton clone, marche sur le levier, recule d'un pas, et reviens dessus.
+tape: R89 _30 | RJ6 R6 J12 R36 RJ12 R88
 
 z=0
 ......#....#..
-...#..E....A..
+..###.E....A..
 @..e..E.a..A.X
 ##############

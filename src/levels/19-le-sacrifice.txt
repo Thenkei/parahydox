@@ -1,10 +1,10 @@
 ; Un clone peut aller là d'où l'on ne revient pas : c'est lui qui reste, pas toi.
 name: Le sacrifice
 world: 3
-tip: Qui descend dans ce trou n'en ressort pas.
-hint: La plaque est au fond du trou. Envoie ta première boucle s'y poser, rembobine, et passe sur sa tête.
 clones: 1
-solution: RRR|RRRRRRRRRR
+tip: Qui descend dans ce trou n'en ressort pas. Autant que ce ne soit pas toi.
+hint: Première course : laisse-toi tomber dans le trou, sur la plaque. Seconde course : saute par-dessus le trou et passe la porte.
+tape: R45 _20 | R36 RJ6 R70
 
 z=0
 #.......#...

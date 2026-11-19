@@ -1,0 +1,14 @@
+; Le clone tient la porte au joueur, puis le joueur la tient au clone, dont les touches perdues deviennent une vraie course jusqu'au pied du mur.
+name: Renvoyer l'ascenseur
+world: 5
+clones: 1
+tip: Tiens-lui la porte, il te la tiendra.
+hint: Première course : attends sur la plaque, puis cours contre la porte en maintenant → longtemps. Seconde course : passe la porte pendant qu'il attend, tiens la seconde plaque pour qu'il passe à son tour, puis monte sur sa tête au pied du mur.
+tape: R20 _90 R130 | _66 R48 J6 _12 R30 RJ6 R12 RJ12 R28
+
+z=0
+..............
+......#......X
+......A....###
+.@.a..A.a..###
+##############

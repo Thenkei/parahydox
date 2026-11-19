@@ -1,0 +1,14 @@
+; Une plaque peut se trouver sur un fil : on la tient en s'arrêtant dessus.
+name: Deux fils
+world: 4
+clones: 1
+glyph: ! = wire + door a
+glyph: _ = wire + plate a
+tip: Une plaque peut être enfilée sur un fil. On la tient en s'arrêtant dessus.
+hint: Première course : prends le fil de gauche et arrête-toi sur la plaque. Seconde course : prends celui de droite.
+tape: L6 _6 E6 L41 _30 | _12 R6 _6 E6 R66 E6 R6 _3
+
+z=0
+................
+*=_===*@*==!==*X
+#.....###.....##

@@ -7,7 +7,9 @@ import { type FlowWorld, type FrameInput, IDLE, initialFlow, outcomeOfFlow, step
  *
  *   R30      hold right for 30 frames          RJ12   right and jump together
  *   _20      nothing for 20 frames             E1     change dimension
- *   L R      left, right      U D   deeper, forward (3D)      J   jump      |   rewind
+ *   L R      left, right      U D   the up and down arrows      J   the jump key      |   rewind
+ *
+ * A tape holds keys, not meanings: U jumps in 2D, goes deeper in 3D and follows a wire in 1D.
  *
  * Example: `R40 RJ14 R30 | _20 R90`. Used by the tests to prove a level can be finished,
  * and by the tools to try a level without a keyboard.

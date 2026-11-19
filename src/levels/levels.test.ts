@@ -1,300 +1,146 @@
 import { describe, expect, it } from 'vitest';
-import { vec } from '../core/grid';
-import { cheapestWithOneClone, solveSolo, solveWithOneClone, solveWithOneCloneExact } from '../core/solver';
-import { totalActions } from '../core/session';
-import { play } from '../core/testing';
 import type { Level } from '../core/types';
-import { isDoorClosed, outcomeOf, playerOf } from '../core/world';
+import { outcomeOfFlow, playerOfFlow } from '../flow/physics';
+import { parseTape, runTape } from '../flow/tape';
 import { LEVEL_SOURCES, WORLD_NAMES, loadLevels } from './index';
 
 const levels = loadLevels();
-const entries = levels.map((level, i) => ({ level, id: LEVEL_SOURCES[i]?.id ?? '', n: i + 1 }));
-const table = entries.map((e) => [e.n, e.level.name, e.level] as const);
-
-/** Finds a level by the slug of its file name, so tests survive reordering. */
+const entries = levels.map((level, i) => ({ id: LEVEL_SOURCES[i]?.id ?? '', level }));
 const named = (slug: string): Level => {
-  const found = entries.find((e) => e.id.endsWith(`-${slug}`));
+  const found = entries.find((e) => e.id.endsWith(slug));
   if (!found) throw new Error(`No level "${slug}"`);
   return found.level;
 };
+const loopsOf = (tape: string) => {
+  const parsed = parseTape(tape);
+  if (!parsed.ok) throw new Error(parsed.error);
+  return parsed.value;
+};
+const run = (level: Level, tape: string, settle = 0) => runTape(level, loopsOf(tape), settle).world;
 
-describe('the level set', () => {
-  it('is eight worlds of eight levels, in order', () => {
-    expect(levels).toHaveLength(64);
+describe('the campaign', () => {
+  it('is eight worlds of eight levels, in the order of the files', () => {
     expect(WORLD_NAMES).toHaveLength(8);
-    expect(levels.map((l) => l.world)).toEqual(Array.from({ length: 64 }, (_, i) => Math.floor(i / 8) + 1));
+    expect(levels.map((level) => level.world)).toEqual(WORLD_NAMES.flatMap((_, w) => Array.from({ length: 8 }, () => w + 1)));
   });
 
-  it('gives every level a message, a hint and an intended solution', () => {
-    for (const { level } of entries) {
-      expect(level.tip, level.name).not.toBeNull();
-      expect(level.hint, level.name).not.toBeNull();
-      expect(level.solution, level.name).not.toBeNull();
+  it('gives every level a name of its own, an opening line and a hint', () => {
+    expect(new Set(levels.map((level) => level.name)).size).toBe(levels.length);
+    for (const { id, level } of entries) {
+      expect(level.tip, `${id}: tip`).not.toBeNull();
+      expect(level.hint, `${id}: hint`).not.toBeNull();
     }
   });
 
-  it.each(table)('level %i (%s) is won by its intended solution, in par', (_n, _name, level) => {
-    const state = play(level, level.solution ?? '');
-    expect(outcomeOf(state.world)).toBe('won');
-    expect(level.par).toBe((level.solution ?? '').replace(/[|.]/g, '').length);
-  });
-
-  describe('levels without clones have no shortcut', () => {
-    it.each(table.filter(([, , l]) => l.maxClones === 0))('level %i (%s)', (_n, _name, level) => {
-      expect(solveSolo(level, 80)?.length).toBe(level.par);
-    });
-  });
-
-  describe('levels with clones cannot be finished alone', () => {
-    it.each(table.filter(([, , l]) => l.maxClones > 0))('level %i (%s)', (_n, _name, level) => {
-      expect(solveSolo(level, 45)).toBeNull();
-    });
-  });
-
-  describe('levels built on a lost key press resist a clone that merely runs an errand', () => {
-    const mimes = [
-      'le-relais',
-      'le-coup-de-main',
-      'le-mime',
-      'renvoyer-l-ascenseur',
-      'le-marchepied',
-      'le-saut-de-la-foi',
-      'le-mime-sur-le-fil',
-      'le-mime-croise',
-      'l-aide-memoire',
-      'la-telecommande',
-    ];
-    it.each(mimes)('%s', (slug) => {
-      expect(solveWithOneClone(named(slug))).toBeNull();
-    });
-  });
-
-  describe('levels for two clones cannot be done with one clone on a plain errand', () => {
-    it.each(['le-trio', 'les-trois-postes', 'chacun-son-tour', 'deux-reflets', 'la-caravane'])('%s', (slug) => {
-      expect(named(slug).maxClones).toBe(2);
-      expect(solveWithOneClone(named(slug))).toBeNull();
-    });
+  it('keeps the first two worlds without clones, and reflections for the seventh', () => {
+    for (const level of levels.filter((l) => l.world <= 2)) expect(level.maxClones).toBe(0);
+    for (const level of levels.filter((l) => l.mirror)) expect([7, 8]).toContain(level.world);
+    expect(levels.filter((l) => l.world === 7).every((l) => l.mirror)).toBe(true);
   });
 });
 
-describe('what individual levels are about', () => {
-  it('le bouchon: the crate corks the upper wire until it is pushed off on foot', () => {
-    const level = named('le-bouchon');
-    const corked = play(level, 'RERRRRRRRR');
-    expect(playerOf(corked.world)).toMatchObject({ dim: 1, pos: vec(8, 4, 0) });
-    expect(corked.world.crates).toHaveLength(1);
+describe('every level', () => {
+  it.each(entries.map((e) => [e.id, e.level] as const))('%s is finished by its own run', (_id, level) => {
+    expect(level.tape).not.toBeNull();
+    const loops = loopsOf(level.tape ?? '');
+    // A run never uses more clones than the level lets the player keep.
+    expect(loops.length - 1).toBeLessThanOrEqual(level.maxClones);
+    expect(outcomeOfFlow(runTape(level, loops).world)).toBe('won');
   });
 
-  it('tenir la porte: standing on the clone is not enough to clear the door', () => {
-    const { world } = play(named('tenir-la-porte'), 'RRRRRR|.RRRRRRRRR');
-    expect(playerOf(world).pos).toEqual(vec(7, 2, 0));
-    expect(outcomeOf(world)).toBe('playing');
-  });
-
-  it('le relais: a clone that leaves the first plate too early shuts the player out', () => {
-    const { world } = play(named('le-relais'), 'RRRR|RRRRRRRRRRRRR');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos.x).toBeLessThan(8);
-  });
-
-  it('le croisement: the barrier opens on the very step the clone reaches the plate', () => {
-    const level = named('le-croisement');
-    const barrier = vec(5, 2, 0);
-    const waiting = play(level, 'REUURRRR|RRERR..');
-    expect(isDoorClosed(waiting.world, barrier)).toBe(true);
-    expect(playerOf(play(level, 'R', waiting).world).pos).toEqual(barrier);
-  });
-
-  it('le croisement inverse: the door cannot be climbed over from the clone', () => {
-    // The clone parks against the door; the lintel stops the player on its head.
-    const { world } = play(named('le-croisement-inverse'), 'REUURRRR|R.EUURRRRRRRRR');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos.x).toBeLessThan(6);
-  });
-
-  it('le mime: a clone parked on the first plate does not open the way out', () => {
-    const { world } = play(named('le-mime'), 'RR|...RRRRRRRR');
-    expect(playerOf(world).pos).toEqual(vec(11, 1, 0));
-    expect(outcomeOf(world)).toBe('playing');
-  });
-
-  it('le marchepied: the clone only gets up the wall if the player stands at its foot', () => {
-    const level = named('le-marchepied');
-    expect(play(level, '.RRRRR|LL......').world.actors[0]?.pos).toEqual(vec(6, 1, 0));
-    expect(play(level, '.RRRRR|RRR...').world.actors[0]?.pos).toEqual(vec(8, 3, 0));
-  });
-
-  it('saute-mouton: without the wait, the player lands on the lever and shuts the door', () => {
-    const { world } = play(named('saute-mouton'), 'RRRRRRRRR|RRRRRRRRRRRRRR');
-    expect(outcomeOf(world)).toBe('playing');
-  });
-
-  it('le grand saut: the loop that sends the reflection to its plate ends in the void', () => {
-    const level = named('le-grand-saut');
-    expect(outcomeOf(play(level, 'RR').world)).toBe('fallen');
-    expect(play(level, 'RR|..').world.actors[0]?.pos).toEqual(vec(3, 1, 0));
-  });
-
-  it('le passeur: a clone that does not wait on the slab takes it down behind it', () => {
-    const { world } = play(named('le-passeur'), 'RRRRRR|.RRRRRRRRRR');
-    expect(outcomeOf(world)).not.toBe('won');
+  const withClones = entries.filter((e) => e.level.maxClones > 0);
+  it.each(withClones.map((e) => [e.id, e.level] as const))('%s: the last loop of its run goes nowhere alone', (_id, level) => {
+    const last = loopsOf(level.tape ?? '').at(-1) ?? [];
+    expect(outcomeOfFlow(runTape(level, [last], 120).world)).not.toBe('won');
   });
 });
 
-describe('the exhaustive one-clone search', () => {
-  // Proved by exhaustion, lost keys, waits and hops on a lever included. Earlier versions of
-  // the last two could be finished by one clone that never stopped walking: each door opened
-  // just in time. The plain-errand search above cannot see that kind of solution.
-  // The same proof holds for la-caravane but takes half a minute: it is left to
-  // `npm run solve -- --exact src/levels/62-*.txt`.
-  it.each(['le-trio', 'chacun-son-tour', 'deux-reflets'])('%s: no tape at all lets a single clone do it', (slug) => {
-    expect(solveWithOneCloneExact(named(slug))).toBeNull();
+describe('what the levels are about', () => {
+  it("l'élan: running without jumping ends in the first gap", () => {
+    expect(outcomeOfFlow(run(named('l-elan'), 'R200'))).toBe('fallen');
   });
 
-  it('la caravane: three travellers who simply walk lose the bridge under the second one', () => {
-    // Found by the third playtest when the slabs still had ground under them.
-    const { world } = play(named('la-caravane'), 'RRRRRRR|.RRRRRRRRRR|..RRRRRRRRRRRRRRR');
-    expect(outcomeOf(world)).not.toBe('won');
+  it('le fil: the void is only crossed on the wire', () => {
+    expect(outcomeOfFlow(run(named('03-le-fil'), 'R200'))).toBe('fallen');
   });
 
-  it('la caravane: the clone that went down to the lower plate cannot come back up to the other', () => {
-    // It walks over the upper plate, drops, holds the lower one, then tries to return.
-    const { world } = play(named('la-caravane'), 'RRURRRRRRRRLLLL');
-    expect(playerOf(world).pos).toEqual(vec(10, 1, 0));
+  it('tiens-moi la porte: alone, the door stays shut', () => {
+    const world = run(named('tiens-moi-la-porte'), 'R200');
+    expect(outcomeOfFlow(world)).toBe('playing');
+    expect(playerOfFlow(world).x).toBeLessThan(9);
   });
 
-  it('chacun son tour: hopping on the spot flips the lever again', () => {
-    const { world } = play(named('chacun-son-tour'), 'RRRU.');
-    expect(world.toggled).toEqual([]);
+  it('la courte échelle: two cells cannot be jumped without a head to stand on', () => {
+    const world = run(named('la-courte-echelle'), 'R70 RJ30 RJ1 RJ30 R40', 30);
+    expect(playerOfFlow(world).y).toBeLessThan(2);
   });
 
-  it('le pont de singes: a single clone is enough if it walks on while the player is in the air', () => {
-    const level = named('le-pont-de-singes');
-    expect(solveWithOneCloneExact(level)).toMatchObject({ ticks: 12 });
-    expect(cheapestWithOneClone(level)).toMatchObject({ actions: level.par });
+  it('sous ton ombre: a runner who stops finds the door shut again', () => {
+    const late = run(named('sous-ton-ombre'), 'RJ16 R260 | R40 _120 R200');
+    expect(outcomeOfFlow(late)).toBe('playing');
+    expect(playerOfFlow(late).x).toBeLessThan(7);
   });
 
-  it('le pont de singes: two clones standing still do it too, for two stars', () => {
-    const { world, session } = play(named('le-pont-de-singes'), 'RRERRR|..RRERR|.......RRURRRURRRRR');
-    expect(outcomeOf(world)).toBe('won');
-    expect(totalActions(session)).toBeGreaterThan(named('le-pont-de-singes').par ?? 0);
+  it('le contretemps: a clone that never pauses is gone before the runner reaches the second door', () => {
+    const level = named('le-contretemps');
+    const naive = run(level, 'RJ16 R330 | R420');
+    expect(outcomeOfFlow(naive)).toBe('playing');
+    expect(playerOfFlow(naive).x).toBeLessThan(17);
+    // Any reasonable pause between the two pairs of plates is enough.
+    for (const pause of [25, 45, 70]) expect(outcomeOfFlow(run(level, `RJ16 R150 _${pause} R200 | R420`))).toBe('won');
   });
 
-  it('la télécommande: the tape that works begins by going down the pit', () => {
-    const found = solveWithOneCloneExact(named('la-telecommande'));
-    expect(found).not.toBeNull();
-    expect(found).not.toBe('too large');
-    if (found !== null && found !== 'too large') expect(found.first.replace(/^\.+/, '').startsWith('L')).toBe(true);
+  it('le mime: the keys lost against a shut door carry the clone through once it is held open', () => {
+    const level = named('33-le-mime');
+    // Alone, the long press ends against the door.
+    expect(playerOfFlow(run(level, 'R150')).x).toBeLessThan(8);
+    // Replayed while the plate is held, the same press ends on the far plates.
+    const replayed = run(level, 'R150 | R22 _140');
+    expect(replayed.bodies[0]?.x).toBeGreaterThan(11);
   });
 
-  it('le sacrifice: nothing shorter than sending the clone down and walking over it', () => {
-    const found = solveWithOneCloneExact(named('le-sacrifice'));
-    expect(found).toMatchObject({ ticks: 10 });
-  });
-});
-
-describe('three stars stand for the best score there is', () => {
-  // Exhaustive search over both loops, waits free. Run on every one-clone level with
-  // `npm run solve -- --cheapest`; a few quick ones are pinned here.
-  it.each(['tenir-la-porte', 'le-coup-de-main', 'le-mime', 'le-marchepied', 'la-telecommande'])('%s', (slug) => {
-    const level = named(slug);
-    expect(cheapestWithOneClone(level)).toMatchObject({ actions: level.par });
-  });
-});
-
-describe('levels reworked after the second playtest', () => {
-  it('la bonne coupe: the middle slice has a gap of two, and jumping it ends in the void', () => {
-    expect(outcomeOf(play(named('la-bonne-coupe'), 'RERUERURR').world)).toBe('fallen');
+  it('le portier: flipping the lever back too early shuts the door on the runner', () => {
+    const world = run(named('le-portier'), 'RJ16 R36 _5 R9 _6 L9 _10 | R400');
+    expect(outcomeOfFlow(world)).toBe('playing');
+    expect(playerOfFlow(world).x).toBeLessThan(10);
   });
 
-  it('le sacrifice: whoever goes down to the plate stays there', () => {
-    const { world } = play(named('le-sacrifice'), 'RRRRRRLLL');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos).toEqual(vec(4, 1, 0));
+  it('le portier: a lever never flipped back leaves the grille shut', () => {
+    const world = run(named('le-portier'), 'RJ16 R36 _100 | R400');
+    expect(outcomeOfFlow(world)).toBe('playing');
+    expect(playerOfFlow(world).x).toBeLessThan(15);
   });
 
-  it('le pont de singes: one head carries a jump, but the next one ends in the void', () => {
-    expect(outcomeOf(play(named('le-pont-de-singes'), 'RRERR|......RRURRURR').world)).toBe('fallen');
+  it('le miroir: the reflection jumps when the recorder jumps, and falls if the recorder does not', () => {
+    const level = named('le-miroir');
+    expect(run(level, 'R120 | _120').bodies[0]?.status).toBe('fallen');
+    const landed = run(level, 'R31 RJ22 R14 _20 | _120').bodies[0];
+    expect(landed?.status).toBe('active');
+    expect(landed?.x).toBeLessThan(3);
   });
 
-  it('le pont de singes: a second clone that does not wait climbs on the first and loses its keys', () => {
-    const { world } = play(named('le-pont-de-singes'), 'RRERRR|RRERR|.......');
-    expect(world.actors[1]?.dim).toBe(2);
+  it('le reflet grimpe: up is not mirrored, and the keys of a slice ride a wire', () => {
+    const level = named('le-reflet-grimpe');
+    const reflection = run(level, `${(level.tape ?? '').split('|')[0]} | _400`).bodies[0];
+    // The recorder only jumped on the spot against its door; the reflection is up on the ledge.
+    expect(reflection?.y).toBe(4);
+    expect(reflection?.x).toBeLessThan(2);
   });
 
-  it('chacun son tour: jumping off the ledge leaves the lever alone', () => {
-    const { world } = play(named('chacun-son-tour'), 'RRURR');
-    expect(world.toggled).toEqual([]);
-    expect(playerOf(world).pos).toEqual(vec(4, 1, 0));
+  it('les dalles: a slab falls once the runner has left it', () => {
+    expect(run(named('les-dalles'), 'R58 RJ14 R34').broken.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('chacun son tour: two flips are one short for the last door', () => {
-    const { world } = play(named('chacun-son-tour'), '.....RRRRR|RRRRRRRRRRRRRRRRR');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos.x).toBe(14);
+  it('le passeur: the slab is gone for whoever comes after the clone has left it', () => {
+    const level = named('le-passeur');
+    expect(outcomeOfFlow(run(level, 'R43 RJ22 R6 _150 RJ24 R21 _20 | _240 R43 RJ22 R4 _12 RJ24 R260'))).toBe('fallen');
   });
 
-  it('la télécommande: from the pit, every key is lost on the recorder and heard by the reflection', () => {
-    const level = named('la-telecommande');
-    expect(playerOf(play(level, 'LRURRRR').world).pos).toEqual(vec(4, 1, 0));
-    expect(play(level, 'LRURRRR|.......').world.actors[0]?.pos).toEqual(vec(1, 3, 0));
-  });
-
-  it('la télécommande: a first step to the right drops the reflection in the pit', () => {
-    expect(play(named('la-telecommande'), 'RURRR|.....').world.actors[0]?.pos).toEqual(vec(4, 1, 0));
-  });
-});
-
-describe('rules the later worlds lean on', () => {
-  it("l'ancre fragile: crossing on foot drops the anchor slab, and the wire back ends in the void", () => {
+  it("l'ancre fragile: crossing on foot takes the anchor's slab away, and the way back with it", () => {
     const level = named('l-ancre-fragile');
-    expect(outcomeOf(play(level, 'RRRRRRRRLLELLLLLE').world)).toBe('fallen');
-  });
-
-  it('deux reflets: a tower of two reflections does not reach over the lintels', () => {
-    // Found by the two-clone audit when the lintels were one cell high.
-    expect(outcomeOf(play(named('deux-reflets'), '..L|L|RU.RURRRR').world)).not.toBe('won');
-  });
-
-  it('deux reflets: a reflection sent alone to the far plate ends at the bottom of the pit', () => {
-    const { world } = play(named('deux-reflets'), 'RRRR|......');
-    expect(world.actors[0]?.pos).toEqual(vec(3, 1, 0));
-  });
-
-  it('parahydox: walking over both levers shuts the wire again', () => {
-    const { world } = play(named('parahydox'), 'EUUU....RRR.....R|EUUURERRRRREDD');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(world.toggled).toEqual([]);
-    expect(playerOf(world)).toMatchObject({ dim: 1, pos: vec(13, 2, 3) });
-  });
-
-  it('parahydox: without the last step of the reflection, the grille stays shut', () => {
-    const { world } = play(named('parahydox'), 'EUUU....RRR|EUUURERRRURREDDDERR');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos).toEqual(vec(13, 2, 0));
+    const onFoot = run(level, 'R110');
+    expect(onFoot.broken.length).toBeGreaterThanOrEqual(4);
+    expect(outcomeOfFlow(run(level, level.tape ?? ''))).toBe('won');
+    expect(run(level, level.tape ?? '').broken.length).toBeLessThan(2);
   });
 });
-
-describe('the jump is a tool, not a way round', () => {
-  it('la fosse: two cells cannot be jumped without the crate as a springboard', () => {
-    const level = named('la-fosse');
-    // Hop over the crate, then try to jump the pit from its edge.
-    const { world } = play(level, 'RURRURR');
-    expect(outcomeOf(world)).toBe('playing');
-    expect(playerOf(world).pos.y).toBeLessThan(3);
-  });
-
-  it('après toi: the roof is too thick to land on, even from the clone', () => {
-    const { world } = play(named('apres-toi'), 'RR|RRURRRRRRURRRR');
-    expect(outcomeOf(world)).toBe('playing');
-  });
-
-  it('le saut de la foi: the recorded jump fails alone and carries from the player\'s head', () => {
-    const level = named('le-saut-de-la-foi');
-    const alone = play(level, '.RRRURRRR');
-    expect(playerOf(alone.world).pos).toEqual(vec(7, 1, 0));
-    const carried = play(level, '.RRRURRRR|RRR......');
-    expect(carried.world.actors[0]?.pos).toEqual(vec(10, 3, 0));
-  });
-});
-

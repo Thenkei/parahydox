@@ -1,0 +1,12 @@
+; En 2D le vide est bien trop large. Le fil, lui, ignore la gravité.
+name: Le fil
+world: 1
+tip: Le losange est une ancre : E pour entrer dans le fil, les flèches pour le suivre, E sur l'autre ancre pour en sortir.
+hint: Arrête-toi sur le losange, appuie sur E, maintiens → jusqu'à l'autre losange, puis E à nouveau.
+tape: R30 _6 E6 R90 E6 R30 _1
+
+z=0
+#...............
+#@..*=======*..X
+#####.......####
+#####.......####

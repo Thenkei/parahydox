@@ -1,13 +1,13 @@
 name: La courte échelle
 world: 3
-tip: Ce mur est trop haut pour toi seul. Marcher contre un clone, c'est lui monter dessus.
-hint: Un clone immobile au pied du mur fait une bonne marche.
 clones: 1
-solution: RRRR|RRRRRRRRR
+tip: Deux cases de haut : trop pour un saut. Une tête fait une bonne marche.
+hint: Laisse ton clone au pied du mur. Saute sur sa tête, puis de sa tête sur le mur.
+tape: R100 | _40 R62 RJ20 _10 RJ26 R70
 
 z=0
-...........
-#.........X
-#.....#####
-#@....#####
-###########
+..............
+.............X
+........######
+@.......######
+##############

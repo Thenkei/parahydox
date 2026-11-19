@@ -1,0 +1,15 @@
+; Le clone sert d'abord de marche, puis va tenir la plaque : deux gestes dans une seule course.
+name: Le coup de main
+world: 3
+clones: 1
+tip: Un clone peut faire deux choses, l'une après l'autre.
+hint: Première course : va au pied du mur, attends deux bonnes secondes, puis reviens te poser sur la plaque. Seconde course : monte par la tête de ton clone avant qu'il ne reparte, et attends en haut qu'il ouvre la porte.
+tape: R20 _100 L38 _10 | _84 RJ6 _6 RJ6 J6 R24 RJ6 J6 R12 RJ6 R30
+
+z=0
+.........#...
+.........A...
+.........A..X
+......#######
+..a.@.#######
+#############

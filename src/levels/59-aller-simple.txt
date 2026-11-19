@@ -1,0 +1,14 @@
+; Le pont de dalles ne sert qu'à l'aller : sous son toit on ne saute pas, chaque dalle est donc foulée et tombe. Le retour se fait par le fil.
+name: Aller simple
+world: 8
+tip: Le pont ne servira qu'une fois.
+hint: Traverse le pont, bascule le levier, et reviens par le fil : il te dépose en haut du pilier, du bon côté.
+tape: R90 _6 L18 E6 U36 L66 E6 L12 _12 L23
+
+z=0
+.#...........
+.#.*======...
+.#.#.....=...
+.E...####=...
+XE.@.....*.e.
+#####~~~~####

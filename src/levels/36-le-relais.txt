@@ -1,0 +1,13 @@
+; Deux portes l'une après l'autre, deux plaques, un seul clone : il change de poste pendant que le joueur attend entre les deux.
+name: Le relais
+world: 5
+clones: 1
+tip: Deux portes, deux plaques, un seul clone : il devra changer de poste au bon moment.
+hint: Première course : attends deux secondes sur la première plaque, puis va te poser sur la seconde. Seconde course : passe la première porte tant qu'il la tient, et attends devant la seconde.
+tape: R20 _90 R22 _30 | _24 R149
+
+z=0
+#.......#..#...
+#.......A..B...
+#@.a.b..A..B..X
+###############

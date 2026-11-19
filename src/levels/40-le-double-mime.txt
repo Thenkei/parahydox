@@ -1,0 +1,16 @@
+; Les deux portes ne s'ouvrent que si quelqu'un reste sur la plaque du milieu, et ce quelqu'un doit ensuite prendre le fil : ce ne peut être que le joueur. Les deux clones doivent donc avoir couru contre des portes fermées.
+name: Le double mime
+world: 5
+clones: 2
+glyph: ! = wire + door b
+glyph: ? = wire + door c
+tip: Deux portes pour une plaque, deux barrières sur le fil, et quelqu'un doit pourtant repartir de la plaque.
+hint: Première course : cours contre la porte de droite, longtemps. Deuxième : contre celle de gauche. Troisième : tiens la plaque du milieu jusqu'à ce que tes deux clones soient au bout, puis prends le fil.
+tape: R150 | L150 | L10 _110 R18 E6 U36 R12 E6 R6 _3
+
+z=0
+..........=*X......
+....#.....?##.#....
+#...A.....!...A...#
+#cc.A...a@*...A.bb#
+###################

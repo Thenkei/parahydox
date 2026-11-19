@@ -1,0 +1,15 @@
+name: Le contretemps
+world: 3
+clones: 1
+tip: Deux étages à descendre, deux portes, et ton clone court toujours aussi vite.
+hint: Chaque chute te fait perdre du temps que ton clone, en haut, ne perd pas. Dans ta première course, arrête-toi un instant entre les deux paires de plaques : tu te laisses ainsi le temps d'arriver à la seconde porte.
+tape: RJ16 R150 _45 R200 | R420
+
+z=0
+.......................#
+@.......aa......bb.....#
+#.######################
+.......A................
+###########.############
+.................B.....X
+########################

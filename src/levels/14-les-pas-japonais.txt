@@ -1,0 +1,21 @@
+; Neuf cases de vide dans la coupe de devant. Dans le volume, des pierres décalées en profondeur.
+name: Les pas japonais
+world: 2
+tip: En 3D, on saute avec Espace, et on vise avec les quatre flèches.
+hint: Déplie la profondeur et saute de pierre en pierre : la première est derrière, la suivante plus au fond, puis reviens vers l'avant.
+tape: R18 E6 R12 U6 R6 RUJ6 R30 RJ12 R6 RU6 R12 RJ12 R12 DJ6 RD6 R12
+
+z=0
+..............
+@^...........X
+###.........##
+
+z=1
+..............
+..............
+###..#....#.##
+
+z=2
+..............
+..............
+###....##...##

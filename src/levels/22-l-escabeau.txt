@@ -1,0 +1,15 @@
+; Trois cases de haut : une caisse, puis une tête, puis un saut.
+name: L'escabeau
+world: 3
+clones: 1
+tip: Trois cases de haut. Une caisse, un clone, et toi.
+hint: Première course : pousse la caisse au pied du mur et monte dessus. Seconde course : saute sur la caisse, puis sur la tête de ton clone, puis sur le mur.
+tape: R100 J6 _6 R6 _20 | _36 R42 RJ6 R6 _6 J6 R6 RJ12 R52
+
+z=0
+............
+...........X
+.......#####
+.......#####
+@..o...#####
+############

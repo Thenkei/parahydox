@@ -1,17 +1,14 @@
+; Ce qui tombe d'en haut sert en bas : la caisse du balcon devient la marche du mur de droite.
 name: Le va-et-vient
 world: 1
 tip: Ce qui tombe d'en haut peut servir en bas.
-hint: Traverse en bas, monte l'escalier, reviens par le fil du haut et pousse la caisse au pied du mur.
-clones: 0
-solution: RRRRERRRRRERRRRRELLLLLLLLLLLELLLLLL
+hint: Monte par le fil, pousse la caisse du balcon dans le vide, redescends, et pousse-la jusqu'au pied du grand mur.
+tape: L12 E1 U36 R60 E1 R87 _6 L12 LJ6 J6 RJ12 R60 J6 R24 RJ12 R18 J3
 
 z=0
-..................
-....o.*==========*
-...####..........#
-................##
-X..............###
-##............####
-##.@...*====*#####
-########....######
-########....######
+....................
+.=====*.o...........
+.=....####.......X..
+.=..............####
+.*@.............####
+####################

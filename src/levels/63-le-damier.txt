@@ -1,25 +1,22 @@
+; Sept cases de vide dans la coupe de devant. Dans le volume, un chemin de dalles en zigzag qui s'effondre derrière soi.
 name: Le damier
 world: 8
-tip: Tout le sol est fragile.
-hint: Passe par le levier sans jamais revenir sur tes pas.
-clones: 0
 glyph: $ = start + threshold
-solution: ERRUURRDRRU
+tip: Tout ce chemin est fragile, et il zigzague dans la profondeur.
+hint: Déplie, et cours sans t'arrêter : vers le fond en diagonale, puis reviens vers l'avant. Espace saute les coins.
+tape: E1 _3 R30 RU14 R22 RU14 R34 RD14 R30 D6
 
 z=0
-.......
-.......
-$......
-#~~~~~#
+..............
+$............X
+##~~~.......##
 
 z=1
-......#
-......E
-......E
-..~.~~#
+..............
+..............
+....~~~~..~~~.
 
 z=2
-.......
-.....#.
-..e..#X
-.~~~~##
+..............
+..............
+.......~~~~...

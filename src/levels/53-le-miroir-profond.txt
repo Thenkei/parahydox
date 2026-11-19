@@ -1,0 +1,27 @@
+; La profondeur non plus n'est pas inversée : le reflet s'enfonce avec toi, puis part de l'autre côté. Les murs de la porte traversent toute la profondeur.
+name: Le miroir profond
+world: 7
+clones: 1
+mirror: true
+glyph: $ = start + threshold
+tip: Un miroir a-t-il une profondeur ?
+hint: Déplie, cours au fond, puis vers la porte. Ton reflet s'enfonce avec toi et part de l'autre côté, vers la plaque. Refais la même course : la porte s'ouvre quand il y arrive.
+tape: E1 _3 U30 R40 _20 | E1 _3 U30 R120
+
+z=0
+.......#.
+.......#.
+....$..#.
+...###...
+
+z=1
+.......#.
+.......#.
+.......#.
+...###...
+
+z=2
+.#.....#.
+.#.....A.
+.#a....AX
+#########

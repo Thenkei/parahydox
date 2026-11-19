@@ -1,6 +1,6 @@
 /**
- * Domain model. Everything here is immutable data: the world is one 3D grid plus a list
- * of bodies, and the three "dimensions" are three ways of reading that same data.
+ * The static side of the domain: a level is one immutable 3D grid, and the three
+ * "dimensions" are three ways of moving through that same data (see src/flow/physics.ts).
  *
  * Axes: x runs left → right, y runs bottom → top (gravity pulls toward y = 0),
  * z runs from the front plane toward the back.
@@ -13,19 +13,6 @@ export interface Vec3 {
   readonly y: number;
   readonly z: number;
 }
-
-/** Screen-relative directions. What they mean in the world depends on the actor's dimension. */
-export type Dir = 'left' | 'right' | 'up' | 'down';
-
-export type Input =
-  | { readonly kind: 'move'; readonly dir: Dir }
-  /** `held` marks a wait slipped into a clone's tape afterwards, when the player held the clones back. */
-  | { readonly kind: 'wait'; readonly held?: boolean }
-  /** Change dimension on an anchor (2D ↔ 1D) or a threshold (2D ↔ 3D). */
-  | { readonly kind: 'shift' };
-
-/** One loop: the inputs of a single run, indexed by step. */
-export type InputLog = readonly Input[];
 
 /** Links plates to doors: plate `a` drives door `a`. */
 export type Channel = string;
@@ -74,17 +61,11 @@ export interface Level {
   readonly tip: string | null;
   /** A stronger nudge, shown only when the player asks for it; null for none. */
   readonly hint: string | null;
-  /** Actions of the intended solution, all loops included, waits excluded: the bar for a perfect score. */
-  readonly par: number | null;
-  /** The intended solution in script notation, kept with the level so tests can replay it. */
-  readonly solution: string | null;
   /** How many past loops can coexist with the player. */
   readonly maxClones: number;
   /** Clones are reflections: they replay left as right and right as left. */
   readonly mirror: boolean;
-  /** Played with continuous movement (src/flow) instead of one cell per key. */
-  readonly flow: boolean;
-  /** For a flow level, the intended run in tape notation (see src/flow/tape.ts). */
+  /** The intended run in tape notation (see src/flow/tape.ts): proof that the level can be finished, and the time to beat. */
   readonly tape: string | null;
   readonly size: Size;
   /** Flat array, see `cellIndex`. */
@@ -94,35 +75,3 @@ export interface Level {
   readonly wires: readonly Wire[];
   readonly plates: ReadonlyMap<Channel, readonly Vec3[]>;
 }
-
-export type ActorStatus = 'active' | 'fallen' | 'exited';
-
-export interface Actor {
-  readonly id: number;
-  readonly role: 'player' | 'clone';
-  readonly pos: Vec3;
-  readonly dim: Dim;
-  readonly status: ActorStatus;
-  /** Moves left in the air after a jump; 0 when on the ground. Gravity waits while it lasts. */
-  readonly air: number;
-}
-
-export interface Crate {
-  readonly id: number;
-  readonly pos: Vec3;
-}
-
-export interface World {
-  readonly level: Level;
-  /** Step counter of the current loop. */
-  readonly tick: number;
-  /** Clones from oldest to newest, then the player. This is also the acting order. */
-  readonly actors: readonly Actor[];
-  readonly crates: readonly Crate[];
-  /** Channels switched on by levers, sorted. */
-  readonly toggled: readonly Channel[];
-  /** Cell indices of fragile blocks that have crumbled, sorted. */
-  readonly broken: readonly number[];
-}
-
-export type Outcome = 'playing' | 'won' | 'fallen';

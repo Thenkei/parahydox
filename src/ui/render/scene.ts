@@ -1,6 +1,5 @@
 import { cellAt, cellIndex, vec } from '../../core/grid';
-import type { Cell, Level, Vec3, World } from '../../core/types';
-import { isPlatePressed, isSolid, isWall, playerOf } from '../../core/world';
+import type { Cell, Channel, Dim, Level, Vec3 } from '../../core/types';
 import type { TileSet } from '../assets';
 import { COLORS, type Theme, channelColor } from '../themes';
 import { type Camera, DEPTH_X, DEPTH_Y, type Point, layerAlpha, project } from './camera';
@@ -33,10 +32,30 @@ interface Segment {
   readonly layer: number;
 }
 
+/** The moment being drawn, reduced to what the scene reads: who is where, and what is switched. */
+export interface SceneView {
+  readonly level: Level;
+  readonly hero: { readonly dim: Dim; readonly cell: Vec3 };
+  /** Cells of the bodies still standing, by id: a shadow can fall on them. */
+  readonly bodies: readonly { readonly id: number; readonly cell: Vec3 }[];
+  readonly crates: readonly Vec3[];
+  readonly toggled: readonly Channel[];
+  /** Channels live right now: a held plate lights up. */
+  readonly live: ReadonlySet<Channel>;
+  /** Cell indices of the slabs that have crumbled. */
+  readonly broken: ReadonlySet<number>;
+}
+
+/** Terrain that is still there: a fragile slab stops being solid once it has crumbled. */
+function isSolid(view: SceneView, p: Vec3): boolean {
+  const cell = cellAt(view.level, p);
+  return cell !== null && cell.solid && !(cell.fragile && view.broken.has(cellIndex(view.level.size, p)));
+}
+
 export interface SceneFrame {
   readonly ctx: CanvasRenderingContext2D;
   readonly cam: Camera;
-  readonly world: World;
+  readonly world: SceneView;
   readonly geometry: LevelGeometry;
   readonly tiles: TileSet;
   readonly theme: Theme;
@@ -102,7 +121,7 @@ export function drawScene(frame: SceneFrame): void {
   const { ctx, cam, world, geometry } = frame;
   const { level } = world;
   const { w, h, d } = level.size;
-  const player = playerOf(world);
+  const player = { dim: world.hero.dim, pos: world.hero.cell };
   const focusWire = player.dim === 1 ? (cellAt(level, player.pos)?.wire?.wire ?? null) : null;
   const onFocusWire = (p: Vec3): boolean => focusWire !== null && cellAt(level, p)?.wire?.wire === focusWire;
 
@@ -437,7 +456,7 @@ function drawFeatures(frame: SceneFrame, cell: Cell, x: number, y: number, z: nu
 
   if (cell.plate !== null && !wireOnly) {
     const color = channelColor(cell.plate);
-    const pressed = isPlatePressed(world, cell.plate);
+    const pressed = world.live.has(cell.plate);
     const thick = pressed ? 0.035 : 0.11;
     const front = project(cam, x + 0.12, y + thick, z + 0.14);
     if (pressed) glow(ctx, feet.x, feet.y, c * 0.75, color, 0.5);
@@ -744,8 +763,9 @@ function drawDropShadow(frame: SceneFrame, pose: ActorPose, feet: Point): void {
   let ground: number | null = null;
   for (let y = Math.floor(pose.y + 0.5) - 1; y >= 0; y--) {
     const below = vec(x, y, z);
-    const body = world.actors.some((a) => a.id !== pose.id && a.status === 'active' && a.pos.x === x && a.pos.y === y && a.pos.z === z);
-    if (isWall(world, below) || body || world.crates.some((k) => k.pos.x === x && k.pos.y === y && k.pos.z === z)) {
+    const body = world.bodies.some((a) => a.id !== pose.id && a.cell.x === x && a.cell.y === y && a.cell.z === z);
+    const door = cellAt(world.level, below)?.door != null && frame.doorOpen(cellIndex(world.level.size, below)) < 0.5;
+    if (isSolid(world, below) || door || body || world.crates.some((k) => k.x === x && k.y === y && k.z === z)) {
       ground = y + 1;
       break;
     }
@@ -809,7 +829,7 @@ function drawActor(frame: SceneFrame, pose: ActorPose): void {
   });
 
   // With several clones on stage, each wears its number: the tapes in the HUD use the same.
-  if (pose.role === 'clone' && frame.world.actors.length > 2 && pose.alpha > 0.5) {
+  if (pose.role === 'clone' && frame.world.bodies.length > 2 && pose.alpha > 0.5) {
     const head = project(cam, pose.x + 0.5, pose.y + (onWire ? 0.95 : 1.02), pose.z + 0.5);
     ctx.font = `800 ${Math.round(Math.max(11, c * 0.22))}px ui-rounded, system-ui, sans-serif`;
     ctx.textAlign = 'center';

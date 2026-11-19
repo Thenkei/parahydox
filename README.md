@@ -4,26 +4,26 @@ Un puzzle-platformer où un seul monde se lit de trois façons : en 1D (un fil),
 coupe verticale) ou en 3D (le volume entier). Rembobiner le temps laisse un clone qui
 rejoue tes touches, pas tes déplacements.
 
-64 niveaux au pas en 8 mondes de 8, et un neuvième monde de 12 niveaux en mouvement continu, présenté en premier :
+Tout le jeu se joue en mouvement continu : on court, on saute, et les clones ne t'attendent
+pas. 64 niveaux en 8 mondes de 8 :
 
 | Monde | Idée |
 | --- | --- |
-| 1. Le fil | marcher, grimper, pousser des caisses, traverser en 1D |
-| 2. Le volume | déplier la profondeur, changer de coupe |
-| 3. La boucle | rembobiner : un clone tient une plaque, sert de marche |
+| 1. Le fil | courir, sauter, pousser des caisses, traverser le vide sur un fil |
+| 2. Le volume | déplier la profondeur, changer de coupe, sauter de pierre en pierre |
+| 3. La boucle | rembobiner : un clone tient une plaque, sert de marche, court au-dessus de toi |
 | 4. Le croisement | le clone dans une dimension, toi dans une autre |
-| 5. La divergence | deux clones, et les touches perdues qui deviennent vraies |
+| 5. La divergence | des touches perdues contre une porte qui deviennent une vraie course |
 | 6. Le levier | un état qui reste, et que chaque passage rebascule |
 | 7. Le reflet | des clones qui rejouent tes touches en miroir |
 | 8. L'éphémère | des dalles qui s'effondrent derrière toi |
-| 9. L'élan | le même monde en mouvement continu : courir, sauter, et son clone qui ne t'attend pas |
 
 ## Lancer
 
 ```bash
 npm install
 npm run dev        # serveur de développement
-npm test           # règles, parseur, et les 64 niveaux
+npm test           # la physique, le parseur, et la course prévue de chaque niveau
 npm run build      # typecheck + build statique dans dist/
 npm run check      # typecheck + tests + build : ce que lance le déploiement
 ```
@@ -32,131 +32,81 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 
 | Touche | Action |
 | --- | --- |
-| ← → (ou A D / Q D) | marcher ; maintenir pour avancer en continu |
-| ↑ (ou W / Z) | sauter en 2D ; en 3D, ↑ ↓ avancent dans la profondeur |
-| E, Entrée | changer de dimension, sur une ancre ou un seuil |
-| Espace | attendre un pas |
-| R | rembobiner : la boucle jouée devient un clone |
-| T | retenir les clones d'un pas (autant de fois qu'il faut) |
-| U, Retour arrière, Ctrl/Cmd+Z | annuler (traverse aussi les rembobinages) |
+| ← → (ou A D / Q D) | courir |
+| ↑ (ou W / Z), Espace | sauter ; plus on appuie longtemps, plus le saut porte |
+| ↑ ↓ en 3D | courir vers le fond et vers l'avant (Espace saute) |
+| ← → ↑ ↓ sur un fil | suivre le fil, avec la flèche qui va dans son sens |
+| E, Entrée | changer de dimension : sur une ancre (même en plein saut) ou sur un seuil |
+| R | rembobiner : la course qu'on vient de faire devient un clone |
+| U, Retour arrière | retenter la boucle en gardant les clones |
 | Maj+R | recommencer le niveau, sans clone |
-| H | rappeler la consigne, puis la forme de la solution, puis l'indice |
+| H | rappeler la consigne, puis donner l'indice |
 | Échap | choix du niveau |
-| G | basculer entre temps réel et pas à pas |
 | M | couper ou remettre le son |
-| N / P | niveau suivant / précédent, même verrouillé |
+| N / P | niveau suivant / précédent |
 
-Deux façons de jouer avec les mêmes règles : pas à pas, une touche à la fois, pour
-réfléchir ; ou en maintenant une direction et en tapant ↑ au bon moment, pour courir et
-sauter. Le premier niveau se finit en maintenant → avec un seul saut, à condition de le
-taper avant le bord. Les touches tapées en avance sont mises en file, pas perdues. Une
-direction maintenue contre un mur s'arrête d'elle-même, et un saut est toujours une
-frappe : maintenir ↑ ne le répète pas.
-
-Par défaut le jeu est en **temps réel** : tant qu'un clone a encore des touches à jouer,
-ou que le héros est en l'air, le monde avance d'un pas tout seul dès que tu ne presses
-rien pendant 0,35 s (0,65 s pour un saut quand personne d'autre ne bouge). Une barre sous
-le compteur montre ce battement. Les clones n'attendent pas, un saut ne plane pas. Tant
-que rien n'est en mouvement (première boucle, ou avant ta première touche), le monde
-t'attend, et il se remet en pause après chaque annulation : on réfléchit à l'arrêt, on
-exécute en mouvement. **G** passe en **pas à pas** (le monde
-n'avance que sur tes touches) et le choix est retenu ; `?steps` le force dans l'URL.
-
-`?level=1&script=RURR` ouvre un niveau dans une situation donnée (`L R U D`
-déplacements, `.` attendre, `E` changer de dimension, `T` retenir les clones, `|` rembobiner). `?unlock` ouvre
-tous les niveaux.
-
-## Le monde 9 : mouvement continu
-
-Mêmes blocs, mêmes plaques, portes, leviers, dalles et seuils, mais on n'avance plus case
-par case : le héros court (environ cinq cases par seconde), saute à hauteur variable (un
-peu plus d'une case en maintenant la touche, bien moins d'une simple frappe), garde un
-court instant pour sauter après avoir quitté un bord, et une frappe légèrement en avance
-est retenue jusqu'à la réception. Une tête sert de plateforme. Un clone rejoue les touches
-de la course précédente, image par image, et part à ta première touche : il ne t'attend
-pas. Le premier niveau du monde 9 est ouvert dès le départ.
-
-| Touche | Action |
-| --- | --- |
-| ← → | courir ; en 3D, ↑ ↓ courent vers le fond et vers l'avant |
-| ↑ ou Espace | sauter (Espace seulement en 3D) |
-| E | déplier ou replier la profondeur sur un seuil |
-| R | rembobiner : la course devient un clone |
-| U | retenter la boucle en gardant les clones |
-| Maj+R | recommencer le niveau |
-
-La simulation est une fonction pure à pas fixe (60 par seconde), dans `src/flow/` : une
-course rejouée à partir de ses touches est toujours la même course. Chaque niveau porte
-sa course prévue (`tape:`), que les tests rejouent.
-
-```bash
-npm run flow -- src/flow/levels/05-sous-ton-ombre.txt "RJ16 R260 | R330" 10   # essayer une bande
-```
+Une boucle part à ta première touche, et tes clones avec elle. Une chute dans le vide
+relance la boucle, clones conservés. `?level=12` ouvre un niveau, `?unlock` les ouvre tous,
+`?level=12&demo` fait jouer au jeu la course prévue du niveau.
 
 ## Règles
 
-- **2D** : gauche, droite, gravité. Une marche d'une case se grimpe (bloc, caisse coincée
-  ou clone) ; deux cases arrêtent. Hors de la grille, il n'y a que du vide.
-- **Saut** (2D seulement) : ↑ élève d'une case et laisse deux pas en l'air. Il franchit un
-  trou d'une case, passe par-dessus une caisse, un clone ou un levier sans les toucher,
-  mais ne passe ni deux cases de vide ni un mur de deux cases. On ne pousse ni ne grimpe
-  en l'air, et porter quelqu'un sur la tête interrompt le saut.
-- **1D** : sur un fil, on suit sa direction et rien ne se contourne. Ni gravité ni vide.
-  On n'entre et on ne sort que par une ancre, depuis la 2D.
-- **3D** : quatre directions au sol. On déplie et replie la profondeur sur un seuil ; se
-  replier sur un autre seuil change de coupe.
-- **Temps** : chaque touche coûte un pas, même si elle ne peut rien faire. Les clones
-  agissent du plus ancien au plus récent, puis le joueur, et la gravité s'applique après
-  chacun. Une touche devenue impossible est perdue, le clone continue.
-- **Corps** : marcher contre un clone, c'est lui monter sur la tête (s'il y a la place).
-  On ne voyage pas sur un clone qui marche : il avance, on retombe où l'on était. En
-  revanche un clone peut avancer sous un saut et se trouver là à la réception.
-- **Retenir** : T glisse une attente dans la bande de chaque clone, à l'instant présent.
-  Rien de ce qui est déjà arrivé ne change ; ce que le clone allait faire arrive un pas
-  plus tard. On enregistre donc un trajet d'une traite et on règle les délais après coup,
-  au lieu de deviner combien de pas la boucle suivante demandera. Attendre ne coûte rien
-  au score ; retenir coûte une action : les trois étoiles vont à la boucle bien prévue.
-- **Plaque et porte** : la porte est ouverte tant que quelque chose pèse sur la plaque.
-- **Levier** : il bascule à chaque fois qu'un personnage arrive dessus (y retomber après
-  un saut sur place compte aussi), et reste dans cet état. Une grille (barreaux horizontaux) est une porte inversée : ouverte au repos.
+- **Corps** : on court à environ cinq cases par seconde. Un saut tenu monte d'un peu plus
+  d'une case : une marche se saute, deux cases sont un mur. On garde un court instant pour
+  sauter après avoir quitté un bord, et un saut demandé un rien trop tôt part à la réception.
+- **Têtes** : une tête est une plateforme, celle d'un clone comme celle d'un voyageur sur
+  un fil. Personne n'est porté : si celui du dessous s'en va, celui du dessus tombe.
+- **Caisses** : on les pousse en marchant contre elles, à demi-vitesse, une à la fois et
+  jamais en l'air. Elles tombent, tiennent une plaque, bouchent un fil, et font une marche
+  de la hauteur d'une tête. En 3D on les pousse dans les quatre directions ; lâchée entre
+  deux coupes, une caisse glisse dans la plus proche.
+- **1D** : sur une ancre, E replie le corps en un point qui glisse le long du fil. Ni
+  gravité ni inertie ; on n'en sort qu'à une ancre. Une barrière enfilée sur le fil
+  n'arrête que celui qui est sur le fil. Sur un fil on ne pèse rien, sauf sur une plaque
+  enfilée dessus.
+- **3D** : sur un seuil, E déplie la profondeur ; s'y replier sur un autre seuil change de
+  coupe. La profondeur s'arrête avec la grille, devant comme derrière.
+- **Clones** : un clone rejoue les touches de sa course, image par image. Ce sont des
+  touches, pas des déplacements ni des intentions : une porte ouverte là où elle était
+  fermée, une marche là où il n'y en avait pas, et la même course mène ailleurs. ↑ saute
+  en 2D, s'enfonce en 3D et monte sur un fil, pour lui comme pour toi.
 - **Reflet** : dans le monde 7, un clone rejoue gauche pour droite et droite pour gauche.
-- **Dalle fragile** : elle tient tant que quelqu'un s'y tient, et tombe quand il la quitte
-  à pied. Une caisse ne la casse pas ; quitter la dalle par un fil non plus.
+  Le haut, le bas et la profondeur ne sont pas inversés.
+- **Plaque et porte** : la porte est ouverte tant que quelque chose pèse sur la plaque, et
+  ne se referme jamais sur quelqu'un.
+- **Levier** : il bascule chaque fois qu'un personnage y pose le pied, et reste dans cet
+  état ; le survoler ne fait rien. Une grille (barreaux horizontaux) est une porte
+  inversée : ouverte au repos.
+- **Dalle fragile** : elle tient tant que quelqu'un s'y tient, et tombe quand le dernier
+  l'a quittée à pied. La quitter par un fil ne la casse pas.
+- **Hors de la grille** il n'y a que du vide, et on n'en revient pas.
 
 ## À l'écran
 
-- En haut à droite, la **frise des touches** : une ligne par clone, puis la tienne, toutes
-  sur les mêmes pas, si bien qu'une colonne est un instant. La règle du haut numérote les
-  pas de cinq en cinq et marque le présent. Pour chaque clone : la prochaine touche en
-  surbrillance, les touches perdues en rouge, les attentes ajoutées avec T (‖), et
-  la dimension où il se trouve, même hors de ta coupe.
-- Le compteur affiche les **actions** de toutes les boucles et le seuil des trois étoiles
-  (la solution prévue) ; attendre ne coûte rien.
-- Sous le compteur, le **chrono** de la tentative et le temps à battre pour l'éclair ⚡ :
-  la solution prévue jouée sans hésiter, à peu près deux fois le temps qu'il faut au héros
-  pour l'exécuter. Les étoiles récompensent la réflexion, l'éclair l'exécution.
+- En haut à gauche le niveau, au centre la dimension courante, à droite le nombre de
+  clones en course et le chrono.
+- L'**éclair** ⚡ récompense une victoire dans le temps affiché : la course prévue du
+  niveau, plus une marge pour une main humaine. Le chrono compte toutes les tentatives
+  depuis l'ouverture du niveau ; Maj+R le remet à zéro.
 - La barre du bas dit ce que font les touches ici et maintenant : elle change avec la
-  dimension, et sur un fil chaque sens porte la flèche qui le suit.
-- Un clone retenu avec T porte un signe de pause tant que son attente n'est pas jouée.
-- Depuis un fil, le monde reste visible en transparence, et les clones aussi. En l'air, un
-  personnage flotte au-dessus de sa case, son ombre restée au sol.
+  dimension, et E s'allume quand il y a quelque chose à faire là où l'on se tient.
 
 ## Architecture
 
-- `src/core/` — le modèle, sans DOM. `step(world, inputs)` est une fonction pure ; une
-  session n'est que des logs d'inputs et le monde se déduit en les rejouant.
-- `src/flow/` — le moteur à mouvement continu du monde 9 (`physics.ts`, pur et à pas fixe),
-  la notation des courses (`tape.ts`) et ses niveaux. `src/ui/flow.ts` le joue à l'écran
-  avec la même scène que le jeu au pas.
-- `src/core/solver.ts` — recherches pour la conception : plus courte solution sans clone,
-  solution à un clone qui fait une simple course, et recherche exhaustive à un clone
-  (touches perdues et attentes comprises). Les tests s'en servent pour prouver qu'aucun
-  niveau solo n'a de raccourci et qu'aucun niveau à clones ne se finit seul.
+- `src/core/` — le niveau, sans DOM : la grille, ses types, et le parseur du format texte
+  (décrit en tête de `src/core/level-parser.ts`).
+- `src/flow/physics.ts` — les règles. `stepFlow(world, inputs)` est une fonction pure à
+  pas fixe (60 par seconde) : une course rejouée à partir de ses touches est toujours la
+  même course. `tape.ts` écrit et rejoue des courses (`R40 RJ14 _20 E1 | R90`).
+- `src/flow/search.ts` — outil de conception : cherche une course qui atteint un but, en
+  essayant toutes les façons de tenir les touches. Il trouve les courses prévues et
+  vérifie qu'un niveau à clones ne se finit pas sans clone.
 - `src/levels/` — un fichier texte par niveau, une couche ASCII par valeur de z, avec sa
-  solution prévue (`solution:`). Le format est décrit en tête de `src/core/level-parser.ts`.
-- `src/ui/render/` — Canvas 2D. Une seule projection oblique dont la profondeur se replie :
-  à plat c'est la coupe 2D, dépliée c'est le volume. Changer de dimension déplace la
-  caméra au lieu de changer d'écran.
+  course prévue (`tape:`), que les tests rejouent.
+- `src/ui/` — `game.ts` lit les touches, fait avancer la physique et dessine ; `app.ts`
+  tient les écrans et la progression ; `render/` est le dessin en Canvas 2D : une seule
+  projection oblique dont la profondeur se replie, si bien que changer de dimension
+  déplace la caméra au lieu de changer d'écran.
 - `src/ui/audio.ts` — tout le son est synthétisé (Web Audio).
 - `src/assets/` — ciels et textures de pierre, d'herbe et de caisse générés avec l'outil
   d'image de Codex ; personnages, portes, leviers, fils et effets sont dessinés en code.
@@ -164,15 +114,18 @@ npm run flow -- src/flow/levels/05-sous-ton-ombre.txt "RJ16 R260 | R330" 10   # 
 ## Outils de conception
 
 ```bash
-python3 tools/levels.py -v                       # feuille des 64 niveaux au pas : régénère src/levels et les audite
-python3 tools/playall.py                         # rejoue chaque solution aux vraies touches (serveur preview sur 4317)
-npm run play -- 37 "RR|.RR" [hint]              # joue un niveau en mode texte, coupe par coupe
-npm run solve -- --clone src/levels/37-*.txt    # audite un niveau : solution prévue, raccourcis
-npm run solve -- --exact src/levels/56-*.txt    # recherche exhaustive à un clone (lente en 3D)
-npm run solve -- --cheapest src/levels/56-*.txt # meilleur score possible à un clone
-npm run solve -- --pair src/levels/62-*.txt     # deux clones en simple course : meilleur score
-node tools/drive.mjs "unlock&level=37" play:RR shot:essai   # vraies touches dans Chrome headless
+npm run flow -- src/levels/20-sous-ton-ombre.txt "RJ16 R260 | R330" 10   # jouer une bande et voir où chacun se trouve
+npm run explore -- src/levels/05-la-fosse.txt                            # chercher une course jusqu'à la sortie
+npm run explore -- src/levels/17-*.txt --with "R44 _10" --goal 12,1      # chercher la boucle suivante, jusqu'à une case
+npm run audit                                                            # tous les niveaux : course prévue, et pas de raccourci sans clone
+npm run audit -- --write src/levels/33-*.txt                             # compléter une bande laissée ouverte avec "?"
+node tools/drive.mjs "unlock&level=6&demo" wait:3000 shot:essai          # le vrai jeu dans Chrome headless (serveur preview sur 4317)
 ```
+
+Dans un fichier de niveau, une boucle peut rester ouverte pendant la conception :
+`tape: R44 _10 | ?` demande à l'audit de trouver la seconde boucle, `?@8,1` de trouver une
+course qui s'arrête sur cette case, `?flat` de ne pas déplier la profondeur. La recherche
+arrondit positions et vitesses : « rien trouvé » est un bon indice, pas une preuve.
 
 ## Déploiement
 

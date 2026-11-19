@@ -1,0 +1,12 @@
+name: Tiens-moi la porte
+world: 3
+clones: 1
+tip: R rembobine : ta course précédente repart avec toi.
+hint: Cours jusqu'à la plaque et restes-y. Rembobine, puis traverse pendant que ton clone tient la porte.
+tape: R44 _10 | R170
+
+z=0
+.........#....
+.........A....
+@...a....A...X
+##############

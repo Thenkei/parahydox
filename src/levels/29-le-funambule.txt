@@ -1,28 +1,14 @@
+; Le fil s'arrête au-dessus du vide. Qui en sort tombe ; qui y reste ne tombe pas, et sa tête est une pierre de gué.
 name: Le funambule
 world: 4
-tip: Sur un fil, on tient aussi une plaque.
-hint: Ton clone s'arrête sur la plaque du fil ; toi, tu passes la porte par la profondeur.
 clones: 1
-glyph: _ = wire + plate a
-solution: RRERR|RERUURRRRRRRRRDD
+tip: Ce fil s'arrête au-dessus du vide. Sur un fil, on ne tombe pas : on peut y attendre.
+hint: Première course : va au bout du fil et restes-y. Seconde course : saute du bord sur la tête de ton clone, puis de sa tête jusqu'à l'autre rive.
+tape: R18 _6 E6 R29 _30 | R36 RJ6 R12 L6 R12 RJ12 R59
 
 z=0
-............
-............
-@^*=_=*....X
-###...#..###
-###...#..###
-
-z=1
-............
-............
-............
-###......###
-###......###
-
-z=2
-....#.......
-....A.......
-....A.......
-############
-############
+.............
+.............
+@.*==*......X
+###......####
+###......####
