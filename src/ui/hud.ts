@@ -72,6 +72,7 @@ export interface PlayStatus {
   readonly dim: Dim;
   /** Clones running with the hero right now. */
   readonly loops: number;
+  readonly field: string;
   readonly message: string;
   readonly tone: '' | 'fallen' | 'hint';
   /** What E would do where the hero stands; null when it would do nothing. */
@@ -124,7 +125,9 @@ export class Hud {
     this.tagline.textContent = campaignById(campaign).pitch;
   }
 
-  showScreen(screen: 'title' | 'select' | 'play'): void {
+  showScreen(screen: 'title' | 'select' | 'play' | 'credits'): void {
+    element('credits').hidden = screen !== 'credits';
+    if (screen !== 'play') this.banner.hidden = true;
     this.title.hidden = screen !== 'title';
     this.select.hidden = screen !== 'select';
     this.hud.hidden = screen !== 'play';
@@ -161,6 +164,7 @@ export class Hud {
           : [keyEntry(['←', '→'], 'courir'), keyEntry(['↑', 'Espace'], 'sauter (maintenir : plus haut)')];
     this.keys.replaceChildren(
       ...moves,
+      ...(status.field ? [keyEntry(['B'], status.field, true)] : []),
       keyEntry(['E'], status.action ?? 'dimension', status.action !== null),
       ...(level.maxClones > 0 ? [keyEntry(['R'], `rembobiner → ${other}`)] : []),
       keyEntry(['U'], 'retenter'),

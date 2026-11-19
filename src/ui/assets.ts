@@ -112,6 +112,7 @@ const buildIce = (image: HTMLImageElement): IceSet => ({
 });
 
 const SOURCE_URLS: Readonly<Record<Biome, Readonly<Record<keyof Sources, string>>>> = {
+  hyperspace: { stone: basaltAUrl, stoneRare: marbleBUrl, top: mosaicUrl, crate: crateIronUrl },
   meadow: { stone: stoneAUrl, stoneRare: stoneBUrl, top: grassUrl, crate: crateUrl },
   ember: { stone: basaltAUrl, stoneRare: basaltBUrl, top: emberUrl, crate: crateIronUrl },
   givre: { stone: frostAUrl, stoneRare: frostBUrl, top: snowUrl, crate: crateUrl },

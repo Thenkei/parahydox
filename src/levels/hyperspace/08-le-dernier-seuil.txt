@@ -1,0 +1,17 @@
+name: Le dernier seuil
+world: 19
+gravity: pulse
+clones: 2
+tip: Une ligne de jour traverse le mur. Pour la première fois, rien ne boucle de l’autre côté.
+hint: En bottes, laisse un clone sur la plaque de gauche. Le second passe sa porte au plafond et s’arrête dans la niche au plafond. Traverse en bottes jusqu’à la balise, dépasse la dent suspendue, puis remonte avant le gouffre. Redescends dans la lumière.
+tape: B1 L80 | R150 | B1 R205 _40 B1 R165 B1 _100
+
+z=0
+################################
+#.......A...b#..B....#.........#
+#.......A..###..B....#.........#
+#.......A.......B....#.........#
+#.......A.......B....#......#..#
+#.......A.......B...........#..#
+#a..@...A.......B.+.........#.O#
+######################......####

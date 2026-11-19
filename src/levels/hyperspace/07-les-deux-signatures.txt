@@ -1,0 +1,18 @@
+name: Les deux signatures
+world: 19
+gravity: lift
+clones: 2
+mirror: true
+tip: Deux empreintes, l’une au sol, l’autre au plafond. Dans ce pli, chaque clone repart en miroir.
+hint: Enregistre deux courses à droite pour envoyer tes reflets à gauche. Laisse le premier sans bottes et chausse le second. Passe leurs portes au sol, puis remonte après la dent.
+tape: R100 | B1 R100 | B1 R165 B1 R100
+
+z=0
+#####################
+#a.......A.B..#....X#
+#........A.B..#.....#
+#........A.B..#.....#
+#........A.B..#.....#
+#........A.B........#
+#b...@...A.B+.......#
+#####################

@@ -1,0 +1,15 @@
+name: La dérive verticale
+world: 19
+gravity: lift
+tip: Le dernier fil vient de céder. Sans tes bottes, tu tombes vers le plafond.
+hint: Laisse-toi monter, cours au-dessus du vide, puis presse B au mur de droite pour chausser les bottes et redescendre.
+tape: R160 B1 _60
+
+z=0
+##############
+#............#
+#............#
+#....#.......#
+#....#.......#
+#@...#......X#
+#######....###

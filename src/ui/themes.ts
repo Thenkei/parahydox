@@ -22,7 +22,7 @@ import bgE2 from '../assets/bg-e2.jpg';
  * under a painted sky, basalt and embers under a burnt one, frosted stone under snow,
  * marble under a mosaic, or the meadow again with a second garden hanging beneath it.
  */
-export type Biome = 'meadow' | 'ember' | 'givre' | 'tore' | 'envers';
+export type Biome = 'meadow' | 'ember' | 'givre' | 'tore' | 'envers' | 'hyperspace';
 
 /**
  * How the specks in the air travel. `rise` and `fall` are pollen, embers and ash; `snow` is
@@ -351,6 +351,13 @@ export const THEMES: readonly Theme[] = [
     ceiling: { light: '#ffd35a', dark: '#c0822a' },
     root: 207.65,
   }),
+  {
+    biome: 'hyperspace', background: bg5, stoneTint: '#8778c3', stoneLift: '#211740',
+    grassHue: '#60f2ed', grassTint: '#9affeb', grassLight: '#b1fff1', grassDark: '#358b9c',
+    rockDark: '#201b41', haze: '#8176da', outline: 'rgba(173, 151, 255, 0.72)',
+    metal: '#c5d8ff', ceiling: { light: '#e0b2ff', dark: '#8055a7' }, rim: true,
+    mote: { color: '#9afaff', drift: 1, count: 55 }, root: 138.59, mode: 'minor',
+  },
 ];
 
 export const themeFor = (world: number): Theme => THEMES[(world - 1) % THEMES.length] ?? (THEMES[0] as Theme);

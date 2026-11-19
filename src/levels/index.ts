@@ -1,7 +1,7 @@
 import { formatLevelErrors, parseLevel } from '../core/level-parser';
 import type { Level } from '../core/types';
 
-export type CampaignId = 'main' | 'givre' | 'tore' | 'envers' | 'hardcore';
+export type CampaignId = 'main' | 'givre' | 'tore' | 'envers' | 'hardcore' | 'hyperspace';
 
 /** One folder per campaign; the main one is this folder itself. An empty or missing folder is a campaign without levels yet. */
 const FILES: Readonly<Record<CampaignId, Record<string, string>>> = {
@@ -9,6 +9,7 @@ const FILES: Readonly<Record<CampaignId, Record<string, string>>> = {
   givre: import.meta.glob<string>('./givre/*.txt', { query: '?raw', import: 'default', eager: true }),
   tore: import.meta.glob<string>('./tore/*.txt', { query: '?raw', import: 'default', eager: true }),
   envers: import.meta.glob<string>('./envers/*.txt', { query: '?raw', import: 'default', eager: true }),
+  hyperspace: import.meta.glob<string>('./hyperspace/*.txt', { query: '?raw', import: 'default', eager: true }),
   hardcore: import.meta.glob<string>('./hardcore/*.txt', { query: '?raw', import: 'default', eager: true }),
 };
 
@@ -47,7 +48,7 @@ const chapters = (first: number, names: readonly string[]): Chapter[] => names.m
 
 /**
  * In play order, which is also the order of the tabs. The side campaigns (one new rule each)
- * open along the main one; hardcore, which asks for all of it, comes last. Chapter numbers
+ * open along the main one. Hardcore leads into the final chapter. Chapter numbers
  * say when a campaign was written, not where it is played: hardcore keeps 9 to 12.
  */
 export const CAMPAIGNS: readonly Campaign[] = [
@@ -91,6 +92,14 @@ export const CAMPAIGNS: readonly Campaign[] = [
     // Every level of the main campaign.
     requires: { campaign: 'main', solved: 64 },
     pitch: "Le même monde, à la braise. Trente-deux niveaux d'élite.",
+  },
+  {
+    id: 'hyperspace',
+    name: "L’Hyperspace",
+    tag: 'X',
+    chapters: chapters(19, ['La cinquième dimension']),
+    requires: { campaign: 'hardcore', solved: 32 },
+    pitch: 'Tes traces ont plié le temps. De l’autre côté du pli, une porte donne encore sur le jour.',
   },
 ];
 

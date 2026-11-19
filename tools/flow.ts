@@ -44,7 +44,7 @@ function picture(world: FlowWorld): string {
                 ? 'i'
                 : '#'
             : cell.exit
-              ? 'X'
+              ? cell.reality ? 'O' : 'X'
               : cell.door !== null
                 ? cell.inverted
                   ? '%'
@@ -59,7 +59,7 @@ function picture(world: FlowWorld): string {
                         ? '='
                         : cell.threshold
                           ? '^'
-                          : '.',
+                          : cell.checkpoint ? '+' : '.',
       );
     }
     rows.push(row);

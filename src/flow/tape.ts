@@ -10,7 +10,7 @@ const MAX_TAPE_FRAMES = 60 * 600;
  *
  *   R30      hold right for 30 frames          RJ12   right and jump together
  *   _20      nothing for 20 frames             E1     change dimension
- *   L R      left, right      U D   the up and down arrows      J   the jump key      |   rewind
+ *   L R      left, right      U D   the up and down arrows      J   the jump key      B   toggle boots (one tap per token)      |   rewind
  *
  * A tape holds keys, not meanings: U jumps in 2D, goes deeper in 3D and follows a wire in 1D.
  *
@@ -25,7 +25,7 @@ export function parseTape(text: string): Result<FrameInput[][], string> {
       loops.push([]);
       continue;
     }
-    const match = /^([LRUDJE]*|_)(\d+)$/.exec(token);
+    const match = /^([LRUDJEB]*|_)(\d+)$/.exec(token);
     if (!match) return err(`Unknown tape token "${token}"`);
     const keys = match[1] ?? '';
     const input: FrameInput = {
@@ -38,7 +38,7 @@ export function parseTape(text: string): Result<FrameInput[][], string> {
     total += Number(match[2]);
     if (total > MAX_TAPE_FRAMES) return err(`Tape longer than ${MAX_TAPE_FRAMES} frames`);
     const current = loops[loops.length - 1];
-    for (let i = 0; i < Number(match[2]); i++) current?.push(input);
+    for (let i = 0; i < Number(match[2]); i++) current?.push(i === 0 && keys.includes('B') ? { ...input, boots: true } : input);
   }
   return ok(loops);
 }

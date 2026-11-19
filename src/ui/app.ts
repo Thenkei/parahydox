@@ -2,12 +2,13 @@ import { parseTape } from '../flow/tape';
 import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, levelIndexOf, levelLabels, loadLevels } from '../levels';
 import { loadAssets } from './assets';
 import { Audio } from './audio';
+import { Credits } from './credits';
 import { Game, targetSeconds } from './game';
 import { type CampaignTab, Hud, type LevelEntry, type WinSequel } from './hud';
 import { campaignOpen, levelOpen, loadProgress, missingFor, nextWaitingOn, openedBetween, remainingIn, saveProgress, withWin } from './progress';
 import { themeFor } from './themes';
 
-type Screen = 'title' | 'select' | 'play';
+type Screen = 'title' | 'select' | 'play' | 'credits';
 
 const WIN_CARD_AFTER_MS = 650;
 
@@ -91,6 +92,7 @@ export async function startApp(): Promise<void> {
     (campaign) => showCampaign(campaign),
   );
   const game = new Game(canvas, assets, hud, audio);
+  const credits = new Credits(assets);
 
   const clearWin = (): void => {
     if (winTimer !== null) window.clearTimeout(winTimer);
@@ -143,6 +145,13 @@ export async function startApp(): Promise<void> {
     showCampaign(campaign);
   };
 
+  const showCredits = (now: number): void => {
+    game.releaseAll();
+    screen = 'credits';
+    hud.showScreen(screen);
+    credits.start(now);
+  };
+
   function openLevel(index: number): void {
     if (!reachable(index)) return;
     levelIndex = index;
@@ -163,6 +172,7 @@ export async function startApp(): Promise<void> {
 
   const onSelectKey = (code: string, shift: boolean): void => {
     if (code === 'Escape') {
+      if (game.returnedToReality) return showCredits(performance.now());
       screen = 'play';
       // The list may have been showing another campaign: back to the colours of the level in play.
       hud.setCampaign(entryAt(levelIndex).campaign);
@@ -170,7 +180,7 @@ export async function startApp(): Promise<void> {
     }
     const tab = CAMPAIGNS.findIndex((campaign) => campaign.id === shown);
     if (code === 'Tab') {
-      // Round and round, and backwards with Shift: five tabs are a long way to go the wrong way.
+      // Cycle backwards with Shift.
       const next = CAMPAIGNS[(tab + (shift ? CAMPAIGNS.length - 1 : 1)) % CAMPAIGNS.length];
       if (next) {
         audio.play('wait');
@@ -247,7 +257,7 @@ export async function startApp(): Promise<void> {
     };
   };
 
-  const HANDLED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'NumpadEnter', 'Escape', 'Backspace', 'Tab', 'KeyE', 'KeyR', 'KeyU', 'KeyH', 'KeyM', 'KeyN', 'KeyP']);
+  const HANDLED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'NumpadEnter', 'Escape', 'Backspace', 'Tab', 'KeyE', 'KeyB', 'KeyR', 'KeyU', 'KeyH', 'KeyM', 'KeyN', 'KeyP']);
 
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || !HANDLED.has(event.code)) return;
@@ -260,6 +270,10 @@ export async function startApp(): Promise<void> {
     if (event.code === 'KeyM') return void audio.toggleMute();
     if (screen === 'title') {
       if (event.code === 'Enter' || event.code === 'NumpadEnter' || event.code === 'Space' || event.code === 'KeyE') openLevel(levelIndex);
+    } else if (screen === 'credits') {
+      if (event.code === 'Escape') showSelect();
+      else if (event.code === 'ArrowLeft') credits.turn(-1, performance.now());
+      else if (['Enter', 'NumpadEnter', 'Space', 'ArrowRight'].includes(event.code) && !credits.turn(1, performance.now())) showSelect();
     } else if (screen === 'select') {
       onSelectKey(event.code, event.shiftKey);
     } else {
@@ -271,16 +285,21 @@ export async function startApp(): Promise<void> {
 
   const loop = (now: number): void => {
     // The level stays on screen behind the title and the level list, but only runs while it is played.
-    game.frame(now, screen === 'play');
+    if (screen === 'credits') credits.frame(now);
+    else game.frame(now, screen === 'play');
     const seconds = game.takeWin();
     if (seconds !== null) {
       const entry = entryAt(levelIndex);
       const before = progress.times;
       progress = withWin(progress, entry.id, seconds);
       saveProgress(progress);
-      const after = sequelOf(entry, before);
-      sequel = after;
-      winTimer = window.setTimeout(() => hud.showWin(entry, seconds, targetSeconds(entry.level), after), WIN_CARD_AFTER_MS);
+      if (game.returnedToReality) {
+        showCredits(now);
+      } else {
+        const after = sequelOf(entry, before);
+        sequel = after;
+        winTimer = window.setTimeout(() => hud.showWin(entry, seconds, targetSeconds(entry.level), after), WIN_CARD_AFTER_MS);
+      }
     }
     requestAnimationFrame(loop);
   };

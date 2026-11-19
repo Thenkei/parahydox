@@ -17,6 +17,8 @@ export interface CharacterLook {
    */
   readonly antipode: boolean;
   /** 1D: the figure folds into a point of light riding the wire. */
+  readonly boots: boolean;
+  readonly inverted: boolean;
   readonly onWire: boolean;
   readonly facing: 1 | -1;
   /** 0..1 through a step sideways, or null when standing. */
@@ -54,7 +56,7 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, feetX: number, feet
   }
 
   // Head down: everything below is drawn as for anyone, mirrored about the line of the soles.
-  if (look.antipode) {
+  if (look.inverted) {
     ctx.translate(0, feetY);
     ctx.scale(1, -1);
     ctx.translate(0, -feetY);
@@ -81,6 +83,11 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, feetX: number, feet
     ctx.beginPath();
     ctx.ellipse(cx + side * spread + step * side * cell * 0.04, footY - lift, cell * 0.095, cell * 0.055, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (look.boots) {
+      ctx.fillStyle = '#adfff0';
+      ctx.fillRect(cx + side * spread + step * side * cell * 0.04 - cell * 0.10, footY - lift, cell * 0.20, cell * 0.055);
+      ctx.fillStyle = COLORS.ink;
+    }
   }
 
   // Scarf: trails behind, lifts when falling.

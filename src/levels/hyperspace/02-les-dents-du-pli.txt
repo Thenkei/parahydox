@@ -1,0 +1,16 @@
+name: Les dents du pli
+world: 19
+gravity: lift
+tip: Le couloir se plisse. Le losange enregistre ta boucle quand tu le touches les pieds posés.
+hint: Passe au-dessus de la première dent. Au mur suspendu, chausse les bottes. Sous la dent, touche la balise. Au dernier mur, retire les bottes.
+tape: R125 B1 R100 B1 R150
+
+z=0
+######################
+#.........#.........X#
+#.........#..........#
+#....#....#....#.....#
+#....#....#....#.....#
+#....#.........#.....#
+#@...#...+.....#.....#
+#################...##

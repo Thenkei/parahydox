@@ -409,7 +409,7 @@ kbd {
 
 /* ------------------------------------------------------------------- campaigns */
 
-/* One row while there is room for the five of them, then they wrap: every campaign stays in sight, none behind a scroll. */
+/* One row while there is room for all campaigns, then they wrap: every campaign stays in sight, none behind a scroll. */
 .tabs {
   display: flex;
   flex-wrap: wrap;
@@ -552,7 +552,7 @@ kbd {
   opacity: 0.7;
 }
 
-/* Five tabs in one row need about a thousand pixels; four of them carry a padlock on a fresh save. */
+/* Compact the campaign tabs before switching to two rows. */
 @media (max-width: 1040px) {
   .tab {
     gap: 6px;
@@ -719,4 +719,42 @@ kbd {
 #game[data-campaign]:not([data-campaign='main']) .banner .eyebrow {
   color: var(--accent);
   opacity: 1;
+}
+
+#game[data-campaign='hyperspace'],
+[data-announces='hyperspace'] {
+  --glass: rgba(18, 12, 41, 0.85);
+  --accent: #a2ffea;
+  --accent-glow: rgba(164, 124, 255, 0.4);
+  --title-from: #acffe7;
+  --title-to: #bc9cff;
+  --veil: rgba(12, 8, 28, 0.92);
+}
+
+#credits, #credits-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#credits footer {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 1em 4vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  font-size: clamp(11px, 2vw, 15px);
+  background: rgba(9, 7, 25, 0.85);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #credits:not([hidden]) {
+    animation: return-to-daylight 750ms ease-out both;
+  }
+  @keyframes return-to-daylight {
+    from { opacity: 0; filter: brightness(1.6); }
+    to { opacity: 1; filter: brightness(1); }
+  }
 }

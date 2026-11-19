@@ -41,8 +41,8 @@ describe('the campaigns', () => {
     expect(levelsOf(id).map((level) => level.world)).toEqual(eightEach(id));
   });
 
-  it('plays and lists them in one order: main, the three side campaigns as they open, hardcore last', () => {
-    expect(CAMPAIGNS.map((campaign) => campaign.id)).toEqual(['main', 'givre', 'tore', 'envers', 'hardcore']);
+  it('plays and lists them in one order: main, the three side campaigns as they open, hardcore, then hyperspace', () => {
+    expect(CAMPAIGNS.map((campaign) => campaign.id)).toEqual(['main', 'givre', 'tore', 'envers', 'hardcore', 'hyperspace']);
     // Play order is one list, a campaign after the other: `?level=<n>` counts along it.
     expect(entries.map((e) => e.campaign)).toEqual(CAMPAIGNS.flatMap((campaign) => levelsOf(campaign.id).map(() => campaign.id)));
   });
@@ -54,6 +54,7 @@ describe('the campaigns', () => {
       { campaign: 'main', solved: 40 },
       { campaign: 'main', solved: 56 },
       { campaign: 'main', solved: 64 },
+      { campaign: 'hardcore', solved: 32 },
     ]);
     for (const { id, requires } of CAMPAIGNS) {
       if (requires === null) continue;
@@ -80,7 +81,9 @@ describe('the campaigns', () => {
     expect(new Set(labels).size).toBe(labels.length);
     expect(labels.slice(0, 9)).toEqual(['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '2-1']);
     expect(labels[entries.findIndex((e) => e.campaign === 'hardcore')]).toBe('H1-1');
-    expect(labels.at(-1)).toBe('H4-8');
+    expect(levelsOf('hyperspace').map((level) => level.world)).toEqual(eightEach('hyperspace'));
+    expect(labels.slice(-9)).toEqual(['H4-8', 'X1-1', 'X1-2', 'X1-3', 'X1-4', 'X1-5', 'X1-6', 'X1-7', 'X1-8']);
+    expect(levels.filter(level => level.cells.some(cell => cell.reality))).toEqual([levels.at(-1)]);
   });
 
   it('finds the level a link names, by its place in play order or by its label', () => {
@@ -145,7 +148,7 @@ describe('the campaigns', () => {
   });
 
   it('keeps ice, sewn edges and antipodes out of every other campaign', () => {
-    const elsewhere = entries.filter((e) => !SIDE.includes(e.campaign));
+    const elsewhere = entries.filter((e) => !SIDE.includes(e.campaign) && e.campaign !== 'hyperspace');
     expect(elsewhere.length).toBeGreaterThan(0);
     for (const { id, level } of elsewhere) {
       expect(level.cells.some((cell) => cell.ice === true), `${id}: ice`).toBe(false);
@@ -172,6 +175,18 @@ describe('every level', () => {
 });
 
 describe('what the levels are about', () => {
+  it('la seconde marée: running into the torn ceiling before the tide turns loses the player', () => {
+    expect(outcomeOfFlow(run(named('04-la-seconde-maree'), 'R330'))).toBe('fallen');
+  });
+
+  it.each(['07-les-deux-signatures', '08-le-dernier-seuil'])('%s needs both recorded runs', (id) => {
+    const level = named(id);
+    const [first, second, player] = loopsOf(level.tape!);
+    for (const clone of [first!, second!]) {
+      expect(outcomeOfFlow(runTape(level, [clone, player!], 120).world)).not.toBe('won');
+    }
+  });
+
   it("l'élan: running without jumping ends in the first gap", () => {
     expect(outcomeOfFlow(run(named('l-elan'), 'R200'))).toBe('fallen');
   });

@@ -60,6 +60,7 @@ function keyOf(world: FlowWorld, timed: boolean, grain: number): string {
     const wide = b.dim === 3 ? 1.5 : 1;
     const fine = (mine ? 0.2 : 0.3) * grain * wide;
     parts.push(b.dim, q(b.x, fine), q(b.y, fine), q(b.z, b.dim === 3 ? fine : 0.5), b.slick ? 1 : 0);
+    if (world.level.gravity !== 'normal') parts.push(Number(b.boots));
     if (b.wire !== null) parts.push(b.wire.id, q(b.wire.s, 0.25));
     // Without grip a decision changes the speed by half a cell a second: at the usual grain
     // every way of holding the keys on ice would look like standing still.
@@ -74,7 +75,7 @@ function keyOf(world: FlowWorld, timed: boolean, grain: number): string {
 }
 
 const KEYS = (input: FrameInput): string =>
-  `${input.x > 0 ? 'R' : input.x < 0 ? 'L' : ''}${input.z > 0 ? 'U' : input.z < 0 ? 'D' : ''}${input.jump ? 'J' : ''}${input.shift ? 'E' : ''}` || '_';
+  `${input.x > 0 ? 'R' : input.x < 0 ? 'L' : ''}${input.z > 0 ? 'U' : input.z < 0 ? 'D' : ''}${input.jump ? 'J' : ''}${input.shift ? 'E' : ''}${input.boots ? 'B' : ''}` || '_';
 
 /** A list of inputs, one per frame, written as a tape. */
 export function formatTape(frames: readonly FrameInput[]): string {
@@ -83,7 +84,7 @@ export function formatTape(frames: readonly FrameInput[]): string {
   let last = '';
   for (const input of frames) {
     const keys = KEYS(input);
-    if (keys === last) {
+    if (keys === last && !input.boots) {
       run++;
       continue;
     }
@@ -108,6 +109,7 @@ function choices(world: FlowWorld, flat: boolean): FrameInput[] {
     for (const x of axis) list.push({ x, z: 0, jump: false, shift: false });
     for (const z of [1, -1] as const) list.push({ x: 0, z, jump: false, shift: false });
   }
+  if (world.level.gravity !== 'normal') list.push(...list.map((input) => ({ ...input, boots: true })));
   const transition = transitionAt(world.level, hero);
   if (transition !== null && !(flat && transition === 'unfold') && !hero.shiftHeld) list.push({ x: 0, z: 0, jump: false, shift: true });
   return list;
@@ -121,7 +123,7 @@ export function searchRun(level: Level, options: SearchOptions = {}): SearchResu
   const goal = options.goal ?? ((world: FlowWorld): boolean => outcomeOfFlow(world) === 'won');
   const session = { level, loops: clones, current: [] };
   // With clones the world changes by itself: the same place at another time is another state.
-  const timed = clones.length > 0;
+  const timed = clones.length > 0 || level.gravity === 'pulse';
   const grain = options.fine ? 0.5 : 1;
 
   const prefix = options.prefix ?? [];
@@ -139,7 +141,7 @@ export function searchRun(level: Level, options: SearchOptions = {}): SearchResu
     inputs.reverse();
     // Written as it was played: E is tapped on the first frame of its chunk, not held through it.
     const frames = inputs.flatMap((input, i) =>
-      Array.from({ length: i === inputs.length - 1 ? extra : chunk }, (_, f) => (input.shift && f > 0 ? { ...input, shift: false } : input)),
+      Array.from({ length: i === inputs.length - 1 ? extra : chunk }, (_, f) => ((input.shift || input.boots) && f > 0 ? { ...input, shift: false, boots: false } : input)),
     );
     return formatTape([...prefix, ...frames]);
   };
@@ -156,7 +158,7 @@ export function searchRun(level: Level, options: SearchOptions = {}): SearchResu
         let reached = -1;
         for (let f = 0; f < chunk; f++) {
           // E is a tap: one frame, then the hands are off.
-          const frame = input.shift && f > 0 ? { ...input, shift: false } : input;
+          const frame = (input.shift || input.boots) && f > 0 ? { ...input, shift: false, boots: false } : input;
           world = stepFlow(world, inputsAtFlow(session, world.tick, frame));
           if (goal(world)) {
             reached = f + 1;

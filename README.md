@@ -5,8 +5,7 @@ coupe verticale) ou en 3D (le volume entier). Rembobiner le temps laisse un clon
 rejoue tes touches, pas tes déplacements.
 
 Tout le jeu se joue en mouvement continu : on court, on saute, et les clones ne t'attendent
-pas. Cinq campagnes : la principale, trois campagnes annexes qui s'ouvrent en chemin, chacune
-bâtie sur une règle de plus, et Hardcore pour finir.
+pas. Six campagnes : la principale, trois campagnes annexes, Hardcore et le chapitre final dans l’Hyperspace.
 
 **Parahydox**, 64 niveaux en 8 mondes de 8 :
 
@@ -41,6 +40,14 @@ mondes qui se croisent. Le décor change : basalte, braises et ciels brûlés.
 | H3. Le contre-jour | des reflets partout : terrains asymétriques, leviers, fils et profondeur |
 | H4. La ruine | le sol cède : des dalles fragiles mêlées à tout le reste, jusqu'au dernier niveau |
 
+**L’Hyperspace** s’ouvre après les 32 niveaux de Hardcore. Huit salles forment le dernier
+chapitre (X1-1 à X1-8). Le champ attire vers le plafond et, dans les salles à marée,
+inverse son sens toutes les deux secondes de simulation. **B** équipe ou retire les bottes :
+équipées, elles ramènent au sol. Les clones rejouent aussi cette commande.
+Le losange mémorise la boucle en cours, y compris la position des clones, les portes et la phase du champ.
+Une chute ou **U** reprend à cette balise. **R** repart du début avec le nouvel enregistrement.
+La balise dure jusqu’au changement de boucle ou de niveau. Au dernier seuil, le portail de jour ouvre le générique.
+
 ## Lancer
 
 ```bash
@@ -60,6 +67,7 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | ↑ ↓ en 3D | courir vers le fond et vers l'avant (Espace saute) |
 | ← → ↑ ↓ sur un fil | suivre le fil, avec la flèche qui va dans son sens |
 | E, Entrée | changer de dimension : sur une ancre (même en plein saut) ou sur un seuil |
+| B | chausser ou retirer les bottes dans l’Hyperspace |
 | R | rembobiner : la course qu'on vient de faire devient un clone |
 | U, Retour arrière | retenter la boucle en gardant les clones |
 | Maj+R | recommencer le niveau, sans clone |
@@ -147,9 +155,9 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
   vérifie qu'un niveau à clones ne se finit pas sans clone.
 - `src/levels/` — un fichier texte par niveau, une couche ASCII par valeur de z, avec sa
   course prévue (`tape:`), que les tests rejouent. Chaque campagne a son dossier
-  (`givre/`, `tore/`, `envers/`, `hardcore/`). `index.ts` décrit les campagnes : leurs mondes
+  (`givre/`, `tore/`, `envers/`, `hardcore/`, `hyperspace/`). `index.ts` décrit les campagnes : leurs mondes
   (le numéro `world:` d'un niveau est unique d'une campagne à l'autre : 1 à 8, Hardcore 9 à
-  12, puis 13 à 18) et combien de niveaux de quelle campagne il faut avoir terminés pour
+  12, les annexes 13 à 18, l’Hyperspace 19) et combien de niveaux de quelle campagne il faut avoir terminés pour
   les ouvrir.
 - `src/ui/` — `game.ts` lit les touches, fait avancer la physique et dessine ; `app.ts`
   tient les écrans et la progression ; `progress.ts` sauvegarde les temps et dit ce qui est
@@ -170,7 +178,7 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
 npm run flow -- src/levels/20-sous-ton-ombre.txt "RJ16 R260 | R330" 10   # jouer une bande et voir où chacun se trouve
 npm run explore -- src/levels/05-la-fosse.txt                            # chercher une course jusqu'à la sortie
 npm run explore -- src/levels/17-*.txt --with "R44 _10" --goal 12,1      # chercher la boucle suivante, jusqu'à une case
-npm run audit                                                            # tous les niveaux des deux campagnes : course prévue, et pas de raccourci sans clone
+npm run audit                                                            # tous les niveaux des campagnes : course prévue, et pas de raccourci sans clone
 npm run audit -- --write src/levels/33-*.txt                             # compléter une bande laissée ouverte avec "?"
 npm run audit -- --fewer src/levels/hardcore/16-*.txt                    # une course à plusieurs clones : chercher à s'en passer d'un
 node tools/drive.mjs "unlock&level=6&demo" wait:3000 shot:essai          # le vrai jeu dans Chrome headless (serveur preview sur 4317)

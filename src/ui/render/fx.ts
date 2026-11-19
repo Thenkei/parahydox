@@ -26,6 +26,44 @@ export function drawBackdrop(
     ctx.fillRect(0, 0, width, height);
   }
 
+  if (theme.biome === 'hyperspace') {
+    const cx = width * (0.54 + 0.055 * Math.sin(time * 0.12));
+    const cy = height * (0.43 + 0.045 * Math.cos(time * 0.16));
+    const span = Math.max(width, height);
+    const veil = ctx.createRadialGradient(cx, cy, 0, cx, cy, span * 0.85);
+    veil.addColorStop(0, '#503778');
+    veil.addColorStop(0.48, 'rgba(19, 14, 51, 0.94)');
+    veil.addColorStop(1, '#070919');
+    ctx.fillStyle = veil;
+    ctx.fillRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(cx, cy);
+    // Successive cross sections turn through each other as the fold passes the camera.
+    for (let i = 0; i < 12; i++) {
+      const t = (i / 12 + time * 0.027) % 1;
+      const r = (0.015 + t * t) * span;
+      ctx.strokeStyle = withAlpha(i % 2 ? '#ad8eff' : '#71eae7', 0.24 * Math.sin(Math.PI * t));
+      ctx.beginPath();
+      for (let corner = 0; corner <= 6; corner++) {
+        const angle = corner * Math.PI / 3 + t * 0.9 + time * 0.045;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r * 0.64;
+        if (corner === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    for (let i = 0; i < 125; i++) {
+      const t = (i * 0.618 + time * 0.043) % 1;
+      const angle = i * 2.399;
+      const r = t * t * span;
+      ctx.fillStyle = withAlpha('#d7dcff', 0.2 + t * 0.62);
+      ctx.fillRect(Math.cos(angle) * r, Math.sin(angle) * r * 0.72, 0.75 + t * 1.6, 0.75 + t);
+    }
+    ctx.restore();
+    return;
+  }
+
   // Far islands drifting between the sky and the level: the world goes on beyond this one.
   for (let i = 0; i < 4; i++) {
     const side = i % 2 === 0 ? 0 : 1;

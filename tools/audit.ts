@@ -32,7 +32,7 @@ const option = (name: string): string | null => {
 };
 const dir = 'src/levels';
 /** One directory per campaign, in play order; a campaign that has no level yet has no directory. */
-const dirs = [dir, ...['givre', 'tore', 'envers', 'hardcore'].map((campaign) => join(dir, campaign))].filter((d) => existsSync(d));
+const dirs = [dir, ...['givre', 'tore', 'envers', 'hardcore', 'hyperspace'].map((campaign) => join(dir, campaign))].filter((d) => existsSync(d));
 const named = args.filter((a) => a.endsWith('.txt'));
 const files = named.length > 0 ? named : dirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.txt')).sort().map((f) => join(d, f)));
 const maxStates = Number(option('states') ?? 400_000);

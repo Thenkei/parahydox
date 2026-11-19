@@ -10,6 +10,7 @@ const SIZES: readonly (readonly [CampaignId, string, number])[] = [
   ['tore', 't', 16],
   ['envers', 'e', 16],
   ['hardcore', 'h', 32],
+  ['hyperspace', 'x', 8],
 ];
 const entries: Unlockable[] = SIZES.flatMap(([campaign, prefix, count]) => Array.from({ length: count }, (_, i) => ({ id: `${prefix}${i + 1}`, campaign })));
 const indexOf = (id: string): number => entries.findIndex((entry) => entry.id === id);
@@ -57,7 +58,7 @@ describe('what is open', () => {
     expect(openCampaigns(solved(...firstOf('m', 64)))).toEqual(['main', 'givre', 'tore', 'envers', 'hardcore']);
 
     const times = solved(...firstOf('m', 30));
-    expect(CAMPAIGNS.map((campaign) => missingFor(campaign.id, entries, times))).toEqual([0, 0, 10, 26, 34]);
+    expect(CAMPAIGNS.map((campaign) => missingFor(campaign.id, entries, times))).toEqual([0, 0, 10, 26, 34, 32]);
   });
 
   it('counts solves wherever they are: skipped levels do not hold a campaign shut', () => {
@@ -82,6 +83,15 @@ describe('what is open', () => {
     expect(campaignOpen('hardcore', entries, all)).toBe(true);
     expect(levelOpen(indexOf('h1'), entries, all)).toBe(true);
     expect(levelOpen(indexOf('h2'), entries, all)).toBe(false);
+  });
+
+  it('opens the finale when all 32 distinct hardcore levels are solved', () => {
+    const before = solved(...firstOf('m', 64), ...firstOf('h', 32, [2]));
+    const after = { ...before, h2: 20 };
+    expect(levelOpen(indexOf('x1'), entries, before)).toBe(false);
+    expect(openedBetween(before, after, entries)).toEqual(['hyperspace']);
+    expect(levelOpen(indexOf('x1'), entries, after)).toBe(true);
+    expect(levelOpen(indexOf('x2'), entries, after)).toBe(false);
   });
 
   it('opens nothing with times that belong to another campaign', () => {

@@ -1,4 +1,4 @@
-import { vec } from '../core/grid';
+import { cellAt, vec } from '../core/grid';
 import type { Level, Vec3 } from '../core/types';
 import {
   type Body,
@@ -7,6 +7,7 @@ import {
   type FrameInput,
   HEIGHT,
   IDLE,
+  PULSE_TICKS,
   type Transition,
   cellOfBody,
   doorClosed,
@@ -97,6 +98,8 @@ export class Game {
   private slideAt = 0;
   private pendingWin: number | null = null;
   private pendingShift = false;
+  private pendingBoots = false;
+  private checkpoint: { world: FlowWorld; session: FlowSession; cell: number } | null = null;
   private fallTimer: number | null = null;
   /** Help asked for with H: 0 none, 1 the level's opening line, 2 its hint. */
   private help: 0 | 1 | 2 = 0;
@@ -140,10 +143,14 @@ export class Game {
   }
 
   /** Back to the start of the loop, with the clones already recorded. */
-  private reset(): void {
+  private reset(retry = false): void {
     if (!this.session) return;
-    this.world = initialFlow(this.session.level, this.session.loops.length);
-    this.session = { ...this.session, current: [] };
+    if (!retry) this.checkpoint = null;
+    this.world = this.checkpoint?.world ?? initialFlow(this.session.level, this.session.loops.length);
+    this.session = this.checkpoint?.session ?? { ...this.session, current: [] };
+    this.pendingBoots = false;
+    this.pendingShift = false;
+    this.resumeAt = null;
     this.running = false;
     this.debt = 0;
     this.doors.clear();
@@ -161,6 +168,11 @@ export class Game {
     return this.world ? outcomeOfFlow(this.world) : 'playing';
   }
 
+  get returnedToReality(): boolean {
+    if (!this.world || this.outcome !== 'won') return false;
+    return cellAt(this.world.level, cellOfBody(this.world.level, playerOfFlow(this.world)))?.reality === true;
+  }
+
   /** Seconds of the winning run, once, when the exit has just been reached. */
   takeWin(): number | null {
     const seconds = this.pendingWin;
@@ -169,7 +181,7 @@ export class Game {
   }
 
   /** State for automated checks. */
-  debug(): { outcome: string; x: number; y: number; z: number; dim: number; loops: number; seconds: number; demo: boolean } {
+  debug(): { outcome: string; x: number; y: number; z: number; dim: number; loops: number; seconds: number; demo: boolean; boots: boolean; tick: number; checkpointTick: number | null } {
     const p = this.world ? playerOfFlow(this.world) : null;
     return {
       outcome: this.outcome,
@@ -180,6 +192,9 @@ export class Game {
       loops: this.session?.loops.length ?? 0,
       seconds: Math.round(this.elapsedMs / 100) / 10,
       demo: this.script !== null,
+      boots: p?.boots ?? false,
+      tick: this.world?.tick ?? 0,
+      checkpointTick: this.checkpoint?.world.tick ?? null,
     };
   }
 
@@ -211,7 +226,7 @@ export class Game {
         // Try the loop again: the clones stay, this attempt is forgotten.
         if (this.session.current.length > 0) {
           this.audio.play('undo');
-          this.reset();
+          this.reset(true);
         }
         return;
       case 'KeyH':
@@ -220,6 +235,10 @@ export class Game {
         this.audio.play('select');
         this.refreshHud();
         return;
+      case 'KeyB':
+        if (this.world.level.gravity === 'normal') return;
+        this.pendingBoots = true;
+        break;
       case 'KeyE':
       case 'Enter':
       case 'NumpadEnter':
@@ -239,6 +258,8 @@ export class Game {
 
   releaseAll(): void {
     this.held.clear();
+    this.pendingShift = false;
+    this.pendingBoots = false;
   }
 
   /** The keys as they are held: what the up arrow means is the physics' business, and a clone's. */
@@ -248,7 +269,9 @@ export class Game {
     const z = (any(UP) ? 1 : 0) - (any(DOWN) ? 1 : 0);
     const shift = this.pendingShift;
     this.pendingShift = false;
-    return { x: x as -1 | 0 | 1, z: z as -1 | 0 | 1, jump: this.held.has('Space'), shift };
+    const boots = this.pendingBoots;
+    this.pendingBoots = false;
+    return { boots, x: x as -1 | 0 | 1, z: z as -1 | 0 | 1, jump: this.held.has('Space'), shift };
   }
 
   /** The next input of the demo; a loop that has run out rewinds into the next one. */
@@ -275,6 +298,12 @@ export class Game {
     const next = stepFlow(before, inputsAtFlow(this.session, before.tick, input));
     this.session = { ...this.session, current: [...this.session.current, input] };
     this.world = next;
+    const hero = playerOfFlow(next);
+    if (hero.grounded && next.level.cells[hero.cell]?.checkpoint && this.checkpoint?.cell !== hero.cell) {
+      this.checkpoint = { world: next, session: this.session, cell: hero.cell };
+      this.audio.play('select');
+      this.effects.ring(hero.x, hero.y + 0.5, hero.z, '#8fffe2', 0.9);
+    }
     this.elapsedMs += STEP_MS;
     this.cues(before, next, now);
     this.refreshHud();
@@ -283,6 +312,11 @@ export class Game {
   /** Sounds and dust, read off the difference between two frames. */
   private cues(before: FlowWorld, next: FlowWorld, now: number): void {
     const theme = themeFor(next.level.world);
+    if (next.level.gravity === 'pulse' && before.tick > 0 && before.tick % PULSE_TICKS === 0) {
+      const hero = playerOfFlow(next);
+      this.effects.ring(hero.x, hero.y + HEIGHT / 2, hero.z, '#cab5ff', 1.6);
+      this.audio.play('wait');
+    }
     let sliding = 0;
     for (const body of next.bodies) {
       const was = before.bodies[body.id];
@@ -293,9 +327,10 @@ export class Game {
         continue;
       }
       // The soles: under the box for most, on top of it for whoever falls upward.
-      const up = fallOf(next.level, body) > 0 ? -1 : 1;
+      if (mine && body.boots !== was.boots) this.audio.play(body.boots ? 'to2d' : 'to3d');
+      const up = fallOf(next.level, body, before.tick) > 0 ? -1 : 1;
       const soles = up > 0 ? body.y : body.y + HEIGHT;
-      if (was.grounded && !body.grounded && body.vy > 4 && mine) this.audio.play('hop');
+      if (was.grounded && !body.grounded && body.vy * up > 4 && mine) this.audio.play('hop');
       if (!was.grounded && body.grounded) {
         this.landedAt.set(body.id, now);
         this.effects.dust(body.x, soles, body.z, body.slick ? COLORS.ice : theme.haze, up);
@@ -360,7 +395,7 @@ export class Game {
       if (outcome === 'fallen') {
         this.fallTimer = window.setTimeout(() => {
           if (this.outcome !== 'fallen') return;
-          this.reset();
+          this.reset(true);
           // Whoever is still holding a key expects to be running again, not waiting.
           this.resumeAt = performance.now() + 350;
         }, 900);
@@ -389,10 +424,11 @@ export class Game {
     const manner = `${level.mirror ? (level.antipode ? ', en miroir,' : ", à l'envers") : ''}${level.antipode ? ' et tombe vers le haut' : ''}`;
 
     const [message, tone] = ((): [string, '' | 'fallen' | 'hint'] => {
-      if (outcome === 'fallen') return ['Tombé dans le vide. La boucle recommence.', 'fallen'];
+      if (outcome === 'fallen') return [this.checkpoint ? 'Retour à la dernière balise.' : 'Tombé dans le vide. La boucle recommence.', 'fallen'];
       if (outcome === 'won') return ['', ''];
       if (this.help === 1 && level.tip !== null) return [level.tip, ''];
       if (this.help === 2 || (this.help === 1 && level.tip === null)) return [level.hint ?? level.tip ?? '', 'hint'];
+      if (this.checkpoint && this.world && this.world.tick - this.checkpoint.world.tick < FPS * 2) return ['Balise activée. U reprend ici avec tes clones.', ''];
       if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. H donne un indice.`, ''];
       if (fresh && this.session.loops.length > 0) return [`Ton ${other} part à ta première touche${manner}.`, ''];
       if (this.session.current.length < TIP_FRAMES && this.session.loops.length === 0 && level.tip !== null) return [level.tip, ''];
@@ -401,10 +437,14 @@ export class Game {
       return ['', ''];
     })();
 
-    const signature = `${this.entry.id}|${hero.dim}|${this.session.loops.length}|${message}|${tone}|${action ?? ''}`;
+    const tick = Math.max(0, this.world.tick - 1);
+    const arrow = fallOf(level, hero, tick) > 0 ? '↑' : '↓';
+    const pulse = level.gravity === 'pulse' && !hero.boots ? ` · inversion dans ${Math.ceil((PULSE_TICKS - tick % PULSE_TICKS) / FPS)} s` : '';
+    const field = level.gravity === 'normal' ? '' : `${hero.boots ? 'Bottes actives' : 'Champ libre'} ${arrow}${pulse}`;
+    const signature = `${this.entry.id}|${hero.dim}|${this.session.loops.length}|${message}|${tone}|${field}|${action ?? ''}`;
     if (signature === this.shown) return;
     this.shown = signature;
-    this.hud.update(this.entry, { dim: hero.dim, loops: this.session.loops.length, message, tone, action });
+    this.hud.update(this.entry, { dim: hero.dim, loops: this.session.loops.length, field, message, tone, action });
   }
 
   private resize(): void {
@@ -429,6 +469,7 @@ export class Game {
       toggled: world.toggled,
       live: liveChannels(world),
       broken: new Set(world.broken),
+      checkpoint: this.checkpoint?.cell ?? null,
     };
   }
 
@@ -482,7 +523,7 @@ export class Game {
       // Whoever has fallen out is drawn as far as the edge of the void, below or, for an antipode, above.
       .filter((b) => b.status !== 'fallen' || (b.y > -3 && b.y < size.h + 3))
       .map((b: Body) => {
-        const up = fallOf(level, b) > 0 ? -1 : 1;
+        const up = fallOf(level, b, Math.max(0, current.tick - 1)) > 0 ? -1 : 1;
         const pace = Math.abs(b.vx) + Math.abs(b.vz);
         return {
           id: b.id,
@@ -531,6 +572,7 @@ export class Game {
       crates,
       lookOf: (pose) => ({
         joy: pose.role === 'player' && this.outcome === 'won',
+        boots: current.bodies[pose.id]?.boots ?? false,
         facing: current.bodies[pose.id]?.facing ?? 1,
         squash: Math.min(1, Math.max(0, 1 - (now - (this.landedAt.get(pose.id) ?? -1e9)) / 200)),
       }),

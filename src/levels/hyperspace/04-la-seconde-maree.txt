@@ -1,0 +1,15 @@
+name: La seconde marée
+world: 19
+gravity: pulse
+tip: Toutes les deux secondes, le champ change de sens. Seules les bottes gardent le sol.
+hint: Au plafond, arrête-toi au-dessus du premier mur, juste avant la brèche. Traverse quand la flèche va basculer vers le bas. Passe sous la herse et laisse la marée suivante te soulever.
+tape: R62 _48 R300
+
+z=0
+#######.......###########
+#.............#........X#
+#.............#.........#
+#.....#.......#....#....#
+#.....#............#....#
+#@....#......+.....#....#
+#######...###############
