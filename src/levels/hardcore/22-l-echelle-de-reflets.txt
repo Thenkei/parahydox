@@ -1,0 +1,16 @@
+; Chaque course va plus loin à droite, et son reflet plus loin à gauche. Le premier reflet tient la plaque au pied du mur ; le second lui monte sur la tête puis sur la corniche, avec les sauts que tu fais de ton côté : celui du trou, puis un autre contre la seconde porte.
+name: L'échelle de reflets
+world: 11
+clones: 2
+mirror: true
+tip: Deux portes pour toi, deux plaques pour eux, et la seconde est perchée sur un mur trop haut pour un seul reflet.
+hint: Première course : cours contre la première porte, deux secondes. Deuxième course : passe la porte dès qu'elle s'ouvre, arrête-toi au bord du trou, saute-le (ton second reflet monte sur la tête du premier), cours contre la seconde porte et saute encore en maintenant → : il grimpe sur la corniche et va jusqu'à sa plaque. Troisième course : passe.
+tape: R120 | R76 _25 RJ24 R30 _10 RJ20 R80 _20 | R76 _10 RJ24 R200
+
+z=0
+.....................
+#...........#.....#..
+#c..........#.....#..
+####........#.....#..
+####b....@..B.....C.X
+##############..#####

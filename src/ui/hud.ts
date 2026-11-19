@@ -1,5 +1,5 @@
 import type { Dim, Level } from '../core/types';
-import { WORLD_NAMES } from '../levels';
+import { type Campaign, type CampaignId, campaignById, chapterLabel, chapterName } from '../levels';
 
 function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -28,10 +28,31 @@ function keyEntry(keys: readonly string[], label: string, lit = false): HTMLSpan
 
 export interface LevelEntry {
   readonly id: string;
+  readonly campaign: CampaignId;
   readonly level: Level;
-  /** "2-3": chapter and position within it. */
+  /** "2-3": chapter and position within it; "H2-3" in hardcore. */
   readonly label: string;
 }
+
+/** A campaign as the level list shows it: its tab, and whether it can be entered. */
+export interface CampaignTab {
+  readonly campaign: Campaign;
+  readonly open: boolean;
+  readonly solved: number;
+  readonly total: number;
+  /** What is still to do before it opens, as a sentence; null once open. */
+  readonly lock: string | null;
+}
+
+/** What follows a win, which decides what the card says and where Enter leads. */
+export type WinSequel =
+  | { readonly kind: 'next' }
+  /** This win finished what `campaign` was waiting for. */
+  | { readonly kind: 'unlocked'; readonly campaign: Campaign }
+  /** The last level of its campaign, with `remaining` levels of it still unsolved; `opens` is the campaign waiting behind it. */
+  | { readonly kind: 'end'; readonly remaining: number; readonly opens: Campaign | null };
+
+const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? 'x' : ''}`;
 
 export interface PlayStatus {
   readonly dim: Dim;
@@ -49,10 +70,14 @@ export interface SelectModel {
   readonly targets: ReadonlyMap<string, number>;
   readonly unlocked: (index: number) => boolean;
   readonly cursor: number;
+  readonly tabs: readonly CampaignTab[];
+  /** The campaign whose levels are listed. */
+  readonly shown: CampaignId;
 }
 
 /** The DOM laid over the canvas: status, messages, and the title, select and win screens. */
 export class Hud {
+  private readonly root = element('game');
   private readonly hud = element('hud');
   private readonly worldName = element('world-name');
   private readonly levelName = element('level-name');
@@ -63,13 +88,26 @@ export class Hud {
   private readonly keys = element('keys');
   private readonly message = element('message');
   private readonly title = element('title');
+  private readonly tagline = element('tagline');
   private readonly select = element('select');
+  private readonly tabs = element('select-tabs');
+  private readonly pitch = element('select-pitch');
   private readonly grid = element('select-grid');
   private readonly win = element('win');
   private readonly banner = element('banner');
 
-  constructor(private readonly onPick: (index: number) => void) {
+  constructor(
+    private readonly onPick: (index: number) => void,
+    private readonly onPickCampaign: (campaign: CampaignId) => void,
+  ) {
     element('boot').hidden = true;
+  }
+
+  /** Each campaign dresses the whole interface: the stylesheet reads this off the root. */
+  setCampaign(campaign: CampaignId): void {
+    if (this.root.dataset.campaign === campaign) return;
+    this.root.dataset.campaign = campaign;
+    this.tagline.textContent = campaignById(campaign).pitch;
   }
 
   showScreen(screen: 'title' | 'select' | 'play'): void {
@@ -84,7 +122,7 @@ export class Hud {
     const { level } = entry;
     const other = level.mirror ? 'reflet' : 'clone';
     // A level played with reflections says so: the clone rule is not the same.
-    this.worldName.textContent = `${entry.label} · ${WORLD_NAMES[level.world - 1] ?? ''}${level.mirror ? ' · reflets' : ''}`;
+    this.worldName.textContent = `${entry.label} · ${chapterName(level.world)}${level.mirror ? ' · reflets' : ''}`;
     this.levelName.textContent = level.name;
     for (const pip of this.dims.children) {
       const dim = (pip as HTMLElement).dataset.dim;
@@ -123,15 +161,32 @@ export class Hud {
     if (this.clock.textContent !== shown) this.clock.textContent = shown;
   }
 
-  showWin(entry: LevelEntry, seconds: number, target: number | null, isLast: boolean): void {
+  showWin(entry: LevelEntry, seconds: number, target: number | null, sequel: WinSequel): void {
     const swift = target !== null && seconds <= target;
-    element('win-eyebrow').textContent = isLast ? 'Dernier niveau terminé' : 'Niveau terminé';
+    const [eyebrow, next, extra] = ((): [string, string, string] => {
+      switch (sequel.kind) {
+        case 'next':
+          return ['Niveau terminé', 'niveau suivant', ''];
+        case 'unlocked':
+          return [`${sequel.campaign.name} débloqué`, `découvrir ${sequel.campaign.name}`, sequel.campaign.pitch];
+        case 'end': {
+          const left = plural(sequel.remaining, 'niveau');
+          if (sequel.remaining > 0) return ['Dernier niveau terminé', 'retour aux niveaux', sequel.opens === null ? `Encore ${left} à terminer.` : `Encore ${left} à terminer pour ouvrir ${sequel.opens.name}.`];
+          return ['Dernier niveau terminé', 'retour aux niveaux', sequel.opens === null ? 'Il ne reste rien. Vraiment rien.' : ''];
+        }
+      }
+    })();
+    element('win-eyebrow').textContent = eyebrow;
     element('win-title').textContent = entry.level.name;
     element('win-stars').textContent = swift ? '⚡' : '★';
     element('win-stats').textContent = `${seconds.toFixed(1)} s`;
     // The clock counts every attempt since the level was opened, falls included.
     element('win-time').textContent = swift ? `Éclair : moins de ${target} s, tentatives comprises` : target === null ? '' : `⚡ en ${target} s ou moins, tentatives comprises`;
-    element('win-next').textContent = isLast ? 'retour aux niveaux' : 'niveau suivant';
+    const note = element('win-extra');
+    note.textContent = extra;
+    note.hidden = extra === '';
+    element('win-next').textContent = next;
+    this.win.classList.toggle('unlock', sequel.kind === 'unlocked');
     this.win.hidden = false;
   }
 
@@ -141,7 +196,7 @@ export class Hud {
 
   /** The level's name, large, for a moment: every level opens like a new page. */
   showBanner(entry: LevelEntry): void {
-    this.banner.replaceChildren(span('eyebrow', `${entry.label} · ${WORLD_NAMES[entry.level.world - 1] ?? ''}`), span('banner-name', entry.level.name));
+    this.banner.replaceChildren(span('eyebrow', `${entry.label} · ${chapterName(entry.level.world)}`), span('banner-name', entry.level.name));
     this.banner.hidden = false;
     // Restart the CSS animation.
     this.banner.classList.remove('run');
@@ -149,12 +204,29 @@ export class Hud {
     this.banner.classList.add('run');
   }
 
-  renderSelect({ entries, times, targets, unlocked, cursor }: SelectModel): void {
+  renderSelect({ entries, times, targets, unlocked, cursor, tabs, shown }: SelectModel): void {
+    this.setCampaign(shown);
+    this.tabs.replaceChildren(
+      ...tabs.map(({ campaign, open, solved, total }) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = `tab${campaign.id === shown ? ' on' : ''}${open ? '' : ' locked'}`;
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-selected', String(campaign.id === shown));
+        tab.append(span('tab-name', `${open ? '' : '🔒 '}${campaign.name}`), span('tab-count', `${solved}/${total}`));
+        tab.addEventListener('click', () => this.onPickCampaign(campaign.id));
+        return tab;
+      }),
+    );
+    const current = tabs.find((tab) => tab.campaign.id === shown);
+    this.pitch.textContent = current === undefined ? '' : (current.lock ?? current.campaign.pitch);
+    this.pitch.classList.toggle('locked', current?.lock != null);
+
     const rows: HTMLElement[] = [];
-    WORLD_NAMES.forEach((worldName, w) => {
+    for (const chapter of current?.campaign.chapters ?? []) {
       const cards = entries
         .map((entry, index) => ({ entry, index }))
-        .filter(({ entry }) => entry.level.world === w + 1)
+        .filter(({ entry }) => entry.level.world === chapter.world)
         .map(({ entry, index }) => {
           const card = document.createElement('button');
           const open = unlocked(index);
@@ -173,22 +245,22 @@ export class Hud {
           card.addEventListener('click', () => this.onPick(index));
           return card;
         });
-      if (cards.length === 0) return;
+      if (cards.length === 0) continue;
       const row = document.createElement('div');
       row.className = 'select-world';
       const label = document.createElement('div');
       const eyebrow = document.createElement('div');
       eyebrow.className = 'eyebrow';
-      eyebrow.textContent = `Monde ${w + 1}`;
+      eyebrow.textContent = `Monde ${chapterLabel(chapter.world)}`;
       const strong = document.createElement('strong');
-      strong.textContent = worldName;
+      strong.textContent = chapter.name;
       label.append(eyebrow, strong);
       const list = document.createElement('div');
       list.className = 'select-levels';
       list.append(...cards);
       row.append(label, list);
       rows.push(row);
-    });
+    }
     this.grid.replaceChildren(...rows);
     this.grid.querySelector('.current')?.scrollIntoView({ block: 'nearest' });
   }

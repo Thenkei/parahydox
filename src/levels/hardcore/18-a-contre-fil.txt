@@ -1,0 +1,18 @@
+; Le fil part à gauche, monte, puis revient vers la droite au-dessus du départ : sur ce tronçon le reflet avance vers la droite quand on court à gauche. La barrière enfilée sur le fil ne s'ouvre que si quelqu'un tient la plaque du bas : toi, à la seconde course.
+name: À contre-fil
+world: 11
+clones: 1
+mirror: true
+glyph: ! = wire + door b
+tip: Sur un fil aussi, ton reflet va à gauche quand tu vas à droite. Et ce fil-là revient vers toi.
+hint: Première course : →, un saut pour sa marche, encore → ; puis E, puis ↑ longtemps, puis ← très longtemps (le fil est long), puis E, puis ← encore. Seconde course : va sur la plaque du bas et n'en bouge pas tant que ton reflet n'a pas franchi la barrière ; il finit sur la plaque du haut, qui t'ouvre la porte.
+tape: R14 RJ16 R30 E1 U40 L135 E1 L30 _10 | R47 _215 R110
+
+z=0
+...............#..
+...............#..
+#=====!=====*.a#..
+#=..........####..
+#=.............#..
+#*.#.@...b.....A.X
+##################

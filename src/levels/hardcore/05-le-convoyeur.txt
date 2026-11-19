@@ -1,0 +1,14 @@
+; Le pont de dalles ne porte qu'un seul passage à pied, et c'est la caisse qui en a besoin : on ne pousse pas une caisse depuis un fil. Aller par le fil, donc. Là-bas, la caisse sert d'abord de marche pour le levier, à une case du pilier pour pouvoir repasser derrière, puis elle rentre par le pont.
+name: Le convoyeur
+world: 9
+tip: Le pont ne servira qu'une fois, et la caisse ne prend pas le fil.
+hint: Pars par le fil : sur un fil, tu ne pèses rien. Là-bas, pousse la caisse vers le pilier sans la coller, grimpe basculer le levier, redescends derrière elle, et ramène-la par le pont jusqu'au pied du mur de gauche.
+tape: R8 E1 _3 U36 R118 D38 E1 _6 R44 _4 RJ14 R6 RJ16 R30 _6 L16 _10 L9 _26 L356 _4 LJ14 L4 LJ16 L40
+
+z=0
+......................
+.#..===========.......
+XE..=.........=.....e#
+##..=.........=....###
+##.@*.........*o...###
+######~~~~~~~#########

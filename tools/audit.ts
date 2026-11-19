@@ -1,12 +1,16 @@
 /**
  * Audits levels the way a designer would before shipping them:
  *
- *   npm run audit [-- <level.txt> ...] [--states n] [--no-solo] [--write]
+ *   npm run audit [-- <level.txt> ...] [--states n] [--no-solo] [--write] [--fewer]
  *
- * For each level (all of src/levels by default): replays its `tape:` and says how it ends;
+ * For each level (both campaigns by default): replays its `tape:` and says how it ends;
  * then looks for a run without any clone. A level without clones must have one (it is
  * printed when the level has no tape yet); a level with clones must not, or the clone is
- * decoration. Exits with an error if a level fails either check.
+ * decoration, and the last loop of its run must not win alone. Exits with an error if a
+ * level fails a check.
+ *
+ * `--fewer` replays a run of several clones with one clone missing and looks for a way
+ * through anyway: a clone the level can do without is decoration too.
  *
  * While designing, a loop of the tape may be left open with "?" ("R44 _10 | ?"): the audit
  * looks for it with the loops before it as clones, starting from whatever is written before
@@ -27,11 +31,14 @@ const option = (name: string): string | null => {
   return at >= 0 ? (args[at + 1] ?? null) : null;
 };
 const dir = 'src/levels';
+/** One directory per campaign, in play order. */
+const dirs = [dir, join(dir, 'hardcore')];
 const named = args.filter((a) => a.endsWith('.txt'));
-const files = named.length > 0 ? named : readdirSync(dir).filter((f) => f.endsWith('.txt')).sort().map((f) => join(dir, f));
+const files = named.length > 0 ? named : dirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.txt')).sort().map((f) => join(d, f)));
 const maxStates = Number(option('states') ?? 400_000);
 const solo = !args.includes('--no-solo');
 const write = args.includes('--write');
+const fewer = args.includes('--fewer');
 
 /** Sets the `tape:` header of a level file, adding it after the other headers if it is missing. */
 function saveTape(file: string, tape: string): void {
@@ -137,6 +144,22 @@ for (const file of files) {
       if (tape.value.length - 1 > level.maxClones) {
         notes.push(`tape uses ${tape.value.length - 1} clones, level allows ${level.maxClones}`);
         bad = true;
+      }
+      if (level.maxClones > 0 && outcomeOfFlow(runTape(level, [tape.value.at(-1) ?? []], 120).world) === 'won') {
+        notes.push('the LAST LOOP WINS ALONE');
+        bad = true;
+      }
+      if (fewer && outcome === 'won' && tape.value.length > 2) {
+        const clones = tape.value.slice(0, -1);
+        clones.forEach((_, missing) => {
+          const result = searchRun(level, { clones: clones.filter((__, i) => i !== missing), maxStates });
+          if (result.found) {
+            notes.push(`WORKS WITHOUT clone ${missing + 1}: ${result.tape}`);
+            bad = true;
+          } else {
+            notes.push(`clone ${missing + 1} ${result.exhausted ? 'is needed' : `not replaced within ${result.states} states`}`);
+          }
+        });
       }
     }
   }

@@ -1,0 +1,17 @@
+; Quatre îles, quatre fils, deux leviers. Le dernier fil veut le levier vert allumé et le rose éteint ; mais on n'atteint le vert qu'avec le rose allumé, et le rose une fois éteint, ce fil-là se referme. Il reste le grand fil qui passe par-dessus, et que le vert a ouvert.
+name: L'aiguillage
+world: 9
+glyph: ! = wire + door e
+glyph: ? = wire + door f
+glyph: % = wire + gate e
+tip: Chaque fil a sa barrière, chaque barrière son levier, et sous ces linteaux on ne saute pas. La dernière barrière en veut deux.
+hint: Traverse l'île du rose : il s'allume. Sur l'île suivante, pose le pied sur le vert et reviens sur tes pas sans le dépasser. Retraverse l'île du rose : il s'éteint. Retourne au départ et prends le grand fil du haut, que le vert a ouvert : il te dépose au-delà du levier.
+tape: R6 _6 E1 _5 R48 E1 _5 R18 _6 E1 _5 R48 E1 _5 R10 _4 L11 _4 E1 _5 L48 E1 _5 L18 _6 E1 _5 L48 E1 _5 L18 _6 E1 _5 U36 R162 D36 E1 _5 R18 _6 E1 _5 R48 E1 _5 R18 _2
+
+z=0
+........................
+.=======?=======........
+.=.............=........
+.=.#####.#####.=.#####..
+.*@*===*e*=!=*f*.*?%=*.X
+####...###...#####...###

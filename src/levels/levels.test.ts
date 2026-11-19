@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { Level } from '../core/types';
 import { outcomeOfFlow, playerOfFlow } from '../flow/physics';
 import { parseTape, runTape } from '../flow/tape';
-import { LEVEL_SOURCES, WORLD_NAMES, loadLevels } from './index';
+import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, chapterLabel, loadLevels } from './index';
 
 const levels = loadLevels();
-const entries = levels.map((level, i) => ({ id: LEVEL_SOURCES[i]?.id ?? '', level }));
+const entries = levels.map((level, i) => ({ id: LEVEL_SOURCES[i]?.id ?? '', campaign: LEVEL_SOURCES[i]?.campaign ?? 'main', level }));
+const levelsOf = (campaign: CampaignId): Level[] => entries.filter((e) => e.campaign === campaign).map((e) => e.level);
+/** Eight levels per chapter, chapter after chapter. */
+const eightEach = (campaign: CampaignId): number[] => campaignById(campaign).chapters.flatMap((chapter) => Array.from({ length: 8 }, () => chapter.world));
 const named = (slug: string): Level => {
   const found = entries.find((e) => e.id.endsWith(slug));
   if (!found) throw new Error(`No level "${slug}"`);
@@ -18,10 +21,32 @@ const loopsOf = (tape: string) => {
 };
 const run = (level: Level, tape: string, settle = 0) => runTape(level, loopsOf(tape), settle).world;
 
-describe('the campaign', () => {
-  it('is eight worlds of eight levels, in the order of the files', () => {
-    expect(WORLD_NAMES).toHaveLength(8);
-    expect(levels.map((level) => level.world)).toEqual(WORLD_NAMES.flatMap((_, w) => Array.from({ length: 8 }, () => w + 1)));
+describe('the campaigns', () => {
+  it('main is eight worlds of eight levels, in the order of the files', () => {
+    expect(campaignById('main').chapters).toHaveLength(8);
+    expect(levelsOf('main').map((level) => level.world)).toEqual(eightEach('main'));
+  });
+
+  it('hardcore is four chapters of eight levels, played after the main campaign and opened by it', () => {
+    const hardcore = campaignById('hardcore');
+    expect(hardcore.chapters).toHaveLength(4);
+    expect(hardcore.requires).toBe('main');
+    expect(levelsOf('hardcore').map((level) => level.world)).toEqual(eightEach('hardcore'));
+    // Play order is one list: every main level comes before the first hardcore one.
+    expect(entries.map((e) => e.campaign)).toEqual([...levelsOf('main').map(() => 'main'), ...levelsOf('hardcore').map(() => 'hardcore')]);
+  });
+
+  it('numbers its chapters once across campaigns, and counts them from one in each', () => {
+    const worlds = CAMPAIGNS.flatMap((campaign) => campaign.chapters.map((chapter) => chapter.world));
+    expect(new Set(worlds).size).toBe(worlds.length);
+    expect(chapterLabel(3)).toBe('3');
+    expect(chapterLabel(9)).toBe('H1');
+    expect(chapterLabel(12)).toBe('H4');
+  });
+
+  it('saves progress under ids that tell the campaigns apart', () => {
+    expect(new Set(entries.map((e) => e.id)).size).toBe(entries.length);
+    for (const e of entries) expect(e.id.startsWith('hardcore/')).toBe(e.campaign === 'hardcore');
   });
 
   it('gives every level a name of its own, an opening line and a hint', () => {
@@ -33,9 +58,17 @@ describe('the campaign', () => {
   });
 
   it('keeps the first two worlds without clones, and reflections for the seventh', () => {
-    for (const level of levels.filter((l) => l.world <= 2)) expect(level.maxClones).toBe(0);
-    for (const level of levels.filter((l) => l.mirror)) expect([7, 8]).toContain(level.world);
-    expect(levels.filter((l) => l.world === 7).every((l) => l.mirror)).toBe(true);
+    const main = levelsOf('main');
+    for (const level of main.filter((l) => l.world <= 2)) expect(level.maxClones).toBe(0);
+    for (const level of main.filter((l) => l.mirror)) expect([7, 8]).toContain(level.world);
+    expect(main.filter((l) => l.world === 7).every((l) => l.mirror)).toBe(true);
+  });
+
+  it('hardcore: le vertige is walked alone, le contre-jour is all reflections, la ruine all slabs', () => {
+    const hardcore = levelsOf('hardcore');
+    for (const level of hardcore.filter((l) => l.world === 9)) expect(level.maxClones, level.name).toBe(0);
+    for (const level of hardcore.filter((l) => l.world === 11)) expect(level.mirror, level.name).toBe(true);
+    for (const level of hardcore.filter((l) => l.world === 12)) expect(level.cells.some((cell) => cell.fragile), level.name).toBe(true);
   });
 });
 

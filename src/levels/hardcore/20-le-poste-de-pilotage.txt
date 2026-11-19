@@ -1,0 +1,30 @@
+; La profondeur n'est pas inversée, E non plus. Le reflet doit déplier, s'enfoncer, se replier au pied de sa marche, prendre le fil qui monte, fait un pas de côté puis revient vers l'avant, et finir sur la plaque : une longue suite de touches. Celui qui les enregistre les rejoue de son côté, où presque tout l'avant est du vide : il lui faut le coin du fond, à droite, où le mur de devant les lui fait perdre.
+name: Le poste de pilotage
+world: 11
+clones: 1
+mirror: true
+glyph: $ = start + threshold
+tip: Sa plaque est tout en haut à gauche, au bout d'un fil qui part du fond. Tes touches l'y mènent ; encore faut-il que tu leur survives, de ton côté.
+hint: Première course : E, ↑ jusqu'au fond, → jusqu'au coin ; E (il se replie devant sa marche), → avec un saut (il monte dessus), E (il entre dans le fil), ↑, un peu de →, puis ↓ (le fil revient vers l'avant), E, et → pour finir. Dans ton coin, le mur de devant arrête ton ↓. Seconde course : va attendre devant la porte.
+tape: E1 _3 U30 R70 E1 _3 RJ20 R10 E1 U30 R20 D30 E1 R30 _20 | R35 _215 R60
+
+z=0
+#a*........#...
+###........#...
+...........#...
+.......$...A.X.
+......########.
+
+z=1
+..=............
+...............
+............#..
+............#..
+.......#....#..
+
+z=2
+..==...........
+...=.........#.
+..#*.........#.
+..##^........#.
+..############.

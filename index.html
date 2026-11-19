@@ -40,6 +40,7 @@
         <p id="win-stars" class="stars" aria-label="Étoiles"></p>
         <p id="win-stats" class="stats"></p>
         <p id="win-time" class="stats"></p>
+        <p id="win-extra" class="stats note" hidden></p>
         <p class="hint"><kbd>Entrée</kbd> <span id="win-next">niveau suivant</span> · <kbd>Maj</kbd>+<kbd>R</kbd> rejouer</p>
       </section>
 
@@ -47,14 +48,15 @@
 
       <section id="title" class="screen">
         <h1>PARAHYDOX</h1>
-        <p class="tagline">Un seul monde. Trois façons de le lire.</p>
+        <p id="tagline" class="tagline">Un seul monde. Trois façons de le lire.</p>
         <p class="hint blink"><kbd>Entrée</kbd> pour jouer</p>
       </section>
 
       <section id="select" class="screen" hidden>
-        <h2>Niveaux</h2>
+        <div id="select-tabs" class="tabs" role="tablist" aria-label="Campagne"></div>
+        <p id="select-pitch" class="pitch"></p>
         <div id="select-grid" class="select-grid"></div>
-        <p class="hint"><kbd>←</kbd><kbd>→</kbd> choisir · <kbd>Entrée</kbd> jouer · <kbd>Échap</kbd> retour</p>
+        <p class="hint"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> choisir · <kbd>Tab</kbd> changer de campagne · <kbd>Entrée</kbd> jouer · <kbd>Échap</kbd> retour</p>
       </section>
 
       <p id="boot" class="boot">Chargement…</p>

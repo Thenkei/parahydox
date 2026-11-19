@@ -1,0 +1,14 @@
+; Deux fils qui s'arrêtent au-dessus du vide, à une case de la rive : qui en sort tombe. Mais un voyageur sur un fil a une tête, et il glisse à la vitesse d'un coureur : en maintenant → comme lui depuis le départ, on reste dessus. Le premier clone porte le second, qui porte le joueur.
+name: L'unisson
+world: 10
+clones: 2
+tip: Ces fils s'arrêtent au-dessus du vide. Celui qui glisse dessus va exactement à ton pas.
+hint: Première course : cours sans t'arrêter, E au passage sur le losange, et garde → jusqu'au bout du fil. Deuxième : maintiens → dès le départ, saute sur la tête de ton clone et laisse-toi porter ; sur la rive, prends le second fil de la même façon. Troisième : → toujours, d'une tête à l'autre.
+tape: R36 RE1 R110 _20 | R6 RJ16 R129 RE1 R130 _20 | R6 RJ16 R108 RJ16 R160
+
+z=0
+........................
+........................
+@..*=====*...*=======*.X
+####......####........##
+####......####........##

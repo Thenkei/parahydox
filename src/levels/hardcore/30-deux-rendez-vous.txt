@@ -1,0 +1,15 @@
+; Le clone doit attendre deux fois quelqu'un qui n'existe pas encore : sur la plaque, le temps que le joueur aille au levier et en revienne, puis sur la dalle, le temps qu'il passe. Sans lui sur la dalle, le vide fait cinq cases.
+name: Deux rendez-vous
+world: 12
+clones: 1
+tip: Le levier est derrière une porte, la porte tient à une plaque, et la seule dalle du vide ne servira qu'une fois.
+hint: Première course : reste trois secondes sur la plaque, saute sur la dalle, restes-y trois secondes encore, puis va tomber sur la plaque du fond. Seconde course : file à gauche basculer le levier pendant que ton clone tient la porte, ressors, et traverse par la dalle pendant qu'il y est.
+tape: R20 _180 R29 RJ22 R8 _180 RJ26 R60 | L60 R60 _150 R38 RJ22 R8 _6 RJ26 R14 RJ20 R200
+
+z=0
+.......................
+...#..............##...
+...#..............##...
+#e.B.@.b..........AE.X#
+##########..~.##a######
+##########....#########

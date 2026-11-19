@@ -1,0 +1,17 @@
+; Dos au mur, chaque course envoie un reflet à gauche. Les deux plaques sont à deux étages, et l'étage du bas n'a qu'une entrée : la dalle, une fois tombée. Il faut donc qu'un reflet passe la dalle et la casse, et que l'autre arrive après lui, par les mêmes touches, pour tomber dans le trou.
+name: Le retardataire
+world: 12
+clones: 2
+mirror: true
+tip: Dos au mur, tes reflets partent à gauche. Deux plaques, deux étages, et une seule dalle entre les deux.
+hint: Première course : cours contre le mur de droite, longtemps ; ton reflet traverse la dalle et s'arrête sur la plaque du haut. Deuxième : attends d'abord une seconde (↓ ne fait rien), puis cours contre le mur ; ce reflet-là arrive quand la dalle est tombée, et finit en bas. Troisième : pars à gauche tout de suite.
+tape: R150 | D60 R160 | L112 LJ20 L80
+
+z=0
+..##................
+..##................
+..##................
+X.BA.............@##
+######a######~######
+#########b....######
+####################

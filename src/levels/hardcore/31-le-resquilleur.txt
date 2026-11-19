@@ -1,0 +1,18 @@
+; Quatre étages, et à chaque étage des dalles que seul le premier arrivé traverse : les suivants tombent d'un étage. La sortie est au deuxième rang. Les clones du bas sont donc enregistrés un étage trop haut, et c'est le joueur, en se glissant devant eux à la dernière course, qui les fait tous descendre d'un cran.
+name: Le resquilleur
+world: 12
+clones: 3
+tip: À chaque étage, le premier passe et les suivants tombent. Tes clones rejouent tes touches, pas ta chute.
+hint: Première course : cours à droite jusqu'à la plaque du haut. Deuxième : attends deux secondes (↓ ne fait rien), puis garde → enfoncé : tu finis contre les portes. Troisième : attends quatre secondes, puis → : tu finis sur la plaque d'en dessous. Dernière course : pars juste après ton premier clone, avant les deux autres : chacun d'eux tombera un étage plus bas qu'à l'enregistrement.
+tape: R230 | D120 R240 | D240 R240 | D40 R480
+
+z=0
+.....................
+.@................c##
+###~#################
+###............ABC.X#
+#######~~############
+#######...........b##
+############~~#######
+############......a##
+#####################

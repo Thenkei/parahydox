@@ -1,0 +1,14 @@
+; Trois caisses dans un tunnel où l'on ne saute pas, une plaque tout au fond à gauche, le fil tout au bout à droite. On ne pousse qu'une caisse à la fois : il faut plonger deux fois, d'abord pour jeter la dernière caisse dans le vide, et ressortir par le petit fil avant de s'occuper des deux autres.
+name: Le goulot
+world: 9
+glyph: ! = wire + door a
+tip: Trois caisses, et on n'en pousse qu'une à la fois. Sous ce toit on ne saute pas : regarde avant de tomber.
+hint: Saute le premier trou et tombe dans le deuxième : pousse la caisse de droite dans le vide, puis remonte par le petit fil sans toucher aux autres. Tombe ensuite dans le premier trou : une caisse à gauche sur la plaque, l'autre à droite dans le vide, et le grand fil est ouvert.
+tape: R76 RJ12 R10 _6 R8 _24 R104 _10 L26 _4 E1 _3 U26 R14 E1 _6 L4 LJ12 L12 LJ12 L6 _12 L9 _24 L62 _4 R176 _10 E1 _3 R90 E1 _4 R40
+
+z=0
+........................
+@..........=*...........
+#######.#.#=##..........
+####a.o.o.o*.*====!=*..X
+##############......####

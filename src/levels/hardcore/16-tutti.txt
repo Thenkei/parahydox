@@ -1,0 +1,17 @@
+; Quatre voyageurs doivent passer la première porte : deux pour faire l'échelle au pied du mur, un pour tomber sur la plaque d'en haut, et le joueur. Mais celui qui tient la plaque de la porte ne peut pas la franchir, sauf si quelqu'un reste dans l'embrasure. Le premier clone tient la plaque puis court contre la porte, fermée pour lui ; le second l'attend dans la porte, puis monte sur sa tête.
+name: Tutti
+world: 10
+clones: 3
+tip: Une plaque, une porte, trois cases de mur, et là-haut un trou d'où l'on ne ressort pas. Il faut tout le monde de l'autre côté de la porte, même celui qui la tient.
+hint: Première course : reste sur la plaque deux bonnes secondes, puis maintiens → contre la porte, longtemps. Deuxième : arrête-toi dans l'embrasure jusqu'à ce qu'il soit passé, suis-le au pied du mur et monte sur sa tête. Troisième : passe la porte tout de suite, attends l'échelle, grimpe (le dernier saut tenu jusqu'au bout, contre le mur), et laisse-toi tomber dans le trou. Quatrième : pareil, mais saute le trou.
+tape: R24 _100 R200 | R70 _120 R80 RJ20 R10 _20 | R150 _160 RJ20 R8 RJ20 R8 RJ24 R60 _10 | R150 _170 RJ20 R8 RJ20 R8 RJ24 R12 RJ14 R80
+
+z=0
+......#...........#..
+......#...........#..
+......#...........C..
+......#...........C.X
+......#......##.#####
+......D......##c#####
+@.d...D......########
+#####################

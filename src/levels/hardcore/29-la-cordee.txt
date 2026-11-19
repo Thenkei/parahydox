@@ -1,0 +1,15 @@
+; Un mur de trois cases au bout d'un pont de dalles : il faut deux têtes l'une sur l'autre, donc trois voyageurs qui passent le pont ensemble. Le levier est derrière le mur et la sortie au départ : celui qui grimpe doit pouvoir rentrer, sur les dalles que la cordée aura épargnées.
+name: La cordée
+world: 12
+clones: 2
+tip: Trois cases de mur : deux têtes, l'une sur l'autre. Et il faudra rentrer.
+hint: Les trois courses commencent pareil : avance sur la première dalle, saute sur la troisième, saute sur la cinquième, contre le mur, en marquant un temps sur chacune. Le premier reste là. Le deuxième saute sur sa tête. Le troisième grimpe sur les deux, passe le mur (dernier saut tenu jusqu'au bout, en poussant contre lui), bascule le levier, et rentre par les deux dalles que personne n'a touchées.
+tape: R21 _30 RJ28 _30 RJ28 R10 _20 | R21 _30 RJ28 _30 RJ28 R10 J20 _30 | R21 _30 RJ28 _30 RJ28 R10 J20 _20 J20 _20 RJ30 R40 L37 _30 L10 _30 LJ28 _10 LJ28 L40
+
+z=0
+.............
+.#.........e#
+.#.......####
+.#.......####
+XE@......####
+####~~~~~####

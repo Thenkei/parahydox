@@ -1,0 +1,17 @@
+; Tout le monde part du même endroit : au fond d'un puits de trois cases, une case de large. On saute à travers un clone et on retombe sur sa tête. Deux têtes empilées font sortir du puits, mais ceux qui portent restent au fond ; il faut un troisième clone au pied du mur.
+name: Le puits
+world: 10
+clones: 3
+tip: Trois cases à remonter, et pas la place de prendre de l'élan. Tes clones partent du même endroit que toi.
+hint: Première course : ne bouge pas (↓ suffit à lancer la boucle), puis rembobine. Deuxième : saute sur place, tu retombes sur la tête de ton clone ; restes-y. Troisième : de tête en tête, sors du puits et va te poser au pied du mur. Quatrième : même chemin, puis la tête du troisième. Du haut de deux têtes, le bord est tout juste à portée : tiens le saut jusqu'au bout, en poussant contre le mur.
+tape: _40 | J20 _40 | RJ20 _10 RJ20 _10 RJ24 R80 _20 | RJ20 _10 RJ20 _10 RJ24 R70 RJ20 _6 RJ24 R50
+
+z=0
+..............
+............X.
+.........#####
+.........#####
+##.###########
+##.###########
+##@###########
+##############

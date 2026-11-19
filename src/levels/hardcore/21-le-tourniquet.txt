@@ -1,0 +1,15 @@
+; Le même levier ouvre les portes et ferme les grilles, des deux côtés. Chacun a donc besoin que l'autre bascule pendant qu'il est entre sa porte et sa grille : partir ensemble annule tout, et le reflet doit revenir sur ses pas pour le dernier basculement. Sous un linteau on ne saute pas : un levier se franchit à pied.
+name: Le tourniquet
+world: 11
+clones: 1
+mirror: true
+glyph: % = gate e
+tip: Trois leviers, un seul état. Une porte veut qu'il soit allumé, une grille qu'il soit éteint, et vous en avez chacun une de chaque.
+hint: Première course : cours à droite jusqu'à ta grille et insiste trois secondes ; attends une seconde ; puis cours à gauche deux bonnes secondes. Seconde course : laisse ton reflet passer sa porte, puis cours à droite sans t'arrêter : ton levier lui ouvre sa grille, le sien au fond t'ouvre ta porte, et son retour t'ouvre ta grille avant de le poser sur la plaque.
+tape: R200 _60 L150 | _40 R400
+
+z=0
+...#..#.......#..#.#..
+#.##..#.#...#.#..#.#..
+#.e%.aE.e.@.e.E..%.A.X
+######################

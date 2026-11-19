@@ -1,0 +1,15 @@
+; Une seule caisse pour deux murs. Poussée contre le premier, elle n'en repart plus : il faut la laisser à une case du mur, sauter de là-haut, puis redescendre derrière elle pour la renvoyer de l'autre côté.
+name: La marge
+world: 9
+tip: Une caisse, deux murs. On ne tire pas une caisse : on passe derrière.
+hint: Saute par-dessus la caisse et pousse-la vers la gauche, mais arrête-toi une case avant le mur. Grimpe, bascule le levier, redescends entre le mur et la caisse, et pousse-la jusqu'au mur de droite.
+tape: R4 RJ16 R24 _6 L145 LJ12 L14 LJ16 L26 _8 R24 _24 R236 RJ12 R14 RJ16 R60
+
+z=0
+....................
+.................#..
+.................#..
+#e...............E.X
+###.............####
+###.....@.o.....####
+####################

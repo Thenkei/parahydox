@@ -1,0 +1,16 @@
+; Le fil s'arrête au pied d'une falaise de trois cases. Une tête ne suffit pas, et il n'y a pas de sol où en empiler deux : le premier clone glisse sur le fil, le second voyage sur sa tête et y reste, contre la falaise. Le joueur, porté lui aussi, monte sur le second à travers lui, puis saute.
+name: La pièce montée
+world: 10
+clones: 2
+tip: Le fil s'arrête au pied de la falaise, au-dessus du vide. Trois cases : il faudrait deux têtes l'une sur l'autre.
+hint: Première course : prends le fil jusqu'au bout. Deuxième : fais-toi porter et reste sur sa tête, contre la falaise. Troisième : fais-toi porter aussi ; au bout, saute sur place pour retomber sur la tête du second, puis saute encore en maintenant → : du haut de deux têtes le bord est tout juste à portée, tiens le saut jusqu'au bout.
+tape: R36 RE1 R140 _20 | R6 RJ16 R200 _20 | R6 RJ16 R128 RJ20 R8 RJ24 R60
+
+z=0
+.................
+...............X.
+.............####
+.............####
+@..*========*####
+####.........####
+####.........####
