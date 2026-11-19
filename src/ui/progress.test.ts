@@ -116,7 +116,7 @@ describe('what is open', () => {
 
 describe('a win', () => {
   it('keeps the fastest time', () => {
-    const first = withWin({ last: null, times: {} }, 'm1', 12);
+    const first = withWin({ last: null, times: {}, seenLessons: [] }, 'm1', 12);
     expect(withWin(first, 'm1', 15).times.m1).toBe(12);
     expect(withWin(first, 'm1', 9).times.m1).toBe(9);
   });
