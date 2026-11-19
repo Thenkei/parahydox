@@ -22,7 +22,12 @@ export type Sound =
   | 'win'
   | 'select';
 
-const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16];
+/** Two octaves of a pentatonic scale, in semitones above the root. */
+const SCALES = {
+  major: [0, 2, 4, 7, 9, 12, 14, 16],
+  minor: [0, 3, 5, 7, 10, 12, 15, 17],
+} as const;
+export type Mode = keyof typeof SCALES;
 const semitones = (n: number): number => 2 ** (n / 12);
 
 export class Audio {
@@ -32,6 +37,7 @@ export class Audio {
   private meter: AnalyserNode | null = null;
   private musicTimer: number | null = null;
   private root = 220;
+  private scale: readonly number[] = SCALES.major;
   private note = 0;
   muted = false;
 
@@ -82,9 +88,10 @@ export class Audio {
     return Math.sqrt(samples.reduce((sum, v) => sum + v * v, 0) / samples.length);
   }
 
-  /** Each chapter sings in its own key. */
-  setRoot(frequency: number): void {
-    this.root = frequency;
+  /** Each chapter sings in its own key: brighter worlds in major, burnt ones in minor. */
+  setKey(root: number, mode: Mode): void {
+    this.root = root;
+    this.scale = SCALES[mode];
   }
 
   dispose(): void {
@@ -195,7 +202,7 @@ export class Audio {
         break;
       case 'rewind':
         for (let i = 0; i < 9; i++) {
-          this.tone({ freq: r * semitones(PENTATONIC[8 - i - 1] ?? 0) * 2, duration: 0.07, type: 'square', gain: 0.05, delay: delay + i * 0.055 });
+          this.tone({ freq: r * semitones(this.scale[8 - i - 1] ?? 0) * 2, duration: 0.07, type: 'square', gain: 0.05, delay: delay + i * 0.055 });
         }
         this.tone({ freq: r * 4, to: r * 0.5, duration: 0.6, type: 'sawtooth', gain: 0.05, delay });
         break;
@@ -217,8 +224,8 @@ export class Audio {
   private playMelodyNote(): void {
     if (this.ctx === null || this.muted || this.ctx.state !== 'running') return;
     if (Math.random() < 0.25) return;
-    this.note = Math.max(0, Math.min(PENTATONIC.length - 1, this.note + Math.round(Math.random() * 4 - 2)));
-    const freq = this.root * semitones(PENTATONIC[this.note] ?? 0);
+    this.note = Math.max(0, Math.min(this.scale.length - 1, this.note + Math.round(Math.random() * 4 - 2)));
+    const freq = this.root * semitones(this.scale[this.note] ?? 0);
     this.tone({ freq, duration: 2.2, gain: 0.05, echo: true });
     if (Math.random() < 0.3) this.tone({ freq: freq * 1.5, duration: 1.8, gain: 0.025, delay: 0.5, echo: true });
     this.tone({ freq: this.root / 2, duration: 2.4, gain: 0.03 });

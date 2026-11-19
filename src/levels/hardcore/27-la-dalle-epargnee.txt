@@ -1,0 +1,17 @@
+; Un pont de six dalles pour trois passages : le clone à pied vers la plaque, le joueur vers l'ancre, puis son retour. La dalle de l'ancre est la seule qu'on puisse quitter sans la perdre, par le fil : personne ne doit la quitter à pied avant la fin, et il faut encore des dalles pour l'atteindre et pour rentrer.
+name: La dalle épargnée
+world: 12
+clones: 1
+glyph: ! = wire + door a
+tip: Six dalles, et trois passages : ton clone vers la plaque, toi vers l'ancre, puis ton retour. Sur un fil, tu ne pèses rien.
+hint: Première course : deux grands bonds par-dessus le pont, sans toucher la dalle de l'ancre, puis tombe sur la plaque. Seconde course : laisse partir ton clone, saute sur la deuxième dalle, puis sur celle de l'ancre, et prends le fil. Bascule le levier là-haut, reviens par le fil : il reste la première dalle pour rentrer.
+tape: R27 RJ20 R14 RJ20 R90 | D40 R16 RJ20 R10 RJ20 R3 E1 U14 R100 U26 R14 E1 R22 L24 E1 L14 D26 L100 D14 E1 L4 LJ20 L120
+
+z=0
+........................
+...................=*.e#
+..#................=####
+..#........====!====....
+X.E..@.....*............
+########~~~~~~###a######
+########......##########

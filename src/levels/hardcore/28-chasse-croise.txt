@@ -1,0 +1,29 @@
+; Deux ponts dans deux coupes, deux leviers, et deux fils qui ne s'ouvrent qu'une fois leur levier basculé : l'aller se fait donc à pied. Le premier fil dépose sur le second pont. Le second ramène sur une dalle du premier, au milieu : il faut l'avoir enjambée à l'aller, et avoir gardé de quoi rentrer.
+name: Chassé-croisé
+world: 12
+glyph: ! = wire + door e
+glyph: % = wire + door f
+tip: Chaque fil reste fermé tant que son levier n'est pas basculé. Regarde où le dernier fil te déposera.
+hint: Le fil du fond te ramène sur l'avant-dernière dalle du premier pont. À l'aller, saute donc par-dessus la première dalle, marche, et saute par-dessus celle de l'ancre. Au retour, un bond jusqu'à la première dalle, restée debout.
+tape: R6 RJ20 R19 RJ20 R40 L14 E1 U60 L80 D30 E1 R90 L22 E1 D14 L26 D14 E1 L3 LJ20 L80
+
+z=0
+...............
+............=..
+.##.........=..
+XFE.@....*..*e#
+######~~~~~####
+
+z=1
+...............
+............!..
+...............
+.........=%=...
+...............
+
+z=2
+...............
+......=======..
+......=........
+......*....*.f#
+......~~~~~####

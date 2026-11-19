@@ -1,0 +1,12 @@
+; Trois traversées pour un seul pont : aller au levier de droite, revenir à celui de gauche, repartir vers la sortie. Chaque dalle ne sert qu'une fois : il faut en garder pour le retour, et pour le second aller.
+name: Un sur trois
+world: 12
+tip: Un seul pont, et trois traversées à faire. Une dalle quittée est une dalle perdue.
+hint: Ne marche jamais sur le pont : à chaque bond, saute par-dessus deux dalles. À l'aller tu ne touches que la troisième et la sixième ; au retour la septième, la quatrième et la première ; il reste alors la deuxième, la cinquième et la huitième pour repartir.
+tape: R27 RJ20 R14 RJ20 R14 RJ20 R34 L20 LJ20 L14 LJ20 L14 LJ20 L92 R66 RJ20 R18 RJ20 R14 RJ20 R100
+
+z=0
+........................
+...#................#...
+#f.E.@............e.F..X
+########~~~~~~~~########

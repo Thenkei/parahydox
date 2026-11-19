@@ -253,7 +253,7 @@ function drawBlock(frame: SceneFrame, x: number, y: number, z: number): void {
   }
 
   // Outline the silhouette so terrain reads against a painted sky.
-  ctx.strokeStyle = 'rgba(20, 16, 30, 0.55)';
+  ctx.strokeStyle = theme.outline;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   if (!solid(-1, 0, 0)) segmentPath(ctx, top.x, top.y, top.x, top.y + c);
@@ -262,12 +262,110 @@ function drawBlock(frame: SceneFrame, x: number, y: number, z: number): void {
   ctx.stroke();
 
   if (topExposed) {
-    drawGrassFringe(frame, x, y, z, top);
-    // Small life on the grass, only where nothing that matters stands, and only along
+    const burnt = theme.biome === 'ember';
+    if (burnt) drawEmberSeam(frame, x, y, z, top);
+    else drawGrassFringe(frame, x, y, z, top);
+    // Small life on the ground, only where nothing that matters stands, and only along
     // the edge facing the camera so the ground stays readable in 3D.
     const above = cellAt(level, vec(x, y + 1, z));
     const bare = above !== null && !above.exit && !above.anchor && !above.threshold && above.plate === null && above.lever === null && above.door === null;
-    if (bare && !(open && solid(0, 0, -1))) drawSprig(frame, x, y, z, top);
+    if (bare && !(open && solid(0, 0, -1))) (burnt ? drawCinder : drawSprig)(frame, x, y, z, top);
+  }
+}
+
+/**
+ * Burnt ground: where grass would spill over the edge, a crust of cooled rock, and under
+ * it a seam that still glows. Each block breathes on its own phase.
+ */
+function drawEmberSeam(frame: SceneFrame, x: number, y: number, z: number, top: Point): void {
+  const { ctx, cam, theme, time } = frame;
+  const c = cam.cell;
+  const pulse = 0.7 + 0.3 * Math.sin(time * 1.7 + hash(x, y, z) * Math.PI * 2);
+
+  // Heat rising off the seam.
+  ctx.fillStyle = withAlpha(theme.grassLight, 0.08 * pulse);
+  ctx.fillRect(top.x, top.y - c * 0.22, c, c * 0.22);
+  ctx.fillStyle = withAlpha(theme.grassLight, 0.12 * pulse);
+  ctx.fillRect(top.x, top.y - c * 0.1, c, c * 0.1);
+
+  // The crust: angular where grass was soft.
+  const teeth = 4;
+  ctx.fillStyle = theme.grassDark;
+  ctx.beginPath();
+  ctx.moveTo(top.x - 1, top.y - c * 0.03);
+  ctx.lineTo(top.x + c + 1, top.y - c * 0.03);
+  for (let i = teeth; i >= 0; i--) {
+    const drop = 0.07 + hash(x * 7 + i, y, z) * 0.1;
+    ctx.lineTo(top.x + (c * (i + 0.35)) / teeth, top.y + c * drop);
+    ctx.lineTo(top.x + (c * i) / teeth, top.y + c * 0.05);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = withAlpha(theme.grassLight, pulse);
+  ctx.fillRect(top.x - 1, top.y - c * 0.045, c + 2, c * 0.07);
+  ctx.fillStyle = withAlpha(COLORS.paper, 0.55 * pulse);
+  ctx.fillRect(top.x - 1, top.y - c * 0.03, c + 2, c * 0.022);
+
+  // A flame or two licking up from the seam.
+  ctx.fillStyle = theme.grassLight;
+  for (let i = 0; i < 2; i++) {
+    const r = hash(x, y * 5 + i, z + 3);
+    if (r < 0.55) continue;
+    const bx = top.x + c * (0.22 + 0.5 * i + r * 0.1);
+    const flicker = 0.55 + 0.45 * Math.sin(time * (7 + r * 5) + r * 40 + x);
+    const height = c * (0.07 + r * 0.09) * flicker;
+    const lean = Math.sin(time * 3.1 + r * 9) * c * 0.025;
+    ctx.beginPath();
+    ctx.moveTo(bx - c * 0.035, top.y - c * 0.03);
+    ctx.quadraticCurveTo(bx + lean, top.y - c * 0.03 - height * 1.7, bx + c * 0.035, top.y - c * 0.03);
+    ctx.fill();
+  }
+}
+
+/** What is left on burnt ground: a shard of glass, a coal still red, a pebble. Decoration, picked by position. */
+function drawCinder(frame: SceneFrame, x: number, y: number, z: number, top: Point): void {
+  const { ctx, cam, theme, time } = frame;
+  const c = cam.cell;
+  const pick = hash(x * 13 + 5, y * 7 + 1, z * 3 + 2);
+  if (pick < 0.66) return;
+  const at = top.x + c * (0.2 + hash(x, y + 21, z) * 0.6);
+  const base = top.y - c * 0.03;
+
+  if (pick < 0.82) {
+    // A shard standing in the ash, one face catching the light.
+    const height = c * (0.14 + hash(x + 3, y, z) * 0.1);
+    const lean = (hash(x, y, z + 40) - 0.5) * c * 0.08;
+    ctx.fillStyle = theme.rockDark;
+    ctx.beginPath();
+    ctx.moveTo(at - c * 0.05, base);
+    ctx.lineTo(at + lean, base - height);
+    ctx.lineTo(at + c * 0.05, base);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = withAlpha(theme.grassLight, 0.75);
+    ctx.beginPath();
+    ctx.moveTo(at + c * 0.005, base);
+    ctx.lineTo(at + lean, base - height);
+    ctx.lineTo(at + c * 0.05, base);
+    ctx.closePath();
+    ctx.fill();
+  } else if (pick < 0.92) {
+    const heat = 0.6 + 0.4 * Math.sin(time * 2.3 + x * 1.7 + z);
+    glow(ctx, at, base - c * 0.03, c * 0.2, theme.grassLight, 0.4 * heat);
+    ctx.fillStyle = theme.grassDark;
+    ctx.beginPath();
+    ctx.ellipse(at, base - c * 0.03, c * 0.065, c * 0.045, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = withAlpha(theme.grassLight, heat);
+    ctx.beginPath();
+    ctx.ellipse(at, base - c * 0.035, c * 0.035, c * 0.022, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = theme.rockDark;
+    ctx.beginPath();
+    ctx.ellipse(at, base - c * 0.025, c * 0.07, c * 0.045, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -620,7 +718,7 @@ function drawLever(ctx: CanvasRenderingContext2D, feet: Point, c: number, color:
   const tipX = feet.x + Math.sin(lean) * c * 0.42;
   const tipY = feet.y - c * 0.1 - Math.cos(lean) * c * 0.42;
   if (on) glow(ctx, tipX, tipY, c * 0.6, color, 0.55);
-  ctx.strokeStyle = COLORS.ink;
+  ctx.strokeStyle = theme.metal;
   ctx.lineWidth = Math.max(3, c * 0.09);
   ctx.lineCap = 'round';
   ctx.beginPath();
@@ -630,6 +728,7 @@ function drawLever(ctx: CanvasRenderingContext2D, feet: Point, c: number, color:
   ctx.beginPath();
   ctx.arc(tipX, tipY, c * 0.1, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = COLORS.ink;
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.fillStyle = theme.rockDark;
@@ -680,6 +779,13 @@ function drawGate(
   ctx.fillStyle = theme.rockDark;
   ctx.fillRect(topLeft.x + c * 0.1, topLeft.y, c * 0.12, c + 0.5);
   ctx.fillRect(topLeft.x + c * 0.78, topLeft.y, c * 0.12, c + 0.5);
+  // Posts of dark rock vanish against a dark sky: edge them with the terrain's own line.
+  if (theme.biome === 'ember') {
+    ctx.strokeStyle = theme.outline;
+    ctx.lineWidth = 1.25;
+    ctx.strokeRect(topLeft.x + c * 0.1, topLeft.y, c * 0.12, c);
+    ctx.strokeRect(topLeft.x + c * 0.78, topLeft.y, c * 0.12, c);
+  }
   ctx.fillStyle = color;
   ctx.fillRect(topLeft.x + c * 0.1, topLeft.y + c * 0.42, c * 0.12, c * 0.1);
   ctx.fillRect(topLeft.x + c * 0.78, topLeft.y + c * 0.42, c * 0.12, c * 0.1);

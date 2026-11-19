@@ -1,0 +1,31 @@
+; Deux caisses, deux plaques, et un seul passage entre l'avant et le fond. Pousser tout droit celle qui est déjà devant la plaque de l'avant, c'est se priver de l'endroit d'où l'on poussera l'autre vers le fond : il n'y a pas de sol ailleurs. La plaque du fond d'abord ; la seconde caisse fera le tour.
+name: Le rangement
+world: 9
+glyph: $ = start + threshold
+tip: Deux plaques, deux caisses. Pour pousser, il faut du sol derrière soi.
+hint: Mets-toi sur la plaque de l'avant et pousse la caisse de droite vers le fond. Amène l'autre une case plus loin seulement, passe derrière elle en sautant par la caisse du fond, pousse-la vers l'avant, puis vers la droite jusqu'à la plaque.
+tape: E1 _3 R26 _4 U40 _6 D4 _4 L12 LJ14 L24 _4 R30 _4 D22 _4 R30 _4 U12 UJ14 U4 _6 L14 _6 D34 _4 L10 _4 D16 _4 R36 _4 L60
+
+z=0
+........
+###...##
+###...##
+XAB$.b##
+########
+########
+
+z=1
+........
+##....##
+##....##
+##.o.o##
+########
+########
+
+z=2
+........
+......##
+......##
+.....a##
+....####
+....####

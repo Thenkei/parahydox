@@ -1,0 +1,17 @@
+; L'unisson, avec un levier suspendu au milieu du vide, sur le passage du fil. Qui glisse sur le fil ne pèse rien ; qui se tient sur sa tête bascule le levier en passant. Le deuxième clone l'a basculé pour s'ouvrir la porte. Porté avec lui, le joueur le rebasculerait : il doit être en l'air à ce moment-là, ou déjà sur les épaules du second clone, un étage au-dessus du levier.
+name: La syncope
+world: 10
+clones: 2
+glyph: ! = wire + lever e
+tip: Un levier au milieu du vide. Celui qui glisse sur le fil ne le touche pas. Celui qu'il porte, si.
+hint: Première course : prends le premier fil. Deuxième : laisse-toi porter ; tes pieds basculent le levier et la porte s'ouvre ; prends le second fil. Troisième : fais-toi porter avec lui, mais saute une seconde fois avant le levier : tu retombes sur les épaules de ton second clone, au-dessus du levier. Sinon vous le basculez deux fois, et la porte reste fermée.
+tape: R24 RE1 R130 _20 | R4 RJ16 R155 RE1 R100 _20 | R4 RJ16 R14 RJ16 R230
+
+z=0
+.............#..........
+.............#..........
+.............E..........
+.............E..........
+@.*===!===*..E.*=====*.X
+###........#####......##
+###........#####......##

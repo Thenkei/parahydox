@@ -1,0 +1,19 @@
+; Trois étages, trois voix qui entrent l'une après l'autre. La plaque du bas ouvre la porte du milieu, celle du milieu ouvre la porte du haut, puis les plaques du haut ouvrent les portes du milieu, et celles du milieu les portes du bas. Aucune porte ne s'ouvre pendant qu'on enregistre : les deux clones ont couru contre une porte fermée, et c'est le joueur, en bas, qui donne le départ.
+name: Le canon
+world: 10
+clones: 2
+glyph: p = plate e
+glyph: q = plate f
+tip: Trois étages, et chaque porte s'ouvre depuis un autre étage. Tes clones rejouent tes touches, pas tes déplacements.
+hint: Première course : en haut, cours contre la porte et maintiens → en comptant jusqu'à huit. Deuxième : descends d'un étage par la gauche, puis même chose contre la porte du milieu. Troisième : descends tout en bas et cours à droite sans t'arrêter, en sautant les trous : ta plaque lâche la voix du milieu, qui lâche celle du haut, et chaque porte s'ouvre un instant.
+tape: R480 | L30 R450 | L75 R88 RJ14 R102 RJ14 R90
+
+z=0
+........E...............
+#....@..E....aa.....bb.#
+###.####################
+.......F.pp..A.cc..B.dd#
+.#######################
+............C.......D...
+...qq.......C.......D.X.
+#######..######..#######

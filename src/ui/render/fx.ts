@@ -67,15 +67,16 @@ export function drawBackdrop(
     ctx.restore();
   }
 
-  // Motes drifting up through the air: the world breathes even when nothing moves.
-  for (let i = 0; i < 16; i++) {
-    const rise = (time * (0.012 + (i % 4) * 0.004) + i * 0.137) % 1;
+  // Specks in the air, pollen or embers rising, ash falling: the world breathes even when nothing moves.
+  const { mote } = theme;
+  for (let i = 0; i < mote.count; i++) {
+    const travel = (time * (0.012 + (i % 4) * 0.004) + i * 0.137) % 1;
     const mx = ((i * 0.618) % 1) * width + Math.sin(time * 0.5 + i * 1.9) * 26;
     const twinkle = 0.25 + 0.75 * Math.abs(Math.sin(time * 1.3 + i * 2.1));
-    ctx.globalAlpha = twinkle * 0.5 * Math.sin(Math.PI * rise);
-    ctx.fillStyle = '#fff8ea';
+    ctx.globalAlpha = twinkle * 0.5 * Math.sin(Math.PI * travel);
+    ctx.fillStyle = mote.color;
     ctx.beginPath();
-    ctx.arc(mx, height * (1 - rise), 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
+    ctx.arc(mx, height * (mote.drift > 0 ? 1 - travel : travel), 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;

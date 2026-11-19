@@ -1,0 +1,18 @@
+; Quatre leviers en poupées russes : le premier est libre, le deuxième derrière la porte du premier, le troisième veut le deuxième allumé et le premier éteint, le quatrième veut le troisième allumé et les deux autres éteints. La sortie les veut tous. C'est le casse-tête des anneaux : dix bascules, dans un ordre qui ne s'improvise pas.
+name: Le baguenaudier
+world: 9
+glyph: % = gate e
+glyph: & = gate f
+tip: Quatre leviers, et la sortie les veut tous allumés. Mais chaque levier se cache derrière les barrières des précédents.
+hint: Dix bascules : rose, vert, rose, bleu, rose, vert, rose, jaune, rose, vert. Pour atteindre un levier, il faut que le précédent soit allumé et tous ceux d'avant éteints.
+tape: L46 R58 RJ20 _6 LJ16 L44 R54 L70 R58 RJ20 _4 RJ16 R4 RJ16 R66 L50 LJ20 L110 R58 RJ20 _6 LJ16 L44 R54 L70 R58 RJ20 _4 RJ16 R4 RJ16 R2 RJ16 R60 L184 R58 RJ20 _6 LJ16 L44 R170
+
+z=0
+..................
+.............#####
+.............G&%h#
+....#.......######
+##f.E.....#.F%.g##
+######...#########
+##e...@#..EFGH.X##
+##################

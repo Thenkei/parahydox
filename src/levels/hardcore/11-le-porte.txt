@@ -1,0 +1,16 @@
+; Trois cases de mur, deux têtes à empiler, deux clones seulement, et celui qui monte doit rester là-haut sur les plaques : le joueur ne peut donc pas être celui qui monte. Il fait le deuxième étage. Le clone qui grimpe a été enregistré avant, sautant trois fois contre le mur sans y arriver : ses touches trouvent une marche de plus.
+name: Le porté
+world: 10
+clones: 2
+tip: Les plaques sont en haut de trois cases de mur, la sortie est en bas. Tes clones rejouent tes touches, pas tes déplacements.
+hint: Première course : va au pied du mur et restes-y. Deuxième : saute sur sa tête, saute encore deux fois à fond en maintenant →, et garde → enfoncé longtemps. Troisième : monte sur la tête du premier et ne bouge plus ; l'autre te passe sur les épaules et court jusqu'aux plaques. Redescends vers la sortie.
+tape: R60 _20 | R45 RJ20 R12 RJ20 R12 RJ20 R150 | R45 RJ20 R6 _120 L90
+
+z=0
+.#..........#
+.#..........#
+.#........bb#
+.#.....######
+.B.....######
+XB.@...######
+#############

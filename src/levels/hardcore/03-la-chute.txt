@@ -1,0 +1,18 @@
+; Trois fils dont l'ancre flotte sous le bord : on ne les attrape qu'en se laissant tomber. Entre les deux premiers, une caisse à jeter du bon côté, sur la plaque tout en bas, et un levier qu'on foulera forcément en la poussant : il ne faut donc pas y avoir touché avant.
+name: La chute
+world: 9
+glyph: ! = wire + door a
+tip: Ces ancres flottent sous le bord : laisse-toi tomber, et E au passage. Une caisse, elle, tombe tout droit.
+hint: Tombe du bord et attrape le fil. Là-haut, saute sur la caisse sans toucher le levier, passe derrière elle et pousse-la vers la gauche : elle tombe sur la plaque, et tu as basculé le levier en la suivant. Laisse-toi tomber du même bord pour le deuxième fil, passe la porte, et recommence au bord suivant.
+tape: R36 E1 _5 R48 U12 R36 D12 E1 _5 R6 RJ12 R12 J6 R12 _12 L96 _6 L12 E1 _5 D12 R36 E1 _5 R36 E1 _5 D24 L24 E1 _5 L6 _3
+
+z=0
+.................
+@......====......
+###*====..*e.o...
+.........*#######
+.........=!=*E...
+...........####*.
+...........#...=.
+.........a.#X*==.
+.........#.###...

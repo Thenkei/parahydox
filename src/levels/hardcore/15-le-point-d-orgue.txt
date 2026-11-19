@@ -1,0 +1,19 @@
+; Le levier est au fond du puits : chacun le bascule en tombant. Trois voyageurs, donc ouvert, fermé, ouvert pour la porte, et l'inverse pour la grille. Le dernier arrivé trouve toujours la grille fermée, le deuxième toujours la porte fermée. Mais une porte ne se referme jamais sur quelqu'un : celui qui s'arrête dans l'embrasure la tient pour le suivant.
+name: Le point d'orgue
+world: 10
+clones: 2
+glyph: % = gate e
+tip: Chacun bascule le levier en tombant dans le puits : la porte et la grille ne sont jamais ouvertes ensemble. Une porte ne se referme jamais sur quelqu'un.
+hint: Première course : arrête-toi dans l'embrasure de la porte, compte jusqu'à cinq, puis maintiens → contre la grille, longtemps. Deuxième : attends en haut qu'il soit dans la porte, descends, passe à travers lui, arrête-toi dans la grille, laisse passer le premier, compte encore jusqu'à trois, puis saute le premier trou et tombe dans le second. Troisième : descends dès que ton second clone est dans la grille.
+tape: R98 _200 R120 | _110 R121 _200 R22 RJ12 R60 _10 | _190 R143 RJ12 R14 RJ12 R220
+
+z=0
+....#..#.#.......#.#..
+@...#..#.#.......#.#..
+###.#..#.#.......#.#..
+###e...#.#.......#.#..
+####...E.%.......A.B..
+####...E.%.......A.B.X
+############.##.######
+############a##b######
+######################

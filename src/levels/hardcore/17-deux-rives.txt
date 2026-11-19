@@ -1,0 +1,16 @@
+; Un seul clavier pour deux rives qui ne se ressemblent pas. Ta marche vient avant son trou : contre elle, tes touches courent encore pour lui, et c'est le même saut qui te hisse et le fait passer, à condition de l'attendre. Ton trou vient ensuite, et ses deux marches : la seconde se saute contre la porte.
+name: Deux rives
+world: 11
+clones: 1
+mirror: true
+tip: Sa rive n'est pas la tienne : tu as une marche là où il court encore, et il a un trou un peu plus loin.
+hint: Première course : cours contre ta marche et ne saute pas tout de suite : compte une demi-seconde, le temps qu'il arrive au bord de son trou, puis saute en maintenant →. Saute ensuite ton trou (il monte sa première marche), cours jusqu'à la porte et, contre elle, saute encore : il monte la seconde et se pose sur la plaque. Seconde course : refais le chemin, la porte s'ouvre quand il arrive.
+tape: R45 RJ24 R50 RJ24 R60 RJ20 R40 | R16 RJ20 R50 RJ24 R150
+
+z=0
+........................
+#.......................
+#a....................#.
+##....................A.
+###.........@.#.......AX
+#######.###########..###

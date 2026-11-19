@@ -1,0 +1,18 @@
+; Sur un fil, une tête est encore une plateforme : un reflet arrêté par une barrière est un pas au-dessus du vide. Il en faut deux. Le premier doit franchir la première barrière, que seule la plaque de gauche ouvre ; le second doit la trouver fermée. Et tous deux vont à droite : il faut les enregistrer en courant à gauche, contre le mur.
+name: Les pas de verre
+world: 11
+clones: 2
+mirror: true
+glyph: ! = wire + door b
+glyph: ? = wire + door c
+tip: Le vide est trop large, et les barrières du fil sont fermées. Un voyageur arrêté sur un fil garde la tête dure.
+hint: Première course : cours à gauche contre le mur (ton reflet tombe dans l'encoche de l'ancre), E, ↑, puis ← longtemps. Deuxième course : attends deux secondes, puis la même chose. Troisième course : tiens la plaque jusqu'à ce que le premier reflet ait franchi la première barrière, quitte-la avant que le second n'arrive, puis traverse de tête en tête.
+tape: L70 E1 U20 L100 _10 | _120 L70 E1 U20 L60 _10 | L12 _130 R30 _90 R22 RJ20 _25 RJ26 _20 RJ24 _20 RJ26 R60
+
+z=0
+...................
+#..................
+#..................
+#b@...====!=?==*c.X
+######*#.......####
+########.......####
