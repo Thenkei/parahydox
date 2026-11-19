@@ -1,4 +1,5 @@
 import type { Dim, Level } from '../core/types';
+import type { LessonId } from '../lessons';
 import { type Campaign, type CampaignId, campaignById, chapterLabel, chapterName } from '../levels';
 
 function element<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -29,6 +30,7 @@ function keyEntry(keys: readonly string[], label: string, lit = false): HTMLSpan
 export interface LevelEntry {
   readonly id: string;
   readonly campaign: CampaignId;
+  readonly lesson: LessonId | null;
   readonly level: Level;
   /** "2-3": chapter and position within it; "G2-3" in Le givre, "H2-3" in hardcore. Also what `?level=` accepts. */
   readonly label: string;
@@ -125,7 +127,8 @@ export class Hud {
     this.tagline.textContent = campaignById(campaign).pitch;
   }
 
-  showScreen(screen: 'title' | 'select' | 'play' | 'credits'): void {
+  showScreen(screen: 'title' | 'select' | 'play' | 'credits' | 'lesson'): void {
+    element('lesson').hidden = screen !== 'lesson';
     element('credits').hidden = screen !== 'credits';
     if (screen !== 'play') this.banner.hidden = true;
     this.title.hidden = screen !== 'title';
@@ -169,7 +172,7 @@ export class Hud {
       ...(level.maxClones > 0 ? [keyEntry(['R'], `rembobiner → ${other}`)] : []),
       keyEntry(['U'], 'retenter'),
       keyEntry(['Maj', 'R'], 'recommencer'),
-      keyEntry(['H'], 'indice'),
+      ...(entry.lesson ? [keyEntry(['H'], 'démo'), keyEntry(['Maj', 'H'], 'indice')] : [keyEntry(['H'], 'indice')]),
       keyEntry(['Échap'], 'niveaux'),
       keyEntry(['M'], 'son'),
     );

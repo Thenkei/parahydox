@@ -1,14 +1,16 @@
 import { parseTape } from '../flow/tape';
+import { lessonFor } from '../lessons';
 import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, levelIndexOf, levelLabels, loadLevels } from '../levels';
 import { loadAssets } from './assets';
 import { Audio } from './audio';
 import { Credits } from './credits';
 import { Game, targetSeconds } from './game';
 import { type CampaignTab, Hud, type LevelEntry, type WinSequel } from './hud';
+import { LessonPlayer } from './lesson-player';
 import { campaignOpen, levelOpen, loadProgress, missingFor, nextWaitingOn, openedBetween, remainingIn, saveProgress, withWin } from './progress';
 import { themeFor } from './themes';
 
-type Screen = 'title' | 'select' | 'play' | 'credits';
+type Screen = 'title' | 'select' | 'play' | 'credits' | 'lesson';
 
 const WIN_CARD_AFTER_MS = 650;
 
@@ -18,7 +20,7 @@ function buildEntries(): LevelEntry[] {
   return levels.map((level, i) => {
     const source = LEVEL_SOURCES[i];
     if (!source) throw new Error(`Invariant violated: level ${i} has no source`);
-    return { id: source.id, campaign: source.campaign, level, label: labels[i] ?? '' };
+    return { id: source.id, campaign: source.campaign, level, lesson: lessonFor(level), label: labels[i] ?? '' };
   });
 }
 
@@ -93,6 +95,33 @@ export async function startApp(): Promise<void> {
   );
   const game = new Game(canvas, assets, hud, audio);
   const credits = new Credits(assets);
+  const lessons = new LessonPlayer(assets, audio);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let introductoryLesson = false;
+
+  function showLesson(entry: LevelEntry, introduction: boolean): void {
+    const id = entry.lesson;
+    if (!id) return;
+    game.releaseAll();
+    introductoryLesson = introduction;
+    screen = 'lesson';
+    hud.showScreen(screen);
+    lessons.start(id, entry);
+    if (!progress.seenLessons.includes(id)) {
+      progress = { ...progress, seenLessons: [...progress.seenLessons, id] };
+      saveProgress(progress);
+    }
+  }
+
+  function finishLesson(): void {
+    if (screen !== 'lesson') return;
+    screen = 'play';
+    hud.showScreen(screen);
+    // Synchronize the clock without advancing the level for the time spent watching.
+    game.frame(performance.now(), false);
+    if (introductoryLesson) hud.showBanner(entryAt(levelIndex));
+  }
+  document.getElementById('lesson-skip')!.addEventListener('click', finishLesson);
 
   const clearWin = (): void => {
     if (winTimer !== null) window.clearTimeout(winTimer);
@@ -152,7 +181,7 @@ export async function startApp(): Promise<void> {
     credits.start(now);
   };
 
-  function openLevel(index: number): void {
+  function openLevel(index: number, introduce = true): void {
     if (!reachable(index)) return;
     levelIndex = index;
     cursor = levelIndex;
@@ -167,6 +196,11 @@ export async function startApp(): Promise<void> {
     hud.setCampaign(entry.campaign);
     hud.showScreen('play');
     game.start(entry);
+    if (entry.lesson && introduce && !reducedMotion.matches && !progress.seenLessons.includes(entry.lesson)) {
+      // Existing saves already know the rule if they have solved a level that uses it.
+      const familiar = entries.some(other => other.lesson === entry.lesson && other.id in progress.times);
+      if (!familiar) return showLesson(entry, true);
+    }
     hud.showBanner(entry);
   }
 
@@ -239,6 +273,9 @@ export async function startApp(): Promise<void> {
       // Once through the door only starting over means anything.
       if (!(code === 'KeyR' && event.shiftKey)) return;
     }
+    if (code === 'KeyH' && !event.shiftKey && game.outcome === 'playing' && entryAt(levelIndex).lesson) {
+      return showLesson(entryAt(levelIndex), false);
+    }
     clearWin();
     game.keyDown(code, event.shiftKey);
   };
@@ -270,6 +307,8 @@ export async function startApp(): Promise<void> {
     if (event.code === 'KeyM') return void audio.toggleMute();
     if (screen === 'title') {
       if (event.code === 'Enter' || event.code === 'NumpadEnter' || event.code === 'Space' || event.code === 'KeyE') openLevel(levelIndex);
+    } else if (screen === 'lesson') {
+      if (['Escape', 'Space', 'Enter', 'NumpadEnter'].includes(event.code)) finishLesson();
     } else if (screen === 'credits') {
       if (event.code === 'Escape') showSelect();
       else if (event.code === 'ArrowLeft') credits.turn(-1, performance.now());
@@ -285,7 +324,9 @@ export async function startApp(): Promise<void> {
 
   const loop = (now: number): void => {
     // The level stays on screen behind the title and the level list, but only runs while it is played.
-    if (screen === 'credits') credits.frame(now);
+    if (screen === 'lesson') {
+      if (!lessons.frame(now)) finishLesson();
+    } else if (screen === 'credits') credits.frame(now);
     else game.frame(now, screen === 'play');
     const seconds = game.takeWin();
     if (seconds !== null) {
@@ -324,7 +365,7 @@ export async function startApp(): Promise<void> {
   game.start(opening);
   hud.showScreen('title');
   if (deepLink) {
-    openLevel(levelIndex);
+    openLevel(levelIndex, !params.has('demo') && !params.has('tape'));
     // `?demo` plays the level's own run, `?tape=…` a given one: a run to watch, or to check in a real browser.
     const tape = params.has('tape') ? params.get('tape') : params.has('demo') ? entryAt(levelIndex).level.tape : null;
     const parsed = tape === null || tape === undefined ? null : parseTape(tape);

@@ -10,9 +10,10 @@ export interface Progress {
   readonly last: string | number | null;
   /** Fastest winning time in seconds, by level id. A level with a time is a level solved. */
   readonly times: Readonly<Record<string, number>>;
+  readonly seenLessons: readonly string[];
 }
 
-const EMPTY: Progress = { last: null, times: {} };
+const EMPTY: Progress = { last: null, times: {}, seenLessons: [] };
 
 /** Progress is a convenience: the game must run the same when storage is unavailable. */
 export function loadProgress(): Progress {
@@ -23,7 +24,8 @@ export function loadProgress(): Progress {
     for (const [id, value] of Object.entries((raw.times ?? {}) as Record<string, unknown>)) {
       if (typeof value === 'number' && Number.isFinite(value)) times[id] = value;
     }
-    return { last: typeof raw.last === 'string' || typeof raw.last === 'number' ? raw.last : null, times };
+    const seenLessons = Array.isArray(raw.seenLessons) ? raw.seenLessons.filter((id): id is string => typeof id === 'string') : [];
+    return { seenLessons, last: typeof raw.last === 'string' || typeof raw.last === 'number' ? raw.last : null, times };
   } catch {
     return EMPTY;
   }

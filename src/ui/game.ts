@@ -116,7 +116,7 @@ export class Game {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly assets: Assets,
-    private readonly hud: Hud,
+    private readonly hud: Hud | null,
     private readonly audio: Audio,
   ) {
     const ctx = canvas.getContext('2d');
@@ -166,6 +166,11 @@ export class Game {
 
   get outcome(): 'playing' | 'won' | 'fallen' {
     return this.world ? outcomeOfFlow(this.world) : 'playing';
+  }
+
+  /** Simulation frames played across all loops, including the frames recorded before R. */
+  get playedFrames(): number {
+    return Math.round(this.elapsedMs / STEP_MS);
   }
 
   get returnedToReality(): boolean {
@@ -231,7 +236,7 @@ export class Game {
         return;
       case 'KeyH':
         // H recalls the level's line, then gives its hint; a third press clears.
-        this.help = ((this.help + 1) % 3) as 0 | 1 | 2;
+        this.help = shift ? (this.help === 2 ? 0 : 2) : ((this.help + 1) % 3) as 0 | 1 | 2;
         this.audio.play('select');
         this.refreshHud();
         return;
@@ -410,7 +415,7 @@ export class Game {
   }
 
   private refreshHud(): void {
-    if (!this.entry || !this.session || !this.world) return;
+    if (!this.hud || !this.entry || !this.session || !this.world) return;
     const { level } = this.session;
     const other = cloneWord(level);
     const outcome = this.outcome;
@@ -429,7 +434,7 @@ export class Game {
       if (this.help === 1 && level.tip !== null) return [level.tip, ''];
       if (this.help === 2 || (this.help === 1 && level.tip === null)) return [level.hint ?? level.tip ?? '', 'hint'];
       if (this.checkpoint && this.world && this.world.tick - this.checkpoint.world.tick < FPS * 2) return ['Balise activée. U reprend ici avec tes clones.', ''];
-      if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. H donne un indice.`, ''];
+      if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. ${this.entry?.lesson ? 'Maj+H' : 'H'} donne un indice.`, ''];
       if (fresh && this.session.loops.length > 0) return [`Ton ${other} part à ta première touche${manner}.`, ''];
       if (this.session.current.length < TIP_FRAMES && this.session.loops.length === 0 && level.tip !== null) return [level.tip, ''];
       if (action !== null) return [`E : ${action}`, ''];
@@ -498,7 +503,7 @@ export class Game {
     const current = this.world ?? world;
     const { level } = current;
     const scene = this.sceneOf(current);
-    this.hud.setClock(this.elapsedMs / 1000, targetSeconds(level), this.elapsedMs > 0);
+    this.hud?.setClock(this.elapsedMs / 1000, targetSeconds(level), this.elapsedMs > 0);
 
     const target = cameraTarget(level, scene.hero, view);
     if (this.cam === null) this.cam = target;

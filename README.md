@@ -71,11 +71,17 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | R | rembobiner : la course qu'on vient de faire devient un clone |
 | U, Retour arrière | retenter la boucle en gardant les clones |
 | Maj+R | recommencer le niveau, sans clone |
-| H | rappeler la consigne, puis donner l'indice |
+| H | revoir la démonstration disponible, ou rappeler la consigne puis l’indice |
+| Maj+H | afficher ou masquer directement l’indice du niveau |
 | Échap | choix du niveau |
 | Tab | dans le choix du niveau : changer de campagne |
 | M | couper ou remettre le son |
 | N / P | niveau suivant / précédent |
+
+La première rencontre avec la profondeur, le rembobinage d’un clone ou les bottes ouvre
+une courte démonstration dans une salle dédiée. Échap, Entrée ou Espace rend la main.
+Le chrono, les clones et la balise du niveau restent en pause. Avec la préférence système
+de réduction des animations, les démonstrations s’ouvrent uniquement sur demande avec H.
 
 Une boucle part à ta première touche, et tes clones avec elle. Une chute dans le vide
 relance la boucle, clones conservés. `?level=12` ouvre le douzième niveau dans l'ordre de jeu,

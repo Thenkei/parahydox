@@ -34,6 +34,17 @@
         <footer id="keys" class="keys"></footer>
       </div>
 
+      <section id="lesson" aria-labelledby="lesson-title" hidden>
+        <canvas id="lesson-view" aria-hidden="true"></canvas>
+        <header class="lesson-header">
+          <div><span class="eyebrow">Démonstration</span><h2 id="lesson-title"></h2></div>
+          <button id="lesson-skip" type="button">Passer <kbd>Échap</kbd></button>
+        </header>
+        <div class="lesson-caption" role="status">
+          <kbd id="lesson-key"></kbd><span id="lesson-line"></span>
+        </div>
+      </section>
+
       <section id="win" class="card" hidden aria-live="polite">
         <p class="eyebrow" id="win-eyebrow">Niveau terminé</p>
         <h2 id="win-title"></h2>
