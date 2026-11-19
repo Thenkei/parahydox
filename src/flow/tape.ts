@@ -2,18 +2,24 @@ import { type Result, err, ok } from '../core/result';
 import type { Level } from '../core/types';
 import { type FlowWorld, type FrameInput, IDLE, initialFlow, outcomeOfFlow, stepFlow } from './physics';
 
+/** Ten minutes of play: far beyond any run, small enough to hold in memory. */
+const MAX_TAPE_FRAMES = 60 * 600;
+
 /**
  * A run written down: what is held, and for how many frames.
  *
  *   R30      hold right for 30 frames          RJ12   right and jump together
  *   _20      nothing for 20 frames             E1     change dimension
- *   L R      left, right      U D   deeper, forward (3D)      J   jump      |   rewind
+ *   L R      left, right      U D   the up and down arrows      J   the jump key      |   rewind
+ *
+ * A tape holds keys, not meanings: U jumps in 2D, goes deeper in 3D and follows a wire in 1D.
  *
  * Example: `R40 RJ14 R30 | _20 R90`. Used by the tests to prove a level can be finished,
  * and by the tools to try a level without a keyboard.
  */
 export function parseTape(text: string): Result<FrameInput[][], string> {
   const loops: FrameInput[][] = [[]];
+  let total = 0;
   for (const token of text.split(/\s+/).filter((t) => t !== '')) {
     if (token === '|') {
       loops.push([]);
@@ -28,6 +34,9 @@ export function parseTape(text: string): Result<FrameInput[][], string> {
       jump: keys.includes('J'),
       shift: keys.includes('E'),
     };
+    // A tape can come from a URL: refuse one long enough to hang the page instead of building it.
+    total += Number(match[2]);
+    if (total > MAX_TAPE_FRAMES) return err(`Tape longer than ${MAX_TAPE_FRAMES} frames`);
     const current = loops[loops.length - 1];
     for (let i = 0; i < Number(match[2]); i++) current?.push(input);
   }

@@ -1,10 +1,10 @@
 name: Le reflet
 world: 7
-tip: Ton reflet inverse la gauche et la droite.
-hint: Pour envoyer ton reflet à gauche, marche à droite.
 clones: 1
 mirror: true
-solution: RRR|RRRRR
+tip: Ici, ta course précédente revient en reflet : il court à gauche quand tu as couru à droite.
+hint: Première course : cours vers la porte, trois cases, et arrête-toi. Seconde course : ton reflet fait les mêmes trois cases vers la gauche, jusqu'à la plaque.
+tape: R35 _20 | _6 R54
 
 z=0
 ........#..

@@ -1,0 +1,14 @@
+; Une ancre n'a pas besoin de sol : on l'attrape au vol.
+name: L'attrape-fil
+world: 1
+tip: Cette ancre flotte au-dessus du vide. E fonctionne aussi en plein saut.
+hint: Cours, saute depuis le bord, et appuie sur E quand tu traverses le losange. Au bout du fil, E te pose sur la corniche.
+tape: R48 RJ6 E6 R78 E6 R54
+
+z=0
+..................
+..................
+.....*======*....X
+@...........######
+####........######
+####........######

@@ -1,0 +1,11 @@
+name: Les dalles
+world: 8
+tip: Ces dalles tombent derrière toi : ici, on ne revient pas sur ses pas.
+hint: Cours sans relâcher →, et saute au bord de chaque trou.
+tape: R58 RJ14 R34 RJ22 R130
+
+z=0
+......................
+......................
+@....................X
+###~~~.~~~..~~~~######

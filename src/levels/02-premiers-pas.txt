@@ -1,0 +1,13 @@
+; Une marche se saute, deux cases sont un mur : l'escalier monte une marche à la fois, et la descente est libre.
+name: Premiers pas
+world: 1
+tip: Une marche d'une case se saute. Deux cases de haut, c'est un mur.
+hint: Monte l'escalier une marche à la fois, saute le trou tout en haut, puis laisse-toi tomber de l'autre côté.
+tape: R48 RJ12 R12 RJ12 R12 RJ12 R30 RJ6 R72
+
+z=0
+....................
+..........##..##....
+........####..##....
+@.....######..##...X
+####################

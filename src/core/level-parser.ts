@@ -28,8 +28,8 @@ import type { Cell, Channel, Level, Size, Vec3, Wire } from './types';
  * (block, start, exit, anchor, wire, threshold, crate, fragile, plate x, door x, lever x,
  * and gate x: a door that is open by default and shuts while its channel is live).
  *
- * Other headers: world, tip, hint, clones, mirror (clones replay left as right), par,
- * and solution (the intended solution in script notation; par defaults to its length).
+ * Other headers: world, tip, hint, clones, mirror (clones replay left as right), and tape
+ * (the intended run, in the notation of src/flow/tape.ts).
  */
 
 export interface LevelError {
@@ -102,12 +102,9 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
   let maxClones = 0;
   let world = 1;
   let tip: string | null = null;
-  let par: number | null = null;
   let hint: string | null = null;
   let mirror = false;
-  let flow = false;
   let tape: string | null = null;
-  let solution: string | null = null;
   const glyphs = new Map(BUILTIN_GLYPHS);
   const layers: Layer[] = [];
   let current: Layer | null = null;
@@ -147,19 +144,6 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
         }
         break;
       }
-      case 'par': {
-        const n = Number(value);
-        if (!Number.isInteger(n) || n < 1) fail(line, 'par must be a positive integer');
-        else par = n;
-        break;
-      }
-      case 'solution':
-        solution = value.replace(/\s+/g, '') || null;
-        break;
-      case 'flow':
-        if (value.trim() !== 'true' && value.trim() !== 'false') fail(line, 'flow must be true or false');
-        else flow = value.trim() === 'true';
-        break;
       case 'tape':
         tape = value.trim() || null;
         break;
@@ -311,7 +295,7 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
     wire: wireRefs.get(i) ?? null,
   }));
 
-  return ok({ name, world, tip, hint, par: par ?? solutionSteps(solution), solution, maxClones, mirror, flow, tape, size, cells, start, crates, wires: traced.value, plates });
+  return ok({ name, world, tip, hint, maxClones, mirror, tape, size, cells, start, crates, wires: traced.value, plates });
 }
 
 function parseGlyph(value: string): Result<{ char: string; features: readonly Feature[] }, string> {
@@ -424,9 +408,6 @@ function traceWires(size: Size, drafts: readonly Draft[]): Result<Wire[], LevelE
   }
   return errors.length > 0 ? err(errors) : ok(wires);
 }
-
-/** Actions in a script: every key except rewinds and waits, which are not scored. */
-const solutionSteps = (script: string | null): number | null => (script === null ? null : script.replace(/[|/.]/g, '').length);
 
 const compareAnchors = (a: Vec3, b: Vec3): number => a.x - b.x || a.z - b.z || a.y - b.y;
 

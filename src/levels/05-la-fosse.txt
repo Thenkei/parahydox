@@ -1,0 +1,14 @@
+; Quatre cases de vide : trop pour un saut. La caisse tombée au fond de la fosse refait un sol à mi-chemin.
+name: La fosse
+world: 1
+tip: Cette fosse est trop large pour un saut. Une caisse se pousse en marchant contre elle.
+hint: Pousse la caisse jusqu'au bord : elle tombe au fond. Descends, monte dessus, et saute de là vers l'autre rive.
+tape: R60 J6 R24 RJ12 R95
+
+z=0
+.................
+#................
+#@..o...........X
+######....#######
+######....#######
+#################

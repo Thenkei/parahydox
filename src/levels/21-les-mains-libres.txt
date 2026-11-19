@@ -1,0 +1,13 @@
+; Deux plaques, deux portes : une caisse tient la première, le clone la seconde.
+name: Les mains libres
+world: 3
+clones: 1
+tip: Une caisse aussi sait tenir une plaque.
+hint: Première course : pousse la caisse sur la première plaque, saute par-dessus et reste sur la seconde. Seconde course : passe.
+tape: R70 J6 R12 RJ6 R18 _26 | R12 RJ6 R30 RJ6 R108
+
+z=0
+.........#..#..
+.........A..B..
+@.o.a#b..A..B.X
+###############

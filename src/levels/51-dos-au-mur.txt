@@ -1,0 +1,15 @@
+; Le mur de droite demande une marche à son pied, à droite du départ. Pour y envoyer le reflet il faut courir à gauche : contre le mur.
+name: Dos au mur
+world: 7
+clones: 1
+mirror: true
+tip: Un mur derrière toi. Les touches que tu y perds, ton reflet les court.
+hint: Première course : cours contre le mur de gauche, une demi-seconde. Seconde course : ton reflet arrive au pied du mur de droite ; monte sur sa tête.
+tape: L30 _20 | RJ6 R6 _6 RJ12 R42
+
+z=0
+...........
+..........X
+...#...####
+...#@..####
+###########

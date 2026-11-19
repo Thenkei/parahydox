@@ -1,14 +1,15 @@
+; Le levier est au fond du trou qui mène à la sortie : c'est le joueur qui y descend. Le clone, lui, a couru contre la porte fermée ; elle s'ouvre devant ses touches.
 name: L'aide-mémoire
 world: 6
-tip: Le levier est au fond d'un trou.
-hint: Enregistre ta marche contre la porte fermée. En boucle 2, saute sur le levier : ton clone passera.
 clones: 1
-solution: RRRRRR|LL....LL
+tip: Le levier est au fond du trou, et la sortie aussi. Qui ira donc jusqu'aux plaques ?
+hint: Première course : cours contre la porte de droite et maintiens → longtemps. Seconde course : descends dans le trou ; le levier ouvre la porte à ton clone, qui t'ouvre la tienne.
+tape: R150 | LJ6 L18 _54 L18
 
 z=0
 .......#.....
-.......E.....
-....@..E..bb.
+.......E....#
+....@..E..bb#
 ##.##########
 XBe##########
 #############

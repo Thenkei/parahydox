@@ -1,16 +1,16 @@
-; Dos au mur, en grand : le trou de gauche sert de cabine de pilotage. Toute touche vers la droite t'approche du vide ; tout pas vers la droite jette ton reflet dans le trou.
+; Le trou de droite sert de cabine de pilotage : on n'en ressort pas, mais toutes les touches y sont perdues pour le joueur et vraies pour son reflet, qui doit sauter un trou qu'il ne voit pas.
 name: La télécommande
 world: 7
-tip: Pour ton reflet, le chemin commence par un saut. Pour toi, ce saut finit dans le vide.
-hint: Au fond du trou, tes touches ne te déplacent plus, mais ton reflet les entend toujours. Descends-y d'abord, puis joue son trajet : un pas pour revenir, le saut, et la marche jusqu'à la plaque.
 clones: 1
 mirror: true
-solution: LRURRRR|RURRR.RRR
+tip: Le trou à ta droite est profond : on n'en ressort pas. De là, on peut tout de même courir et sauter à gauche.
+hint: Première course : tombe dans le trou de droite et garde → enfoncé ; une demi-seconde après le départ, saute. Ton reflet franchit son trou et court jusqu'à la plaque. Seconde course : saute par-dessus le trou de droite et passe la porte.
+tape: R36 RJ22 R120 | _66 R12 RJ6 R36
 
 z=0
-..........#...
-..........A...
-.a...@....A.X.
-####.##.######
-####.##.######
-#######.######
+............#..
+#...........A..
+#a.......@..A.X
+####..####.####
+####..####.####
+####..#########

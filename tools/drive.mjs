@@ -4,11 +4,11 @@
 //
 //   node tools/drive.mjs "<url query>" <step> [<step> ...]
 //
+// `level=6&demo` in the query makes the game play that level's own run; `tape=…` plays another.
+//
 //   key:<Code>[+shift]   press and release a key (key:ArrowRight, key:KeyR+shift)
 //   hold:<Code>:<ms>     hold a key down for a while
 //   down:<Code> up:<Code> press or release only (hold one key, tap another)
-//   play:<script>        type a script in the game's notation (L R U D . E T |)
-//   type:<script>        the same, typed fast (about eleven keys a second, no pause)
 //   wait:<ms>            let the game run
 //   shot:<name>          save .scratch/shots/<name>.png
 //   burst:<name>:<n>:<ms> save n screenshots, ms apart, as <name>-0.png …
@@ -79,8 +79,6 @@ await sleep(1500);
 
 const key = (type, code, shift) =>
   send('Input.dispatchKeyEvent', { type, code, key: code.startsWith('Key') ? code.slice(3).toLowerCase() : code, modifiers: shift ? 8 : 0 });
-const SCRIPT_KEYS = { L: 'ArrowLeft', R: 'ArrowRight', U: 'ArrowUp', D: 'ArrowDown', '.': 'Space', E: 'KeyE', T: 'KeyT', '|': 'KeyR' };
-
 for (const step of steps) {
   const [kind, ...rest] = step.split(':');
   const arg = rest.join(':');
@@ -98,22 +96,6 @@ for (const step of steps) {
     await key('keyDown', code, false);
     await sleep(Number(ms));
     await key('keyUp', code, false);
-  } else if (kind === 'play') {
-    for (const char of arg) {
-      await key('keyDown', SCRIPT_KEYS[char], false);
-      await sleep(25);
-      await key('keyUp', SCRIPT_KEYS[char], false);
-      // Rewinds and dimension changes hold the input back while they play out.
-      await sleep(char === '|' ? 1300 : char === 'E' ? 520 : 330);
-    }
-  } else if (kind === 'type') {
-    // A fast typist: keys arrive quicker than the hero moves, and none may be lost.
-    for (const char of arg) {
-      await key('keyDown', SCRIPT_KEYS[char], false);
-      await sleep(25);
-      await key('keyUp', SCRIPT_KEYS[char], false);
-      await sleep(65);
-    }
   } else if (kind === 'wait') {
     await sleep(Number(arg));
   } else if (kind === 'burst') {

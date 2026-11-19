@@ -1,9 +1,9 @@
 name: L'île du fond
 world: 4
-tip: Ce fil mène ailleurs.
-hint: Envoie ton clone au fond par le fil : sa plaque ouvre ta porte.
 clones: 1
-solution: RREUUERR|.RRRRRRRRRR
+tip: Ce fil mène ailleurs.
+hint: Première course : le fil t'emmène sur une île, au fond. Restes-y, sur la plaque. Seconde course : passe la porte.
+tape: R18 _6 E6 U24 E6 R18 _2 _30 | _6 R114
 
 z=0
 .......#...

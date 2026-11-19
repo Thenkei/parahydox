@@ -1,22 +1,21 @@
 ; Aucun seuil ici : seuls les fils changent de coupe.
 name: Le fil qui s'enfonce
 world: 2
-tip: Un fil peut quitter ta coupe.
-hint: Le fil t'emmène dans une autre coupe. Marche jusqu'au second fil et reviens par lui.
-clones: 0
-solution: RRREUUERRRREDDERR
+tip: Un fil peut quitter ta coupe. Vers le fond, il se suit avec ↑ ; vers l'avant, avec ↓.
+hint: Le premier fil t'emmène dans la coupe du fond. Marche jusqu'au second fil et reviens par lui.
+tape: R30 _6 E6 U24 E6 R78 E6 D24 E6 R18 _2
 
 z=0
-..........
-@..*...*.X
-####...###
+.............
+@..*......*.X
+####......###
 
 z=1
-..........
-...=...=..
-..........
+.............
+...=......=..
+.............
 
 z=2
-..........
-...*...*..
-...#####..
+.............
+...*......*..
+...########..

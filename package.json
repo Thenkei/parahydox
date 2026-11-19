@@ -2,7 +2,7 @@
   "name": "parahydox",
   "private": true,
   "version": "0.1.0",
-  "description": "Prototype de casse-têtes dimensionnels : coupes 1D/2D/3D d'une même grille, et clones qui rejouent des inputs.",
+  "description": "Puzzle-platformer dimensionnel : un même monde en 1D, 2D et 3D, et des clones qui rejouent tes touches.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "play": "vite build --ssr tools/play.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/play.js",
-    "solve": "vite build --ssr tools/solve.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/solve.js",
     "flow": "vite build --ssr tools/flow.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/flow.js",
-    "check": "npm run typecheck && npm run test && vite build"
+    "check": "npm run typecheck && npm run test && vite build",
+    "explore": "vite build --ssr tools/explore.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/explore.js",
+    "audit": "vite build --ssr tools/audit.ts --outDir .tools --emptyOutDir false --logLevel error && node .tools/audit.js"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -1,0 +1,14 @@
+; La porte du reflet s'ouvre par la plaque du joueur, et celle du joueur par la plaque du reflet. Dans la première course il n'y a personne à gauche : la porte du reflet est une affaire de seconde course.
+name: Ouvre-moi
+world: 7
+clones: 1
+mirror: true
+tip: Ta plaque ouvre sa porte. Sa plaque ouvre la tienne.
+hint: Cours vers la droite et maintiens →, contre la porte. Rembobine, et refais exactement la même chose : cette fois ton reflet trouve sa porte ouverte.
+tape: R150 | R150
+
+z=0
+....#......#.
+#...C......A.
+#a..C...@.cAX
+#############

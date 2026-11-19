@@ -1,6 +1,5 @@
 import { cellAt } from '../../core/grid';
-import type { Level, World } from '../../core/types';
-import { playerOf } from '../../core/world';
+import type { Dim, Level, Vec3 } from '../../core/types';
 
 /**
  * One projection serves the three dimensions. The world is always drawn as an oblique
@@ -60,10 +59,9 @@ export function cellSizeFor(level: Level, view: Viewport): number {
 }
 
 /** Where the camera wants to be for this world: slice, volume or wire, centred on the level. */
-export function cameraTarget(world: World, view: Viewport): Camera {
-  const { level } = world;
+export function cameraTarget(level: Level, hero: { readonly dim: Dim; readonly cell: Vec3 }, view: Viewport): Camera {
   const { w, h, d } = level.size;
-  const player = playerOf(world);
+  const player = { dim: hero.dim, pos: hero.cell };
   const cell = cellSizeFor(level, view);
 
   let depth = 0;

@@ -1,0 +1,13 @@
+; Courir contre une porte fermée dans la première course, c'est la franchir dans la seconde si quelqu'un la tient ouverte : un clone rejoue des touches, pas des déplacements.
+name: Le mime
+world: 5
+clones: 1
+tip: Ton clone rejoue tes touches, pas tes déplacements. Une porte fermée pour toi ne le sera peut-être pas pour lui.
+hint: Première course : cours vers la droite et continue de maintenir → contre la porte fermée, deux bonnes secondes. Seconde course : tiens la plaque ; ton clone passe la porte, va jusqu'au bout, et t'ouvre la sortie de gauche.
+tape: R150 | R22 _80 L53
+
+z=0
+.#......#.....
+.B......A....#
+XB.@.a..A..bb#
+##############

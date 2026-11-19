@@ -1,9 +1,8 @@
 name: Pair, impair
 world: 6
-tip: Chaque passage bascule le levier.
-hint: Deux leviers pour une porte : n'en touche qu'un. Un saut passe par-dessus.
-clones: 0
-solution: RRRRRRURRRRRRRR
+tip: Chaque passage rebascule le levier. Deux leviers, une porte.
+hint: Marche sur le premier, saute par-dessus le second : en l'air, on ne touche à rien.
+tape: R68 RJ22 R100
 
 z=0
 ...........#...

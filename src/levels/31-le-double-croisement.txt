@@ -1,11 +1,12 @@
+; Deux barrières, un seul clone : il tient une plaque, puis l'autre.
 name: Le double croisement
 world: 4
-tip: Deux barrières, un seul clone.
-hint: Ton clone passe sur la première plaque puis s'arrête sur la seconde : cale ton passage sur le sien.
 clones: 1
 glyph: ! = wire + door a
 glyph: ? = wire + door b
-solution: RERUURRRR|.RRERRRRRRRRERR
+tip: Deux barrières, deux plaques, un seul clone.
+hint: Première course : cours au fond, passe sur la première plaque puis va te poser sur la seconde. Seconde course : sur le fil, maintiens → : chaque barrière s'ouvre quand ton clone arrive sur sa plaque.
+tape: R10 _8 E1 _3 U26 _6 R60 _40 | _30 R18 _6 E6 R90 E6 R18 _2
 
 z=0
 .............

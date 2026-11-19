@@ -1,9 +1,9 @@
+; Un mur de deux cases vu de côté. Derrière le plan, une marche mène en haut.
 name: L'escalier caché
 world: 2
-tip: Un mur de deux cases, vu de côté.
-hint: Derrière le plan, une marche mène en haut du mur.
-clones: 0
-solution: RRERRRURRRRRRD
+tip: Deux cases de haut : un mur. Vu de côté, du moins.
+hint: Déplie la profondeur : derrière le plan, une marche mène en haut du mur. Saute dessus (Espace), puis sur le mur.
+tape: R30 E6 R6 RJ12 U6 RJ12 R60 _3
 
 z=0
 ............

@@ -1,17 +1,14 @@
-; Un seul reflet ne peut pas tenir les deux plaques : celui qui descend sur la première n'en ressort pas. Les deux reflets partent du même point : sous le plafond, le second ne peut pas monter sur le premier et perd sa première touche.
+; Le niveau est symétrique autour du départ : ce que le joueur fait à droite, son reflet le fait à gauche. Un reflet pour chaque plaque.
 name: Deux reflets
 world: 7
-tip: Deux plaques. La première est au fond d'un trou, et le plafond est bas.
-hint: Le premier reflet tombe dans le trou et y reste, sur sa plaque. Le second lui marche sur la tête pour atteindre l'autre plaque, mais il part gêné : sous ce plafond, il ne peut pas monter sur le premier et sa première touche est perdue. Fais-le attendre un pas avant de partir.
 clones: 2
 mirror: true
-solution: RR|.RRRR|RRR.RRR
+tip: Deux plaques à gauche, deux portes à droite, et le même muret des deux côtés.
+hint: Première course : saute le muret et cours jusqu'à la porte ; ton reflet va au bout, sur la plaque du fond. Deuxième : saute sur le muret et restes-y ; ton second reflet s'arrête sur la plaque du muret. Troisième : passe.
+tape: R18 RJ22 R120 | R12 RJ6 J6 R12 _30 | _30 R18 RJ12 R70
 
 z=0
-.......#.#...
-.......#.#...
-.####..A.B...
-.b...@.A.B.X.
-###.#########
-###a#########
-#############
+.............#.#..
+#....b.......A.B..
+#a...#..@..#.A.B.X
+##################

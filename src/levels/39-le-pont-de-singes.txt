@@ -1,0 +1,13 @@
+; Sept cases de vide. Deux têtes immobiles sur le fil font deux pierres de gué ; une seule tête qui avance sous tes pieds aussi, si tu cours avec elle.
+name: Le pont de singes
+world: 5
+clones: 2
+tip: Ce fil donne sur le vide, mais il peut porter quelqu'un. Deux clones suffisent. Un seul aussi, s'il avance au bon moment.
+hint: Première course : va au bout du fil et restes-y. Deuxième : arrête-toi au milieu du fil. Troisième : saute de tête en tête, puis vers l'autre rive.
+tape: R18 _6 E6 R64 _30 | R18 _6 E6 R29 _30 | _12 R36 RJ6 R18 RJ6 R24 L6 R12 RJ12 R58
+
+z=0
+................
+@.*=====*......X
+###.........####
+###.........####

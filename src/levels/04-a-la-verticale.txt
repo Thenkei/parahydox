@@ -1,0 +1,15 @@
+; Un fil ignore la gravité : il sert aussi d'ascenseur, et il tourne.
+name: À la verticale
+world: 1
+tip: Un fil ne tombe pas. On le suit avec la flèche qui va dans son sens.
+hint: Entre dans le fil, maintiens ↑ jusqu'au coin, puis → jusqu'à l'ancre du haut.
+tape: R18 _6 E6 U48 R78 E6 R30 _1
+
+z=0
+...............
+...=======*..X.
+...=......#####
+...=......#####
+#..=......#####
+#@.*......#####
+###############

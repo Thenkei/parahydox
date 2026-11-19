@@ -1,0 +1,14 @@
+; La courte échelle à l'envers : c'est le clone qui doit monter, et le joueur qui lui sert de marche.
+name: Le marchepied
+world: 5
+clones: 1
+tip: Les plaques sont en haut du mur. Ton clone ne peut y monter que si ses sauts trouvent une marche.
+hint: Première course : cours jusqu'au mur, saute deux fois en maintenant →, et garde → enfoncé. Seconde course : va te poser au pied du mur et ne bouge plus ; ton clone saute sur ta tête, puis sur le mur. Quand il est sur les plaques, cours vers la sortie.
+tape: R45 RJ24 R20 RJ24 R150 | R45 _150 L66 _3
+
+z=0
+...........#
+.#.......bb#
+.B.....#####
+XB.@...#####
+############
