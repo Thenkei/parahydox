@@ -26,6 +26,8 @@ export interface WireRef {
 export interface Cell {
   readonly solid: boolean;
   readonly exit: boolean;
+  readonly reality: boolean;
+  readonly checkpoint: boolean;
   /** 2D ↔ 3D transition tile. */
   readonly threshold: boolean;
   /** 2D ↔ 1D transition tile; always the end of a wire. */
@@ -70,6 +72,7 @@ export interface Level {
   /** Clones are antipodes: they fall upward and walk the ceilings. */
   readonly antipode: boolean;
   /** Axes along which the grid has no edge: what leaves by one side arrives by the other. Depth never wraps. */
+  readonly gravity: 'normal' | 'lift' | 'pulse';
   readonly wrap: { readonly x: boolean; readonly y: boolean };
   /** The intended run in tape notation (see src/flow/tape.ts): proof that the level can be finished, and the time to beat. */
   readonly tape: string | null;

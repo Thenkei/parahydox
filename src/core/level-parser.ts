@@ -18,6 +18,7 @@ import type { Cell, Channel, Level, Size, Vec3, Wire } from './types';
  *   ###.....###
  *
  * Built-in glyphs:
+ *   +  checkpoint   O  exit to reality     gravity: lift or pulse enables boots
  *   .  empty        #  block         @  player start    X  exit
  *   *  wire anchor  =  wire          ^  3D threshold    o  crate
  *   a–d  plate      A–D  door held open by the plate of the same letter
@@ -42,7 +43,7 @@ export interface LevelError {
 }
 
 type Feature =
-  | { readonly kind: 'block' | 'start' | 'exit' | 'anchor' | 'wire' | 'threshold' | 'crate' | 'fragile' | 'ice' }
+  | { readonly kind: 'checkpoint' | 'reality' | 'block' | 'start' | 'exit' | 'anchor' | 'wire' | 'threshold' | 'crate' | 'fragile' | 'ice' }
   | { readonly kind: 'plate' | 'door' | 'gate' | 'lever'; readonly channel: Channel };
 
 const MAX_CLONES = 3;
@@ -55,6 +56,8 @@ const BUILTIN_GLYPHS: ReadonlyMap<string, readonly Feature[]> = new Map<string, 
   ['.', []],
   ['#', [{ kind: 'block' }]],
   ['@', [{ kind: 'start' }]],
+  ['+', [{ kind: 'checkpoint' }]],
+  ['O', [{ kind: 'reality' }]],
   ['X', [{ kind: 'exit' }]],
   ['*', [{ kind: 'anchor' }]],
   ['=', [{ kind: 'wire' }]],
@@ -77,6 +80,8 @@ interface Layer {
 interface Draft {
   solid: boolean;
   exit: boolean;
+  checkpoint: boolean;
+  reality: boolean;
   threshold: boolean;
   anchor: boolean;
   wire: boolean;
@@ -91,6 +96,8 @@ interface Draft {
 const emptyDraft = (): Draft => ({
   solid: false,
   exit: false,
+  checkpoint: false,
+  reality: false,
   threshold: false,
   anchor: false,
   wire: false,
@@ -111,6 +118,7 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
   let world = 1;
   let tip: string | null = null;
   let hint: string | null = null;
+  let gravity: Level['gravity'] = 'normal';
   let mirror = false;
   let antipode = false;
   let wrap = { x: false, y: false };
@@ -157,6 +165,10 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
       }
       case 'tape':
         tape = value.trim() || null;
+        break;
+      case 'gravity':
+        if (value === 'lift' || value === 'pulse' || value === 'normal') gravity = value;
+        else fail(line, 'gravity must be normal, lift or pulse');
         break;
       case 'mirror':
         if (value.trim() !== 'true' && value.trim() !== 'false') fail(line, 'mirror must be true or false');
@@ -244,7 +256,12 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
             case 'start':
               starts.push(pos);
               break;
+            case 'checkpoint':
+              draft.checkpoint = true;
+              break;
+            case 'reality':
             case 'exit':
+              draft.reality = feature.kind === 'reality' || draft.reality;
               draft.exit = true;
               exits++;
               break;
@@ -313,6 +330,8 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
   const cells: Cell[] = drafts.map((draft, i) => ({
     solid: draft.solid,
     exit: draft.exit,
+    reality: draft.reality,
+    checkpoint: draft.checkpoint,
     threshold: draft.threshold,
     anchor: draft.anchor,
     plate: draft.plate,
@@ -324,7 +343,7 @@ export function parseLevel(source: string): Result<Level, readonly LevelError[]>
     wire: wireRefs.get(i) ?? null,
   }));
 
-  return ok({ name, world, tip, hint, maxClones, mirror, antipode, wrap, tape, size, cells, start, crates, wires: traced.value, plates });
+  return ok({ name, world, tip, hint, maxClones, mirror, antipode, gravity, wrap, tape, size, cells, start, crates, wires: traced.value, plates });
 }
 
 function parseGlyph(value: string): Result<{ char: string; features: readonly Feature[] }, string> {
@@ -337,6 +356,8 @@ function parseGlyph(value: string): Result<{ char: string; features: readonly Fe
     switch (kind) {
       case 'block':
       case 'start':
+      case 'checkpoint':
+      case 'reality':
       case 'exit':
       case 'anchor':
       case 'wire':

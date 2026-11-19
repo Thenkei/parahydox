@@ -1,0 +1,16 @@
+name: Le veilleur immobile
+world: 19
+gravity: lift
+clones: 1
+tip: Une trace peut rester accrochée au plafond pendant que tu continues.
+hint: Cours à gauche sans bottes jusqu’à la plaque haute. Rembobine avec R. Chausse les bottes pour passer sous la herse que ton clone soulève. Retire-les au pied du dernier mur.
+tape: L90 | B1 R110 B1 R120
+
+z=0
+##################
+#a.......#......X#
+#........#.......#
+#........#...#...#
+#........#...#...#
+#....@...A+..#...#
+##################

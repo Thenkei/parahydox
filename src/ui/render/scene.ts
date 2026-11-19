@@ -36,6 +36,7 @@ interface Segment {
 /** The moment being drawn, reduced to what the scene reads: who is where, and what is switched. */
 export interface SceneView {
   readonly level: Level;
+  readonly checkpoint: number | null;
   readonly hero: { readonly dim: Dim; readonly cell: Vec3 };
   /** Cells of the bodies still standing, by id: a shadow can fall on them. */
   readonly bodies: readonly { readonly id: number; readonly cell: Vec3 }[];
@@ -72,7 +73,7 @@ export interface SceneFrame {
   readonly actors: readonly ActorPose[];
   readonly crates: readonly CratePose[];
   /** Facing and landing squash are remembered across steps by the stage. */
-  readonly lookOf: (pose: ActorPose) => Pick<CharacterLook, 'facing' | 'squash' | 'joy'>;
+  readonly lookOf: (pose: ActorPose) => Pick<CharacterLook, 'facing' | 'squash' | 'joy' | 'boots'>;
   /** 0 closed … 1 open, eased by the stage. */
   readonly doorOpen: (cell: number) => number;
 }
@@ -376,7 +377,7 @@ function drawBlock(frame: SceneFrame, x: number, y: number, z: number): void {
 
 /** A cell with nothing in it that the player must read: scenery may stand there. */
 const bareCell = (cell: Cell | null): boolean =>
-  cell !== null && !cell.exit && !cell.anchor && !cell.threshold && cell.plate === null && cell.lever === null && cell.door === null;
+  cell !== null && !cell.exit && !cell.checkpoint && !cell.anchor && !cell.threshold && cell.plate === null && cell.lever === null && cell.door === null;
 
 type Dressing = (frame: SceneFrame, x: number, y: number, z: number, top: Point) => void;
 
@@ -972,10 +973,11 @@ const TOPS: Readonly<Record<Theme['biome'], Dressing>> = {
   givre: drawSnowCap,
   tore: drawMosaicFrieze,
   envers: drawGrassFringe,
+  hyperspace: drawMosaicFrieze,
 };
 
 /** Dressings that only belong on an edge seen from the front: drawn across a floor in 3D they would stripe it. */
-const EDGE_ONLY: ReadonlySet<Theme['biome']> = new Set(['givre', 'tore']);
+const EDGE_ONLY: ReadonlySet<Theme['biome']> = new Set(['givre', 'tore', 'hyperspace']);
 
 const SPRIGS: Readonly<Record<Theme['biome'], Dressing>> = {
   meadow: drawSprig,
@@ -983,6 +985,7 @@ const SPRIGS: Readonly<Record<Theme['biome'], Dressing>> = {
   givre: drawFrostSprig,
   tore: drawTrinket,
   envers: drawSprig,
+  hyperspace: drawTrinket,
 };
 
 /** The rock tapering under an island: deeper in the middle of the run, ragged along the edge. */
@@ -1057,7 +1060,7 @@ function drawFeatures(frame: SceneFrame, cell: Cell, x: number, y: number, z: nu
   // whoever falls upward stands on that ceiling, and what they tread hangs from it. Read off
   // the level as built: a slab crumbling under a plate does not send the plate to the ceiling.
   // Only where clones fall upward: elsewhere nobody can stand there, and nothing changes.
-  const hung = world.level.antipode && cellOf(world.level, x, y + 1, z)?.solid === true && cellOf(world.level, x, y - 1, z)?.solid !== true;
+  const hung = (world.level.antipode || world.level.gravity !== 'normal') && cellOf(world.level, x, y + 1, z)?.solid === true && cellOf(world.level, x, y - 1, z)?.solid !== true;
   const roof = project(cam, x + 0.5, y + 1, z + 0.5);
 
   if (cell.plate !== null && !wireOnly && hung) {
@@ -1101,7 +1104,26 @@ function drawFeatures(frame: SceneFrame, cell: Cell, x: number, y: number, z: nu
     drawCubeSigil(ctx, centre.x, centre.y - c * (0.1 + 0.05 * Math.sin(time * 1.8)), c * 0.2, 0.6 + 0.4 * pulse);
   }
 
-  if (cell.exit) drawExit(frame, feet, c);
+  if (cell.checkpoint && !wireOnly) {
+    const active = world.checkpoint === cellIndex(world.level.size, vec(x, y, z));
+    ctx.save();
+    ctx.translate(centre.x, centre.y);
+    ctx.strokeStyle = active ? '#ffffff' : '#89ffe3';
+    ctx.lineWidth = Math.max(2, c * 0.035);
+    ctx.beginPath();
+    ctx.moveTo(0, c * 0.12);
+    ctx.lineTo(0, c * 0.48);
+    ctx.stroke();
+    ctx.rotate(Math.PI / 4);
+    if (active) {
+      ctx.fillStyle = '#79ffcf';
+      ctx.fillRect(-c * 0.12, -c * 0.12, c * 0.24, c * 0.24);
+    }
+    ctx.strokeRect(-c * 0.14, -c * 0.14, c * 0.28, c * 0.28);
+    ctx.restore();
+  }
+  if (cell.reality) drawRealityPortal(frame, centre, c);
+  else if (cell.exit) drawExit(frame, feet, c);
 
   // A door cell stacked on a wire barrier of the same channel only makes the barrier two
   // cells tall for the rules; the ring on the wire is all there is to see.
@@ -1192,6 +1214,31 @@ function drawCubeSigil(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   face(5, 0, 1, '#e6d2ff');
   face(1, 2, 3, '#8f5cf0');
   face(3, 4, 5, '#b98cff');
+}
+
+/** A rift with daylight behind it, surrounded by the broken outlines of its frame. */
+function drawRealityPortal({ ctx, time }: SceneFrame, centre: Point, c: number): void {
+  glow(ctx, centre.x, centre.y, c * 1.25, '#aaffed', 0.65);
+  ctx.save();
+  ctx.translate(centre.x, centre.y);
+  const daylight = ctx.createLinearGradient(0, -c * 0.48, 0, c * 0.48);
+  daylight.addColorStop(0, '#92dcff');
+  daylight.addColorStop(0.58, '#fff9d3');
+  daylight.addColorStop(0.59, '#8fc48e');
+  daylight.addColorStop(1, '#335867');
+  ctx.fillStyle = daylight;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, c * 0.29, c * 0.48, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (let i = 0; i < 3; i++) {
+    ctx.strokeStyle = ['#ffffff', '#a2ffe9', '#ccb7ff'][i]!;
+    ctx.lineWidth = Math.max(1, c * 0.028);
+    const angle = time * 0.8 + i * 2.1;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, c * (0.33 + i * 0.045), c * (0.50 + i * 0.035), Math.sin(angle) * 0.28, angle, angle + 4.7);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawExit(frame: SceneFrame, feet: Point, c: number): void {
@@ -1548,6 +1595,8 @@ function drawActor(frame: SceneFrame, pose: ActorPose): void {
   drawCharacter(ctx, feet.x, feet.y, c, {
     role: pose.role,
     reflection: frame.world.level.mirror && clone,
+    boots: look.boots,
+    inverted: pose.up < 0,
     antipode: frame.world.level.antipode && clone,
     onWire,
     facing: look.facing,

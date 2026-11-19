@@ -58,6 +58,8 @@ export interface FrameInput {
   readonly jump: boolean;
   /** Change dimension on an anchor or a threshold. */
   readonly shift: boolean;
+  /** One-frame equipment command, also recorded by clones. */
+  readonly boots?: boolean;
 }
 
 export const IDLE: FrameInput = { x: 0, z: 0, jump: false, shift: false };
@@ -82,6 +84,7 @@ export interface Body {
   /** The wire being ridden, in 1D only. */
   readonly wire: WireHold | null;
   readonly grounded: boolean;
+  readonly boots: boolean;
   readonly status: 'active' | 'fallen' | 'exited';
   readonly coyote: number;
   readonly buffer: number;
@@ -121,8 +124,16 @@ export interface FlowWorld {
 
 export type FlowOutcome = 'playing' | 'won' | 'fallen';
 
-/** Which way a body falls: -1 down, 1 up. In an antipode level every clone falls upward. */
-export const fallOf = (level: Level, body: Pick<Body, 'role'>): 1 | -1 => (level.antipode && body.role === 'clone' ? 1 : -1);
+/** Steps between two reversals of the hyperspace field. */
+export const PULSE_TICKS = FPS * 2;
+
+export function fallOf(level: Level, body: Pick<Body, 'role' | 'boots'>, tick = 0): 1 | -1 {
+  if (level.gravity !== 'normal') {
+    if (body.boots) return -1;
+    return level.gravity === 'pulse' && Math.floor(tick / PULSE_TICKS) % 2 === 1 ? -1 : 1;
+  }
+  return level.antipode && body.role === 'clone' ? 1 : -1;
+}
 
 export function initialFlow(level: Level, clones: number): FlowWorld {
   const { start } = level;
@@ -130,7 +141,7 @@ export function initialFlow(level: Level, clones: number): FlowWorld {
   const bodies: Body[] = Array.from({ length: clones + 1 }, (_, id) => {
     const role = id === clones ? 'player' : 'clone';
     // An antipode has nothing under its feet in the start cell: it leaves it falling upward.
-    const standing = fallOf(level, { role }) < 0;
+    const standing = fallOf(level, { role, boots: false }) < 0;
     return {
       id,
       role,
@@ -143,6 +154,7 @@ export function initialFlow(level: Level, clones: number): FlowWorld {
       dim: 2,
       wire: null,
       grounded: standing,
+      boots: false,
       status: 'active',
       coyote: standing ? COYOTE : 0,
       buffer: 0,
@@ -530,11 +542,10 @@ function slide(scene: Scene, before: Body, axis: 'x' | 'z', x: number, y: number
 }
 
 /** 2D and 3D: run, jump, fall, push; or leave the plane on an anchor or a threshold. */
-function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushedDeep: Set<number>): Body {
+function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushedDeep: Set<number>, fall: 1 | -1): Body {
   const { level } = scene;
   // An antipode is the same body with the vertical turned over: its ground is a ceiling, and
   // it jumps downward. Its box stays [y, y + HEIGHT] like everyone's.
-  const fall = fallOf(level, before);
   let { x, y, z, vx, vy, vz, coyote, buffer } = before;
   let { facing } = before;
   let dim: 2 | 3 = from;
@@ -775,7 +786,12 @@ export function stepFlow(world: FlowWorld, inputs: readonly (FrameInput | null)[
     const before = scene.bodies[i];
     if (!before || before.status !== 'active') continue;
     const input = inputs[i] ?? IDLE;
-    const moved = before.dim === 1 && before.wire !== null ? rideWire(scene, before, before.wire, input) : walk(scene, before, before.dim === 3 ? 3 : 2, input, pushedDeep);
+    const equipped = input.boots && level.gravity !== 'normal' ? { ...before, boots: !before.boots } : before;
+    const fall = fallOf(level, equipped, world.tick);
+    const body = level.gravity !== 'normal' && fall !== fallOf(level, before, Math.max(0, world.tick - 1))
+      ? { ...equipped, grounded: false, coyote: 0, buffer: 0 }
+      : equipped;
+    const moved = body.dim === 1 && body.wire !== null ? rideWire(scene, body, body.wire, input) : walk(scene, body, body.dim === 3 ? 3 : 2, input, pushedDeep, fall);
 
     if (moved.dim === 1) {
       scene.bodies[i] = moved;
@@ -789,7 +805,7 @@ export function stepFlow(world: FlowWorld, inputs: readonly (FrameInput | null)[
       toggled = toggled.includes(lever) ? toggled.filter((c) => c !== lever) : [...toggled, lever].sort();
     }
     // Out by the bottom, or by the top for who falls upward. Along a wrapped y there is no out.
-    const gone = moved.y < -3 || (fallOf(level, moved) > 0 && moved.y > level.size.h + 3);
+    const gone = moved.y < -3 || ((level.gravity !== 'normal' || fall > 0) && moved.y > level.size.h + 3);
     const status: Body['status'] = gone ? 'fallen' : before.role === 'player' && cell?.exit ? 'exited' : 'active';
     scene.bodies[i] = {
       ...moved,

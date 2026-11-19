@@ -1,0 +1,16 @@
+name: La couture aveugle
+world: 19
+gravity: lift
+wrap: x
+tip: Le passage de gauche porte la même lumière que celui de droite. Le couloir se rejoint par sa tranche.
+hint: Chausse les bottes au départ et sors à gauche au ras du sol. De l’autre côté de la couture, enlève-les sous la sortie.
+tape: B1 L88 B1 _60 R45
+
+z=0
+#################
+#.......#...X...#
+#.......#.......#
+#.......#.#.....#
+#.......#.#.....#
+...@....#.#...+..
+#################
