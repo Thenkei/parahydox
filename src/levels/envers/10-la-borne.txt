@@ -1,0 +1,18 @@
+; Une borne monte du vide jusque sous ses pieds à lui : si elle l'arrête, la paire se rompt et tu tombes. Ton saut vous soulève tous les deux d'une case ; mais plus loin le plafond descend, et un second saut te le ferait heurter. Un saut, un seul, entre la fente et la borne.
+name: La borne
+world: 18
+clones: 1
+antipode: true
+tip: Ce qui arrête l'un de vous deux rompt la paire. Saute pendant que vous courez ensemble : vous montez tous les deux d'une case.
+hint: Première course : comme à la trappe, file sous la dalle et garde → enfoncé sept secondes. Seconde course : ouvre la trappe sans lâcher →, puis saute une seule fois au-dessus du vide, avant la borne.
+tape: R420 | L30 LJ14 _10 RJ20 R40 RJ14 R90 RJ20 R130
+
+z=0
+########################
+#........#......########
+#........#.............#
+#.......a#...........X.#
+#....##AA..........#####
+#..#####A......#....####
+##.@.....#.....#....####
+##########.....#....####

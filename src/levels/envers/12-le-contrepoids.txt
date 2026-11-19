@@ -1,0 +1,19 @@
+; Seul, ton antipode ne descend jamais plus bas que son saut ; en paire, chacun de ses sauts vous abaisse tous les deux d'une case. Trois sauts, enregistrés pour après l'ouverture de la trappe, l'amènent devant son couloir : il te lâche, file tenir la porte, et tu tombes au fond du puits, juste devant.
+name: Le contrepoids
+world: 18
+clones: 1
+antipode: true
+tip: Son saut, lui, fait descendre la paire d'une case. Et une paire se sépare là où l'un de vous trouve un passage que l'autre n'a pas.
+hint: Première course : file à droite, tombe dans le puits et va jusqu'à la porte ; attends-y trois secondes, saute trois fois et garde → enfoncé. Seconde course : grimpe et ouvre la trappe dès que ton antipode est dessous, puis ne bouge plus : à son troisième saut, il file vers sa plaque et tu tombes devant la porte.
+tape: R320 RJ10 R20 RJ10 R20 RJ10 R240 | L30 LJ14 _10 RJ20 R40 RJ14 R440
+
+z=0
+#.........##########
+#........a##########
+#....###AA##########
+#..######A##########
+##.@......##########
+#########.##########
+#########.....b#####
+#########.......B.X#
+####################

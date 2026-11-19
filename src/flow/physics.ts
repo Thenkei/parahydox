@@ -6,6 +6,9 @@ import type { Cell, Channel, Level, Vec3 } from '../core/types';
  * a point (1D), walk a slice (2D) or the whole volume (3D), and a clone replays the keys
  * of a past loop frame by frame.
  *
+ * Three side rules, each switched on by the level: ice (no grip), antipodes (clones that
+ * fall upward) and wrapping (a grid without edges along x, y or both).
+ *
  * The simulation is a pure function of the previous state and one input per body, at a
  * fixed 60 steps a second, so a loop replayed from its inputs is always the same loop.
  */
@@ -15,6 +18,8 @@ const DT = 1 / FPS;
 const RUN = 5.2;
 const GROUND_ACCEL = 70;
 const AIR_ACCEL = 42;
+/** Whoever has stood on ice has no grip, on the ground or in the air, until the feet rest on something that has. */
+export const ICE_ACCEL = 5;
 const GRAVITY = 42;
 /** Peaks at about 1.3 cells: one block is jumped onto, two are a wall. */
 const JUMP_SPEED = 10.4;
@@ -66,7 +71,7 @@ export interface WireHold {
 export interface Body {
   readonly id: number;
   readonly role: 'clone' | 'player';
-  /** Centre of the feet. */
+  /** Centre of the box's underside: the feet, or the head of whoever falls upward. */
   readonly x: number;
   readonly y: number;
   readonly z: number;
@@ -85,6 +90,8 @@ export interface Body {
   readonly facing: 1 | -1;
   /** Index of the fragile slab the body stands on, if any. */
   readonly slab: number | null;
+  /** The feet last rested on ice: no grip, through jumps and falls, until they rest on something else. */
+  readonly slick: boolean;
   /** Index of the cell the feet are in, to notice arriving on a lever. */
   readonly cell: number;
 }
@@ -95,7 +102,10 @@ export interface FlowCrate {
   readonly x: number;
   readonly y: number;
   readonly z: number;
+  /** The pace it was last pushed at on ice, kept until something stops it; 0 at rest. */
+  readonly vx: number;
   readonly vy: number;
+  readonly vz: number;
   readonly grounded: boolean;
 }
 
@@ -111,30 +121,40 @@ export interface FlowWorld {
 
 export type FlowOutcome = 'playing' | 'won' | 'fallen';
 
+/** Which way a body falls: -1 down, 1 up. In an antipode level every clone falls upward. */
+export const fallOf = (level: Level, body: Pick<Body, 'role'>): 1 | -1 => (level.antipode && body.role === 'clone' ? 1 : -1);
+
 export function initialFlow(level: Level, clones: number): FlowWorld {
   const { start } = level;
-  const bodies: Body[] = Array.from({ length: clones + 1 }, (_, id) => ({
-    id,
-    role: id === clones ? 'player' : 'clone',
-    x: start.x + 0.5,
-    y: start.y,
-    z: start.z + 0.5,
-    vx: 0,
-    vy: 0,
-    vz: 0,
-    dim: 2,
-    wire: null,
-    grounded: true,
-    status: 'active',
-    coyote: COYOTE,
-    buffer: 0,
-    jumpHeld: false,
-    shiftHeld: false,
-    facing: 1,
-    slab: null,
-    cell: cellIndex(level.size, start),
-  }));
-  const crates: FlowCrate[] = level.crates.map((p, id) => ({ id, x: p.x + 0.5, y: p.y, z: p.z + 0.5, vy: 0, grounded: true }));
+  const onIce = cellAt(level, gridCell(level, start.x, start.y - 1, start.z))?.ice === true;
+  const bodies: Body[] = Array.from({ length: clones + 1 }, (_, id) => {
+    const role = id === clones ? 'player' : 'clone';
+    // An antipode has nothing under its feet in the start cell: it leaves it falling upward.
+    const standing = fallOf(level, { role }) < 0;
+    return {
+      id,
+      role,
+      x: start.x + 0.5,
+      y: start.y,
+      z: start.z + 0.5,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      dim: 2,
+      wire: null,
+      grounded: standing,
+      status: 'active',
+      coyote: standing ? COYOTE : 0,
+      buffer: 0,
+      jumpHeld: false,
+      shiftHeld: false,
+      facing: 1,
+      slab: null,
+      slick: standing && onIce,
+      cell: cellIndex(level.size, start),
+    };
+  });
+  const crates: FlowCrate[] = level.crates.map((p, id) => ({ id, x: p.x + 0.5, y: p.y, z: p.z + 0.5, vx: 0, vy: 0, vz: 0, grounded: true }));
   return { level, tick: 0, bodies, crates, toggled: [], broken: [] };
 }
 
@@ -151,14 +171,36 @@ export function outcomeOfFlow(world: FlowWorld): FlowOutcome {
 
 // ------------------------------------------------------------------------------ geometry
 
-/** The grid cell a body is in: the one under its feet, or the nearest one along its wire. */
+/** A coordinate brought back into [0, span); one already there is returned as it is, to the last bit. */
+const turned = (value: number, span: number): number => (value >= 0 && value < span ? value : ((value % span) + span) % span);
+
+/** Where a point is kept: on a wrapped axis, what leaves by one side is on the other. */
+const seamX = (level: Level, x: number): number => (level.wrap.x ? turned(x, level.size.w) : x);
+const seamY = (level: Level, y: number): number => (level.wrap.y ? turned(y, level.size.h) : y);
+
+/**
+ * Where something is felt from `from`: across a seam, its copy nearest to there. Every
+ * comparison of two places goes through these, so that a seam is nowhere in particular.
+ */
+const nearX = (level: Level, from: number, x: number): number => (level.wrap.x ? x + level.size.w * Math.round((from - x) / level.size.w) : x);
+const nearY = (level: Level, from: number, y: number): number => (level.wrap.y ? y + level.size.h * Math.round((from - y) / level.size.h) : y);
+
+/** The cell at these coordinates. A box near a seam asks for column -1 or w: on a wrapped axis that is the other side. */
+function gridCell(level: Level, cx: number, cy: number, cz: number): Vec3 {
+  return vec(level.wrap.x ? turned(cx, level.size.w) : cx, level.wrap.y ? turned(cy, level.size.h) : cy, cz);
+}
+
+/** The cell a point of the world is in. */
+const cellUnder = (level: Level, x: number, y: number, z: number): Vec3 => gridCell(level, Math.floor(x), Math.floor(y + EPS), Math.floor(z));
+
+/** The grid cell a body is in: the one its box starts in, or the nearest one along its wire. */
 export function cellOfBody(level: Level, body: Pick<Body, 'x' | 'y' | 'z' | 'wire'>): Vec3 {
   if (body.wire !== null) {
     const cells = level.wires[body.wire.id]?.cells ?? [];
     const node = cells[Math.round(body.wire.s)];
     if (node) return node;
   }
-  return vec(Math.floor(body.x), Math.floor(body.y + EPS), Math.floor(body.z));
+  return cellUnder(level, body.x, body.y, body.z);
 }
 
 interface Box {
@@ -188,6 +230,14 @@ const crateBox = (x: number, y: number, z: number): Box => ({
 const overlaps = (a: Box, b: Box): boolean =>
   a.x0 < b.x1 - EPS && b.x0 < a.x1 - EPS && a.y0 < b.y1 - EPS && b.y0 < a.y1 - EPS && a.z0 < b.z1 - EPS && b.z0 < a.z1 - EPS;
 
+/** Whether two boxes of a level overlap, the second taken where it is nearest to the first. */
+function touches(level: Level, a: Box, b: Box): boolean {
+  if (!level.wrap.x && !level.wrap.y) return overlaps(a, b);
+  const dx = nearX(level, (a.x0 + a.x1) / 2, (b.x0 + b.x1) / 2) - (b.x0 + b.x1) / 2;
+  const dy = nearY(level, (a.y0 + a.y1) / 2, (b.y0 + b.y1) / 2) - (b.y0 + b.y1) / 2;
+  return overlaps(a, { x0: b.x0 + dx, x1: b.x1 + dx, y0: b.y0 + dy, y1: b.y1 + dy, z0: b.z0, z1: b.z1 });
+}
+
 /** What a step reads and moves: the arrays are the step's own copies. */
 interface Scene {
   readonly level: Level;
@@ -209,7 +259,7 @@ export function liveChannels(world: Pick<FlowWorld, 'level' | 'bodies' | 'crates
   }
   for (const crate of world.crates) {
     if (!crate.grounded) continue;
-    const plate = cellAt(level, vec(Math.floor(crate.x), Math.floor(crate.y + EPS), Math.floor(crate.z)))?.plate;
+    const plate = cellAt(level, cellUnder(level, crate.x, crate.y, crate.z))?.plate;
     if (plate) live.add(plate);
   }
   return live;
@@ -226,10 +276,10 @@ function doorShut(scene: Scene, cell: Cell, cx: number, cy: number, cz: number):
     if (b.dim === 1) {
       const at = cellOfBody(scene.level, b);
       if (at.x === cx && at.y === cy && at.z === cz) return false;
-    } else if (overlaps(bodyBox(b.x, b.y, b.z, b.dim), doorway)) return false;
+    } else if (touches(scene.level, doorway, bodyBox(b.x, b.y, b.z, b.dim))) return false;
   }
   for (const c of scene.crates) {
-    if (overlaps(crateBox(c.x, c.y, c.z), doorway)) return false;
+    if (touches(scene.level, doorway, crateBox(c.x, c.y, c.z))) return false;
   }
   return true;
 }
@@ -242,12 +292,12 @@ export function doorClosed(world: FlowWorld, live: ReadonlySet<Channel>, cx: num
 }
 
 function solidCell(scene: Scene, cx: number, cy: number, cz: number): boolean {
-  const at = vec(cx, cy, cz);
+  const at = gridCell(scene.level, cx, cy, cz);
   const cell = cellAt(scene.level, at);
   if (!cell) return false;
   if (cell.solid) return !(cell.fragile && scene.broken.has(cellIndex(scene.level.size, at)));
   // A barrier threaded on a wire bars the wire, not the air around it: only a rider is stopped.
-  return cell.wire === null && doorShut(scene, cell, cx, cy, cz);
+  return cell.wire === null && doorShut(scene, cell, at.x, at.y, at.z);
 }
 
 /** Terrain and closed doors in the way of a box. */
@@ -263,7 +313,7 @@ function terrainHits(scene: Scene, box: Box): boolean {
 }
 
 const crateHit = (scene: Scene, box: Box, except = -1): FlowCrate | null =>
-  scene.crates.find((c) => c.id !== except && overlaps(box, crateBox(c.x, c.y, c.z))) ?? null;
+  scene.crates.find((c) => c.id !== except && touches(scene.level, box, crateBox(c.x, c.y, c.z))) ?? null;
 
 const blocked = (scene: Scene, box: Box): boolean => terrainHits(scene, box) || crateHit(scene, box) !== null;
 
@@ -280,8 +330,15 @@ function crateFits(scene: Scene, crate: FlowCrate, x: number, y: number, z: numb
   return !scene.bodies.some((b) => {
     if (b.status !== 'active') return false;
     const body = bodyBox(b.x, b.y, b.z, b.dim);
-    return overlaps(body, box) && !overlaps(body, now);
+    return touches(scene.level, box, body) && !touches(scene.level, now, body);
   });
+}
+
+/** The block a crate rests on, under its centre; null over a void, on another crate or on a head. */
+function crateFloor(scene: Scene, crate: FlowCrate): Cell | null {
+  const under = gridCell(scene.level, Math.floor(crate.x), Math.floor(crate.y - 0.5), Math.floor(crate.z));
+  const cell = cellAt(scene.level, under);
+  return cell?.solid && solidCell(scene, under.x, under.y, under.z) ? cell : null;
 }
 
 const approach = (value: number, target: number, step: number): number =>
@@ -395,7 +452,7 @@ function rideWire(scene: Scene, before: Body, hold: WireHold, input: FrameInput)
 /** The anchor within reach of a body in 2D: under its feet, or at its chest when it is in the air. */
 function anchorAt(level: Level, x: number, y: number, z: number): { at: Vec3; hold: WireHold } | null {
   for (const height of [y + EPS, y + HEIGHT / 2]) {
-    const at = vec(Math.floor(x), Math.floor(height), Math.floor(z));
+    const at = gridCell(level, Math.floor(x), Math.floor(height), Math.floor(z));
     const cell = cellAt(level, at);
     if (cell?.anchor && cell.wire) return { at, hold: { id: cell.wire.wire, s: cell.wire.index } };
   }
@@ -413,28 +470,33 @@ export function transitionAt(level: Level, body: Body): Transition | null {
     return s >= 0 && (s <= ANCHOR_REACH || s >= last - ANCHOR_REACH) ? 'off-wire' : null;
   }
   if (body.dim === 2 && anchorAt(level, body.x, body.y, body.z) !== null) return 'onto-wire';
-  const here = cellAt(level, vec(Math.floor(body.x), Math.floor(body.y + EPS), Math.floor(body.z)));
+  const here = cellAt(level, cellUnder(level, body.x, body.y, body.z));
   if (!(body.grounded && here?.threshold)) return null;
   return body.dim === 2 ? 'unfold' : 'fold';
 }
 
 // ------------------------------------------------------------------------------- walking
 
-/** Moves a body one axis at a time. A crate met on the ground is pushed, anything else stops. */
+/**
+ * Moves a body one axis at a time. A crate met on the ground is pushed, anything else stops.
+ * Along a wrapped x the place returned may lie past the seam: the caller brings it back.
+ */
 function slide(scene: Scene, before: Body, axis: 'x' | 'z', x: number, y: number, z: number, dim: 2 | 3, speed: number, pushedDeep: Set<number>): { at: number; speed: number } {
+  const { level } = scene;
   const from = axis === 'x' ? x : z;
   const to = from + speed * DT;
   const boxAt = (value: number): Box => (axis === 'x' ? bodyBox(value, y, z, dim) : bodyBox(x, y, value, dim));
   const stopAt = (value: number): { at: number; speed: number } => ({ at: blocked(scene, boxAt(value)) ? from : value, speed: 0 });
 
   // Beside the grid there is only void, and no way back from it: whoever has gone over the
-  // side keeps falling. Otherwise the outside would be a way round every wall.
-  if (axis === 'x' && (from + HALF <= 0 ? to + HALF > 0 : from - HALF >= scene.level.size.w && to - HALF < scene.level.size.w)) {
+  // side keeps falling. Otherwise the outside would be a way round every wall. A grid that
+  // wraps along x has no side to go over.
+  if (axis === 'x' && !level.wrap.x && (from + HALF <= 0 ? to + HALF > 0 : from - HALF >= level.size.w && to - HALF < level.size.w)) {
     return { at: from, speed: 0 };
   }
   // The volume has a front and a back: depth ends with the grid, there is no way round outside it.
-  if (axis === 'z' && (to - HALF < 0 || to + HALF > scene.level.size.d)) {
-    return { at: Math.min(scene.level.size.d - HALF, Math.max(HALF, from)), speed: 0 };
+  if (axis === 'z' && (to - HALF < 0 || to + HALF > level.size.d)) {
+    return { at: Math.min(level.size.d - HALF, Math.max(HALF, from)), speed: 0 };
   }
   if (terrainHits(scene, boxAt(to))) {
     return stopAt(speed > 0 ? Math.floor(to + HALF) - HALF - EPS : Math.ceil(to - HALF) + HALF + EPS);
@@ -444,10 +506,10 @@ function slide(scene: Scene, before: Body, axis: 'x' | 'z', x: number, y: number
 
   const dir = Math.sign(speed) || 1;
   const reach = HALF + CRATE_HALF;
-  const centre = axis === 'x' ? crate.x : crate.z;
+  const centre = axis === 'x' ? nearX(level, from, crate.x) : crate.z;
   const against = centre - dir * (reach + EPS);
   // Already inside it (a crate fell there): walk out, never push.
-  if (overlaps(boxAt(from), crateBox(crate.x, crate.y, crate.z))) return { at: to, speed };
+  if (touches(level, boxAt(from), crateBox(crate.x, crate.y, crate.z))) return { at: to, speed };
   if (!(before.grounded && crate.grounded)) return stopAt(against);
 
   const pace = Math.min(Math.abs(speed), PUSH);
@@ -457,7 +519,12 @@ function slide(scene: Scene, before: Body, axis: 'x' | 'z', x: number, y: number
   const index = scene.crates.indexOf(crate);
   const fits = axis === 'x' ? crateFits(scene, crate, moved, crate.y, crate.z) : crateFits(scene, crate, crate.x, crate.y, moved);
   if (!fits || index < 0) return stopAt(against);
-  scene.crates[index] = axis === 'x' ? { ...crate, x: moved } : { ...crate, z: moved };
+  const shoved: FlowCrate = axis === 'x' ? { ...crate, x: seamX(level, moved) } : { ...crate, z: moved };
+  // Stone holds a crate where it is left. Ice does not: the crate keeps the pace of the push.
+  // Over an edge nothing holds it and nothing sends it: it keeps the pace it had.
+  const floor = crateFloor(scene, shoved);
+  const pushOff = floor === null ? (axis === 'x' ? crate.vx : crate.vz) : floor.ice ? dir * pace : 0;
+  scene.crates[index] = axis === 'x' ? { ...shoved, vx: pushOff } : { ...shoved, vz: pushOff };
   if (axis === 'z') pushedDeep.add(crate.id);
   return { at: pushed, speed: dir * pace };
 }
@@ -465,6 +532,9 @@ function slide(scene: Scene, before: Body, axis: 'x' | 'z', x: number, y: number
 /** 2D and 3D: run, jump, fall, push; or leave the plane on an anchor or a threshold. */
 function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushedDeep: Set<number>): Body {
   const { level } = scene;
+  // An antipode is the same body with the vertical turned over: its ground is a ceiling, and
+  // it jumps downward. Its box stays [y, y + HEIGHT] like everyone's.
+  const fall = fallOf(level, before);
   let { x, y, z, vx, vy, vz, coyote, buffer } = before;
   let { facing } = before;
   let dim: 2 | 3 = from;
@@ -493,7 +563,7 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
         cell: -1,
       };
     }
-    const here = cellAt(level, vec(Math.floor(x), Math.floor(y + EPS), Math.floor(z)));
+    const here = cellAt(level, cellUnder(level, x, y, z));
     if (before.grounded && here?.threshold) {
       dim = dim === 2 ? 3 : 2;
       if (dim === 2) {
@@ -503,7 +573,7 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
     }
   }
 
-  const accel = (before.grounded ? GROUND_ACCEL : AIR_ACCEL) * DT;
+  const accel = (before.slick ? ICE_ACCEL : before.grounded ? GROUND_ACCEL : AIR_ACCEL) * DT;
   // A diagonal is not a shortcut: the two axes share the running speed.
   const pace = dim === 3 && input.x !== 0 && input.z !== 0 ? RUN * Math.SQRT1_2 : RUN;
   vx = approach(vx, input.x * pace, accel);
@@ -515,13 +585,13 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
   if (jumping && !before.jumpHeld) buffer = BUFFER;
   else if (buffer > 0) buffer--;
   if (buffer > 0 && (before.grounded || coyote > 0)) {
-    vy = JUMP_SPEED;
+    vy = -fall * JUMP_SPEED;
     buffer = 0;
     coyote = 0;
-  } else if (!jumping && vy > JUMP_SPEED * JUMP_CUT) {
-    vy = JUMP_SPEED * JUMP_CUT;
+  } else if (!jumping && -fall * vy > JUMP_SPEED * JUMP_CUT) {
+    vy = -fall * JUMP_SPEED * JUMP_CUT;
   }
-  vy = Math.max(-MAX_FALL, vy - GRAVITY * DT);
+  vy = fall < 0 ? Math.max(-MAX_FALL, vy - GRAVITY * DT) : Math.min(MAX_FALL, vy + GRAVITY * DT);
 
   // One axis at a time: slide along what stops the others.
   if (vx !== 0) ({ at: x, speed: vx } = slide(scene, before, 'x', x, y, z, dim, vx, pushedDeep));
@@ -532,30 +602,39 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
   const box = bodyBox(x, ny, z, dim);
   const onTerrain = terrainHits(scene, box);
   const onCrate = crateHit(scene, box);
+  // Going the way it falls, a body comes to rest on what it meets; going the other way it bumps.
+  const falling = fall < 0 ? vy <= 0 : vy >= 0;
   if (onTerrain || onCrate !== null) {
-    if (vy <= 0) {
-      // Come down on the highest thing under the feet.
+    const down = falling === fall < 0;
+    if (down) {
+      // Come down on the highest thing under the box.
       let top = onTerrain ? Math.floor(ny + EPS) + 1 : -Infinity;
-      for (const c of scene.crates) if (overlaps(box, crateBox(c.x, c.y, c.z))) top = Math.max(top, c.y + CRATE_HEIGHT);
-      y = top;
-      grounded = true;
+      for (const c of scene.crates) if (touches(level, box, crateBox(c.x, c.y, c.z))) top = Math.max(top, nearY(level, ny, c.y) + CRATE_HEIGHT);
+      y = falling ? top : top + EPS;
     } else {
+      // Come up under the lowest thing over the box.
       let ceiling = onTerrain ? Math.ceil(ny + HEIGHT) - 1 : Infinity;
-      for (const c of scene.crates) if (overlaps(box, crateBox(c.x, c.y, c.z))) ceiling = Math.min(ceiling, c.y);
-      y = ceiling - HEIGHT - EPS;
+      for (const c of scene.crates) if (touches(level, box, crateBox(c.x, c.y, c.z))) ceiling = Math.min(ceiling, nearY(level, ny, c.y));
+      y = falling ? ceiling - HEIGHT : ceiling - HEIGHT - EPS;
     }
+    grounded = falling;
     vy = 0;
   } else {
     y = ny;
-    // Heads are platforms: a body coming down onto another one stands on it. Nobody is
-    // carried: if the one below walks away, the one above falls where it was.
-    if (vy <= 0) {
+    // Heads are platforms: a body falling onto another one comes to rest against it, on its
+    // top or, falling upward, under its bottom. Nobody is carried: if the one who holds
+    // walks away, the one held falls where it was.
+    if (falling) {
       for (const other of scene.bodies) {
         if (other.id === before.id || other.status !== 'active') continue;
-        const top = other.y + HEIGHT;
         const sameDepth = dim === 2 && other.dim === 2 ? Math.floor(other.z) === Math.floor(z) : Math.abs(other.z - z) < HALF * 2;
-        if (sameDepth && Math.abs(other.x - x) < HALF * 2 - 0.05 && before.y >= top - EPS && y <= top) {
-          y = top;
+        if (!(sameDepth && Math.abs(nearX(level, x, other.x) - x) < HALF * 2 - 0.05)) continue;
+        const theirs = nearY(level, before.y, other.y);
+        const rest = fall < 0 ? theirs + HEIGHT : theirs - HEIGHT;
+        // Whoever bumps into the crate on their own head is set back by exactly one EPS: an
+        // antipode holding them up allows for it, or rounding alone would decide if it lets go.
+        if (fall < 0 ? before.y >= rest - EPS && y <= rest : before.y <= rest + EPS * 1.5 && y >= rest) {
+          y = rest;
           vy = 0;
           grounded = true;
           break;
@@ -565,35 +644,87 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
   }
   coyote = grounded ? COYOTE : Math.max(0, coyote - 1);
 
-  // What the feet rest on, to know which slab is being held.
+  // What the feet rest on: a slab to hold, ice that takes the grip away. A crate or a head
+  // is neither, and gives the grip back.
   let slab: number | null = null;
+  let { slick } = before;
   if (grounded) {
+    slick = false;
     const layer = Math.floor(bodyBox(x, y, z, dim).z0 + EPS);
+    const row = Math.floor(fall < 0 ? y - 0.5 : y + HEIGHT + 0.5);
     for (const fx of [x, x - HALF + EPS, x + HALF - EPS]) {
-      const under = vec(Math.floor(fx), Math.floor(y - 0.5), layer);
+      const under = gridCell(level, Math.floor(fx), row, layer);
       const cell = cellAt(level, under);
       if (cell?.solid && solidCell(scene, under.x, under.y, under.z)) {
         slab = cell.fragile ? cellIndex(level.size, under) : null;
+        slick = cell.ice;
         break;
       }
     }
   }
 
-  return { ...before, x, y, z, vx, vy, vz, dim, wire: null, grounded, coyote, buffer, jumpHeld: jumping, shiftHeld: input.shift, facing, slab };
+  return { ...before, x: seamX(level, x), y: seamY(level, y), z, vx, vy, vz, dim, wire: null, grounded, coyote, buffer, jumpHeld: jumping, shiftHeld: input.shift, facing, slab, slick };
 }
 
 // -------------------------------------------------------------------------------- crates
 
+/**
+ * A crate set going on ice keeps going. The ice carries it, and so does the edge it is
+ * sliding off; stone grips it, and so does whatever is in its way: a sliding crate pushes
+ * nothing. This runs before anyone moves, so that whoever pushes it again this step finds
+ * it where its own pace has taken it, and only ever makes it faster.
+ */
+function slideCrates(scene: Scene): void {
+  const { level } = scene;
+  for (const [index, resting] of scene.crates.entries()) {
+    if (resting.vx === 0 && resting.vz === 0) continue;
+    let crate = resting;
+    const floor = crateFloor(scene, crate);
+    if (floor !== null && !floor.ice) {
+      crate = { ...crate, vx: 0, vz: 0 };
+    } else {
+      if (crate.vx !== 0) {
+        const x = crate.x + crate.vx * DT;
+        crate = crateFits(scene, crate, x, crate.y, crate.z) ? { ...crate, x: seamX(level, x) } : { ...crate, vx: 0 };
+      }
+      if (crate.vz !== 0) {
+        const z = crate.z + crate.vz * DT;
+        crate = crateFits(scene, crate, crate.x, crate.y, z) ? { ...crate, z } : { ...crate, vz: 0 };
+      }
+    }
+    scene.crates[index] = crate;
+  }
+}
+
+/**
+ * Lowest first, so that a stack comes down together. Along a wrapped y nothing is lowest:
+ * the order starts above the widest gap between crates, the one place no stack can span.
+ */
+function fallOrder(level: Level, crates: readonly FlowCrate[]): FlowCrate[] {
+  const order = [...crates].sort((a, b) => a.y - b.y || a.id - b.id);
+  if (!level.wrap.y) return order;
+  let first = 0;
+  let widest = -Infinity;
+  for (const [i, crate] of order.entries()) {
+    const below = order[i - 1]?.y ?? ((order[order.length - 1]?.y ?? 0) - level.size.h);
+    if (crate.y - below > widest) {
+      widest = crate.y - below;
+      first = i;
+    }
+  }
+  return [...order.slice(first), ...order.slice(0, first)];
+}
+
 /** Crates fall, rest on the ground, on each other or on a head, and settle into a slice. */
 function settleCrates(scene: Scene, pushedDeep: ReadonlySet<number>): void {
-  // Lowest first, so that a stack comes down together.
-  const order = [...scene.crates].sort((a, b) => a.y - b.y || a.id - b.id);
-  for (const listed of order) {
+  const { level } = scene;
+  for (const listed of fallOrder(level, scene.crates)) {
     const index = scene.crates.findIndex((c) => c.id === listed.id);
     let crate = scene.crates[index];
     if (!crate) continue;
 
-    if (!pushedDeep.has(crate.id)) {
+    // A crate still sliding in depth is not between two slices yet.
+    if (!pushedDeep.has(crate.id) && crate.vz === 0) {
       const lane = Math.round(crate.z - 0.5) + 0.5;
       if (Math.abs(crate.z - lane) > EPS) {
         const z = approach(crate.z, lane, LANE_SPEED * DT);
@@ -606,20 +737,23 @@ function settleCrates(scene: Scene, pushedDeep: ReadonlySet<number>): void {
     const box = crateBox(crate.x, ny, crate.z);
     let top = terrainHits(scene, box) ? Math.floor(ny + EPS) + 1 : -Infinity;
     for (const other of scene.crates) {
-      if (other.id !== crate.id && other.y < crate.y && overlaps(box, crateBox(other.x, other.y, other.z))) top = Math.max(top, other.y + CRATE_HEIGHT);
+      const theirs = nearY(level, crate.y, other.y);
+      if (other.id !== crate.id && theirs < crate.y && touches(level, box, crateBox(other.x, other.y, other.z))) top = Math.max(top, theirs + CRATE_HEIGHT);
     }
     for (const body of scene.bodies) {
       if (body.status !== 'active') continue;
-      const head = body.y + HEIGHT;
-      if (crate.y >= head - EPS && ny <= head && overlaps({ ...box, y0: head - 1, y1: head + 1 }, { ...bodyBox(body.x, body.y, body.z, body.dim), y0: head - 1, y1: head + 1 })) {
+      const head = nearY(level, crate.y, body.y) + HEIGHT;
+      if (crate.y >= head - EPS && ny <= head && touches(level, { ...box, y0: head - 1, y1: head + 1 }, { ...bodyBox(body.x, body.y, body.z, body.dim), y0: head - 1, y1: head + 1 })) {
         top = Math.max(top, head);
       }
     }
     const landed = top > -Infinity;
     // A crate at rest stays the same object: most frames change nothing.
     if (!(landed && crate.y === top && crate.vy === 0 && crate.grounded)) {
-      crate = landed ? { ...crate, y: top, vy: 0, grounded: true } : { ...crate, y: ny, vy, grounded: false };
+      // In the air a crate falls straight down, whatever pace it left the ice with.
+      crate = landed ? { ...crate, y: seamY(level, top), vy: 0, grounded: true } : { ...crate, y: seamY(level, ny), vx: 0, vy, vz: 0, grounded: false };
     }
+    // A grid that wraps along y has no bottom to fall out of.
     if (crate.y < -3) scene.crates.splice(index, 1);
     else scene.crates[index] = crate;
   }
@@ -635,6 +769,8 @@ export function stepFlow(world: FlowWorld, inputs: readonly (FrameInput | null)[
   const pushedDeep = new Set<number>();
   let toggled = world.toggled;
 
+  slideCrates(scene);
+
   for (let i = 0; i < scene.bodies.length; i++) {
     const before = scene.bodies[i];
     if (!before || before.status !== 'active') continue;
@@ -645,14 +781,16 @@ export function stepFlow(world: FlowWorld, inputs: readonly (FrameInput | null)[
       scene.bodies[i] = moved;
       continue;
     }
-    const at = vec(Math.floor(moved.x), Math.floor(moved.y + EPS), Math.floor(moved.z));
+    const at = cellUnder(level, moved.x, moved.y, moved.z);
     const cell = cellAt(level, at);
     const index = cell ? cellIndex(level.size, at) : -1;
     if (index !== before.cell && moved.grounded && cell?.lever) {
       const lever = cell.lever;
       toggled = toggled.includes(lever) ? toggled.filter((c) => c !== lever) : [...toggled, lever].sort();
     }
-    const status: Body['status'] = moved.y < -3 ? 'fallen' : before.role === 'player' && cell?.exit ? 'exited' : 'active';
+    // Out by the bottom, or by the top for who falls upward. Along a wrapped y there is no out.
+    const gone = moved.y < -3 || (fallOf(level, moved) > 0 && moved.y > level.size.h + 3);
+    const status: Body['status'] = gone ? 'fallen' : before.role === 'player' && cell?.exit ? 'exited' : 'active';
     scene.bodies[i] = {
       ...moved,
       status,

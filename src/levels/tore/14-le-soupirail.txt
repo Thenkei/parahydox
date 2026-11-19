@@ -1,0 +1,19 @@
+; La sortie est juste sous le plancher : on n'y entre que par en dessous, c'est-à-dire par le haut du monde. La caisse descend par la trappe que ton clone tient ouverte, et sert de marche pour sauter par-dessus le bord du ciel.
+name: Le soupirail
+world: 16
+clones: 1
+wrap: y
+tip: La sortie est sous le plancher. Le haut du monde touche le bas : on y entre en sautant.
+hint: Première course : cours à droite, monte sur la marche et reste sur la plaque. Seconde course : pousse la caisse à gauche dans le trou ; la trappe est ouverte, elle tombe dans la galerie, tout en haut. Suis-la, pousse-la au bout de la galerie, monte dessus et saute vers la droite : tu passes par le haut du monde et tu retombes à côté de la sortie.
+tape: R40 RJ14 R60 | L60 _40 L14 _6 R110 _10 RJ16 _6 RJ20 R30
+
+z=0
+#........#####
+#........#####
+##############
+#............#
+#...........a#
+#....o.@...###
+####.#########
+####.###.....#
+####A###..X..#

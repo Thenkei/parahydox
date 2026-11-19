@@ -1,0 +1,18 @@
+; La sortie est tout en haut, et chaque corniche est trop haute pour un saut. Mais le bas du monde est aussi son sommet : tomber par le trou du sol pose sur la première corniche, et tomber du bout de celle-ci pose sur la seconde.
+name: Par le fond
+world: 16
+wrap: y
+tip: Ici le monde n'a ni fond ni sommet : ce qui tombe par le bas revient par le haut.
+hint: Laisse-toi tomber dans le trou : tu reviens par le ciel et tu te poses sur la corniche du milieu. Va au bout, à gauche, et tombe encore : tu retombes sur la corniche de la sortie.
+tape: L140
+
+z=0
+#..............#
+#X.............#
+#####..........#
+#..............#
+#..............#
+#...######.....#
+#...#..........#
+#...#......@...#
+#...####.#######

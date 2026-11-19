@@ -1,0 +1,15 @@
+; Le plafond n'est pas le sol. Le trou du bas n'existe pas en haut ; le trou du haut n'existe pas en bas, et c'est un gouffre pour celui qui court au plafond : il faut sauter sur un sol plat, pour lui.
+name: Le trou du plafond
+world: 17
+clones: 1
+antipode: true
+tip: Mêmes touches, autre terrain. Un trou dans le plafond est un gouffre pour ton clone : sans plafond, il s'envole.
+hint: Première course : saute ton trou, puis saute encore sur le sol plat, au moment de passer sous le trou du plafond, et cours jusqu'à la porte. Rembobine : ton clone franchit son trou et tient la plaque.
+tape: R46 RJ16 R70 RJ20 R160 | R46 RJ16 R230
+
+z=0
+############..##########
+.................a#..#..
+.....................#..
+@....................A.X
+#####..#################

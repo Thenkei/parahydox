@@ -5,7 +5,8 @@ coupe verticale) ou en 3D (le volume entier). Rembobiner le temps laisse un clon
 rejoue tes touches, pas tes déplacements.
 
 Tout le jeu se joue en mouvement continu : on court, on saute, et les clones ne t'attendent
-pas. Deux campagnes :
+pas. Cinq campagnes : la principale, trois campagnes annexes qui s'ouvrent en chemin, chacune
+bâtie sur une règle de plus, et Hardcore pour finir.
 
 **Parahydox**, 64 niveaux en 8 mondes de 8 :
 
@@ -19,6 +20,15 @@ pas. Deux campagnes :
 | 6. Le levier | un état qui reste, et que chaque passage rebascule |
 | 7. Le reflet | des clones qui rejouent tes touches en miroir |
 | 8. L'éphémère | des dalles qui s'effondrent derrière toi |
+
+Trois campagnes annexes de 16 niveaux (2 mondes de 8), qui s'ouvrent au fil de la campagne
+principale, au nombre de niveaux terminés, quels qu'ils soient :
+
+| Campagne | S'ouvre à | Règle | Mondes |
+| --- | --- | --- | --- |
+| **Le givre** | 24 niveaux | la glace : on n'y démarre ni n'y freine, et une caisse poussée y glisse | G1. La glissade (seul) · G2. Le verglas (avec des clones) |
+| **Le tore** | 40 niveaux | les bords sont recousus : ce qui sort d'un côté revient de l'autre | T1. Le ruban (gauche et droite) · T2. La chute sans fin (bas et haut) |
+| **L'envers** | 56 niveaux | les clones sont des antipodes : ils tombent vers le haut | E1. Les antipodes · E2. Semelle contre semelle |
 
 **Hardcore**, 32 niveaux d'élite en 4 mondes de 8, qui s'ouvre quand les 64 premiers sont
 tous terminés. Les mêmes règles, sans rien de neuf à apprendre : ce sont les idées des huit
@@ -60,13 +70,14 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | N / P | niveau suivant / précédent |
 
 Une boucle part à ta première touche, et tes clones avec elle. Une chute dans le vide
-relance la boucle, clones conservés. `?level=12` ouvre un niveau (les niveaux Hardcore
-suivent, de 65 à 96), `?unlock` les ouvre tous, `?level=12&demo` fait jouer au jeu la course
-prévue du niveau.
+relance la boucle, clones conservés. `?level=12` ouvre le douzième niveau dans l'ordre de jeu,
+toutes campagnes comptées ; `?level=H2-5` (ou `G1-4`, `T2-1`, `E1-8`, `3-2`) le nomme par son
+étiquette, qui ne bouge pas quand une campagne s'ajoute. `?unlock` ouvre tout,
+`?level=12&demo` fait jouer au jeu la course prévue du niveau.
 
 Dans le choix du niveau, Tab passe d'une campagne à l'autre (↑ et ↓ aussi, au bout de la
-liste). Tant que Hardcore est fermé, on peut le regarder mais pas y entrer : ni N, ni
-`?level=` n'y mènent, seul `?unlock` l'ouvre sans l'avoir gagné.
+liste). Une campagne fermée se regarde mais on n'y entre pas : ni N, ni `?level=` n'y
+mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
 
 ## Règles
 
@@ -98,7 +109,21 @@ liste). Tant que Hardcore est fermé, on peut le regarder mais pas y entrer : ni
   inversée : ouverte au repos.
 - **Dalle fragile** : elle tient tant que quelqu'un s'y tient, et tombe quand le dernier
   l'a quittée à pied. La quitter par un fil ne la casse pas.
-- **Hors de la grille** il n'y a que du vide, et on n'en revient pas.
+- **Hors de la grille** il n'y a que du vide, et on n'en revient pas (sauf dans Le tore).
+- **Glace** (Le givre) : les pieds sur la glace, on ne démarre ni ne freine vite, et on reste
+  glissant, saut compris, tant qu'on n'a pas reposé le pied sur ce qui accroche : la pierre,
+  une caisse, une tête. Un mur arrête net. Une caisse poussée sur la glace garde son élan
+  jusqu'à ce que quelque chose l'arrête : un obstacle, la pierre, quelqu'un, ou un bord,
+  d'où elle tombe tout droit.
+- **Bords recousus** (Le tore) : selon le niveau, la gauche et la droite sont le même
+  endroit, ou le bas et le haut, ou les deux. Ce qui tombe par le bas revient par le haut,
+  et plus rien ne se perd dans le vide : tomber est une façon de monter. La profondeur ne
+  se recoud pas, et un fil ne passe pas la couture.
+- **Antipodes** (L'envers) : les clones tombent vers le haut. Ils se tiennent sous les
+  plafonds, y courent, et leur saut va vers le bas ; sans plafond, ils sortent par le haut.
+  Une tête reste une plateforme, dans le sens où chacun tombe : toi et ton antipode pouvez
+  donc vous tenir semelle contre semelle au-dessus du vide, chacun retenant l'autre, et
+  courir ensemble. Les caisses, elles, tombent toujours vers le bas.
 
 ## À l'écran
 
@@ -121,18 +146,19 @@ liste). Tant que Hardcore est fermé, on peut le regarder mais pas y entrer : ni
   essayant toutes les façons de tenir les touches. Il trouve les courses prévues et
   vérifie qu'un niveau à clones ne se finit pas sans clone.
 - `src/levels/` — un fichier texte par niveau, une couche ASCII par valeur de z, avec sa
-  course prévue (`tape:`), que les tests rejouent. Les niveaux Hardcore sont dans
-  `src/levels/hardcore/`. `index.ts` décrit les campagnes : leurs mondes (le numéro `world:`
-  d'un niveau est unique d'une campagne à l'autre, 1 à 8 puis 9 à 12) et ce qu'il faut avoir
-  terminé pour les ouvrir.
+  course prévue (`tape:`), que les tests rejouent. Chaque campagne a son dossier
+  (`givre/`, `tore/`, `envers/`, `hardcore/`). `index.ts` décrit les campagnes : leurs mondes
+  (le numéro `world:` d'un niveau est unique d'une campagne à l'autre : 1 à 8, Hardcore 9 à
+  12, puis 13 à 18) et combien de niveaux de quelle campagne il faut avoir terminés pour
+  les ouvrir.
 - `src/ui/` — `game.ts` lit les touches, fait avancer la physique et dessine ; `app.ts`
   tient les écrans et la progression ; `progress.ts` sauvegarde les temps et dit ce qui est
   ouvert (une campagne, un niveau) ; `render/` est le dessin en Canvas 2D : une seule
   projection oblique dont la profondeur se replie, si bien que changer de dimension
   déplace la caméra au lieu de changer d'écran.
-- `src/ui/themes.ts` — un décor par monde. Un thème appartient à un biome (`meadow` pour
-  Parahydox, `ember` pour Hardcore) qui choisit ses textures et ses détails dessinés
-  (herbe et fleurs, ou croûte, braises et flammes), et donne la tonalité de la musique.
+- `src/ui/themes.ts` — un décor par monde. Un thème appartient à un biome (un par
+  campagne) qui choisit ses textures et ses détails dessinés (herbe et fleurs, croûte et
+  braises, neige et glaçons…), et donne la tonalité de la musique.
 - `src/ui/audio.ts` — tout le son est synthétisé (Web Audio).
 - `src/assets/` — ciels et textures (pierre, herbe et caisse de bois ; basalte, braise et
   caisse de fer pour Hardcore) générés avec l'outil d'image de Codex ; personnages, portes,

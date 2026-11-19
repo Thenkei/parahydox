@@ -1,0 +1,17 @@
+; Le trou se franchit en glissant, et seulement lancé : qui part du bord, où l'on commence, retombe contre la lèvre d'en face, car la glace ne donne pas sa vitesse d'un coup. L'élan se prend en reculant. Le plafond interdit le saut, et la cheminée au-dessus du bord avale qui saute quand même.
+name: Le recul
+world: 13
+tip: Sur la glace on démarre lentement. Le trou est trop large pour qui part du bord.
+hint: Tourne le dos au trou : glisse jusqu'au mur de gauche, qui t'arrête. De là, cours vers la droite sans lâcher et sans sauter : tu arrives au bord à pleine vitesse, et tu passes.
+tape: L90 R167
+
+z=0
+#######.########
+#.....@........#
+#iiiiii........#
+#######........#
+#######........#
+#######........#
+#######........#
+#######......X.#
+#######...iiiii#

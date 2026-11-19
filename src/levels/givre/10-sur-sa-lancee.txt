@@ -1,0 +1,15 @@
+; Le mime, sur la glace : contre la porte fermée le clone a tout perdu, mais ses touches, elles, sont entières. Porte ouverte, il glissera aussi longtemps qu'on a appuyé, plus tout son élan, et derrière les plaques il n'y a que le vide : il faut lâcher au moment où l'on bute.
+name: Sur sa lancée
+world: 14
+clones: 1
+tip: Ton clone rejoue tes touches, pas ta course. Ce que tu appuies contre une porte fermée, il le glissera une fois la porte ouverte.
+hint: Première course : glisse vers la droite et lâche la touche à l'instant où tu butes contre la porte, pas plus tard. Seconde course : fais un pas à gauche sur la plaque et attends ; ton clone passe la porte sur sa lancée et s'arrête de lui-même sur les plaques du fond. La porte de gauche s'ouvre : vas-y.
+tape: R70 _30 | L8 _170 L130
+
+z=0
+.#...............#......
+.#...............#......
+.#...............#......
+.#...............#......
+XB........a@.....Abbbb..
+##iiiiiiii##iiiiiiiiii..

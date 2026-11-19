@@ -1,0 +1,15 @@
+; Rien n'arrête la caisse sur la plaque, et au-delà le trou l'avale. Sur la glace, personne ne peut aller se planter devant elle à temps, ni s'y arrêter net ; mais le fil, attrapé en glissant derrière la caisse, la double par-dessus le plafond et dépose immobile juste après la plaque. On devient le butoir.
+name: Le butoir
+world: 13
+glyph: ! = anchor + crate
+tip: Une caisse qui glisse s'arrête contre qui se trouve sur son chemin. Et qui descend d'un fil se tient immobile, même sur la glace.
+hint: Pousse la caisse, et laisse-toi glisser sur l'ancre où elle était posée : E. Suis le fil jusqu'à l'autre ancre, descends et ne bouge plus : la caisse vient buter contre toi, sur la plaque. Puis saute le trou jusqu'à la sortie.
+tape: R70 _30 E1 U24 R151 D24 E1 _90 R30 RJ14 R48
+
+z=0
+#....................#.
+#....................#.
+#....==============..#.
+#####=############=..#.
+#@...!...........a*..AX
+#iiiiiiiiiiiiiiiiii.i##

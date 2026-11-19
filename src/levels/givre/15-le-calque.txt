@@ -1,0 +1,15 @@
+; La corniche est loin de tout mur : on n'y monte que depuis une tête, et la plaque a, à son pied, doit rester tenue elle aussi. S'arrêter pile sur la glace est difficile ; s'y arrêter une seconde fois au même endroit est facile : il suffit de rejouer les mêmes touches. Le second clone refait la glissade du premier, saute sur sa tête, puis sur la corniche.
+name: Le calque
+world: 14
+clones: 2
+tip: Sur la glace, refaire exactement les mêmes touches, c'est s'arrêter exactement au même endroit.
+hint: Première course : glisse et lâche à temps pour t'arrêter sur la plaque, un peu avant la corniche. Deuxième course : refais la même glissade, saute sur la tête de ton clone, puis sur la corniche. Troisième course : file à droite, les deux portes s'ouvrent.
+tape: R65 _100 | R65 _100 J18 _10 RJ20 R10 | R300
+
+z=0
+####################
+#...............####
+#..........bb...####
+#..........##...####
+#@.......aa.....ABX#
+##iiiiiiiiiiiiii####

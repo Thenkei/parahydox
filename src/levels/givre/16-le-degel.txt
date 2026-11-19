@@ -1,0 +1,17 @@
+; Trois plaques en bas pour trois portes, et la réserve ne s'ouvre que si l'on tient a, en haut : celui qui la tient est le seul à pouvoir sortir, et tout le reste se joue à l'aveugle, porte fermée. Un clone saute la caisse et presse contre la porte ; ouverte, elle le laisse glisser jusqu'au mur, sur b. L'autre pousse la caisse, qui s'arrête contre lui, sur d, puis se jette dans la fosse de c. Le clone passe sur d avant de s'arrêter sur b : la porte D, derrière B, ne s'ouvre donc jamais pour qui attend qu'il passe.
+name: Le dégel
+world: 14
+clones: 2
+tip: Deux clones, trois plaques, une caisse, et une porte qui ne s'ouvrira qu'à la dernière course.
+hint: Première course : descends dans la réserve, saute par-dessus la caisse et appuie vers la gauche contre la porte, trois bonnes secondes. Deuxième course : descends, attends un peu, pousse la caisse un court instant, puis cours à droite et laisse-toi tomber dans la fosse. Troisième course : tiens-toi sur la plaque, en haut ; ton premier clone glisse jusqu'au mur et la caisse s'arrête contre lui. Quand les trois portes sont ouvertes, sors par la gauche.
+tape: R70 _20 LJ20 L180 | R70 _90 L24 R200 | L40 _410 L60
+
+z=0
+#################
+#XDCB.a..@.....##
+##############.##
+############...##
+#bd........A.o..#
+#iiiiiiiiiiii##.#
+###############c#
+#################

@@ -22,7 +22,7 @@ const tape = parseTape(tapeArg || level.tape || '');
 if (!tape.ok) throw new Error(tape.error);
 const every = Number(everyArg ?? 10);
 
-/** The slice the hero is in, as text: terrain, then crates (o), clones (1, 2…) and the hero (@). */
+/** The slice the hero is in, as text: terrain (ice is i), then crates (o), clones (1, 2…) and the hero (@). */
 function picture(world: FlowWorld): string {
   const hero = playerOfFlow(world);
   const z = Math.floor(hero.z);
@@ -40,7 +40,9 @@ function picture(world: FlowWorld): string {
               ? world.broken.includes(index)
                 ? ' '
                 : '~'
-              : '#'
+              : cell.ice
+                ? 'i'
+                : '#'
             : cell.exit
               ? 'X'
               : cell.door !== null
@@ -94,7 +96,7 @@ tape.value.forEach((frames, index) => {
         .join(' ');
       const crates = world.crates.map((c) => `o(${c.x.toFixed(2)},${c.y.toFixed(1)},${c.z.toFixed(1)})`).join(' ');
       console.log(
-        `f${String(world.tick).padStart(4)}  hero x=${p.x.toFixed(2)} y=${p.y.toFixed(2)} z=${p.z.toFixed(2)} ${p.dim}D ${p.grounded ? 'ground' : p.dim === 1 ? 'wire' : 'air'}  ${others} ${crates} levers[${world.toggled.join('')}] broken ${world.broken.length}`,
+        `f${String(world.tick).padStart(4)}  hero x=${p.x.toFixed(2)} y=${p.y.toFixed(2)} z=${p.z.toFixed(2)} ${p.dim}D ${p.grounded ? 'ground' : p.dim === 1 ? 'wire' : 'air'}${p.slick ? ' slick' : ''}  ${others} ${crates} levers[${world.toggled.join('')}] broken ${world.broken.length}`,
       );
     }
   }

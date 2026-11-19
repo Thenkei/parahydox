@@ -1,10 +1,10 @@
 import { parseTape } from '../flow/tape';
-import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, chapterLabel, loadLevels } from '../levels';
+import { CAMPAIGNS, type CampaignId, LEVEL_SOURCES, campaignById, levelIndexOf, levelLabels, loadLevels } from '../levels';
 import { loadAssets } from './assets';
 import { Audio } from './audio';
 import { Game, targetSeconds } from './game';
 import { type CampaignTab, Hud, type LevelEntry, type WinSequel } from './hud';
-import { campaignOpen, levelOpen, loadProgress, remainingIn, saveProgress, withWin } from './progress';
+import { campaignOpen, levelOpen, loadProgress, missingFor, nextWaitingOn, openedBetween, remainingIn, saveProgress, withWin } from './progress';
 import { themeFor } from './themes';
 
 type Screen = 'title' | 'select' | 'play';
@@ -12,13 +12,12 @@ type Screen = 'title' | 'select' | 'play';
 const WIN_CARD_AFTER_MS = 650;
 
 function buildEntries(): LevelEntry[] {
-  const counters = new Map<number, number>();
-  return loadLevels().map((level, i) => {
+  const levels = loadLevels();
+  const labels = levelLabels(levels);
+  return levels.map((level, i) => {
     const source = LEVEL_SOURCES[i];
     if (!source) throw new Error(`Invariant violated: level ${i} has no source`);
-    const position = (counters.get(level.world) ?? 0) + 1;
-    counters.set(level.world, position);
-    return { id: source.id, campaign: source.campaign, level, label: `${chapterLabel(level.world)}-${position}` };
+    return { id: source.id, campaign: source.campaign, level, label: labels[i] ?? '' };
   });
 }
 
@@ -50,7 +49,7 @@ export async function startApp(): Promise<void> {
     const entry = entries[index];
     return entry !== undefined && campaignIsOpen(entry.campaign);
   };
-  /** A campaign's levels are contiguous in play order. */
+  /** A campaign's levels are contiguous in play order; `first` is -1 for a campaign that has none yet. */
   const rangeOf = (campaign: CampaignId): { first: number; last: number } => {
     const first = entries.findIndex((entry) => entry.campaign === campaign);
     return { first, last: first + entries.filter((entry) => entry.campaign === campaign).length - 1 };
@@ -63,10 +62,19 @@ export async function startApp(): Promise<void> {
   const canvas = document.getElementById('view');
   if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing <canvas id="view"> in index.html');
 
-  // `?level=12` opens a level directly, to share or reproduce a situation; levels count on through hardcore (65 to 96).
-  const asked = params.has('level') ? clampIndex(Number(params.get('level')) - 1) : -1;
+  // `?level=12` opens a level directly, to share or reproduce a situation: the twelfth in play order, every
+  // campaign counted. `?level=H2-5` names it by its label instead, which no new campaign can shift.
+  const wanted = params.get('level');
+  const asked = wanted === null ? -1 : levelIndexOf(wanted, entries.map((entry) => entry.label));
   const deepLink = reachable(asked);
-  const resumed = clampIndex(progress.last);
+  // An old save holds a position: only positions in the first campaign still mean the same level.
+  const firstCampaign = entries.filter((entry) => entry.campaign === entries[0]?.campaign).length;
+  const resumed =
+    typeof progress.last === 'string'
+      ? Math.max(0, entries.findIndex((entry) => entry.id === progress.last))
+      : typeof progress.last === 'number' && progress.last < firstCampaign
+        ? clampIndex(progress.last)
+        : 0;
   let levelIndex = deepLink ? asked : reachable(resumed) ? resumed : 0;
   let screen: Screen = 'title';
   let cursor = levelIndex;
@@ -74,7 +82,7 @@ export async function startApp(): Promise<void> {
   let shown: CampaignId = entryAt(levelIndex).campaign;
   let winTimer: number | null = null;
   /** What follows the win on screen: where Enter leads from the card. */
-  let sequel: WinSequel = { kind: 'next' };
+  let sequel: WinSequel = { kind: 'next', opened: [] };
 
   const hud = new Hud(
     (index) => {
@@ -90,20 +98,25 @@ export async function startApp(): Promise<void> {
     hud.hideWin();
   };
 
+  /** "Termine 24 niveaux de Parahydox pour ouvrir Le givre : encore 7." */
+  const lockLine = (campaign: CampaignId): string | null => {
+    const { name, requires } = campaignById(campaign);
+    if (requires === null || campaignIsOpen(campaign)) return null;
+    // Asking for as many levels as there are is asking for all of them, and reads better that way.
+    const all = requires.solved >= entries.filter((entry) => entry.campaign === requires.campaign).length;
+    const asks = all ? 'tous les niveaux' : `${requires.solved} niveaux`;
+    return `Termine ${asks} de ${campaignById(requires.campaign).name} pour ouvrir ${name} : encore ${missingFor(campaign, entries, progress.times)}.`;
+  };
+
   const tabs = (): CampaignTab[] =>
     CAMPAIGNS.map((campaign) => {
-      const mine = entries.filter((entry) => entry.campaign === campaign.id);
-      const open = campaignIsOpen(campaign.id);
-      const required = campaign.requires === null ? null : campaignById(campaign.requires);
+      const total = entries.filter((entry) => entry.campaign === campaign.id).length;
       return {
         campaign,
-        open,
-        solved: mine.filter((entry) => entry.id in progress.times).length,
-        total: mine.length,
-        lock:
-          open || required === null
-            ? null
-            : `Termine tous les niveaux de ${required.name} pour ouvrir ${campaign.name} : encore ${remainingIn(required.id, entries, progress.times)}.`,
+        open: campaignIsOpen(campaign.id),
+        solved: total - remainingIn(campaign.id, entries, progress.times),
+        total,
+        lock: lockLine(campaign.id),
       };
     });
 
@@ -135,7 +148,7 @@ export async function startApp(): Promise<void> {
     levelIndex = index;
     cursor = levelIndex;
     screen = 'play';
-    progress = { ...progress, last: levelIndex };
+    progress = { ...progress, last: entryAt(levelIndex).id };
     saveProgress(progress);
     const entry = entryAt(levelIndex);
     const theme = themeFor(entry.level.world);
@@ -148,43 +161,47 @@ export async function startApp(): Promise<void> {
     hud.showBanner(entry);
   }
 
-  const onSelectKey = (code: string): void => {
+  const onSelectKey = (code: string, shift: boolean): void => {
     if (code === 'Escape') {
       screen = 'play';
-      // The list may have been showing the other campaign: back to the colours of the level in play.
+      // The list may have been showing another campaign: back to the colours of the level in play.
       hud.setCampaign(entryAt(levelIndex).campaign);
       return hud.showScreen('play');
     }
+    const tab = CAMPAIGNS.findIndex((campaign) => campaign.id === shown);
     if (code === 'Tab') {
-      const next = CAMPAIGNS[(CAMPAIGNS.findIndex((campaign) => campaign.id === shown) + 1) % CAMPAIGNS.length];
+      // Round and round, and backwards with Shift: five tabs are a long way to go the wrong way.
+      const next = CAMPAIGNS[(tab + (shift ? CAMPAIGNS.length - 1 : 1)) % CAMPAIGNS.length];
       if (next) {
         audio.play('wait');
         showCampaign(next.id);
       }
       return;
     }
+    const { first, last } = rangeOf(shown);
+    // The cursor only means something inside the campaign on screen: one without levels yet has none to open.
+    const here = cursor >= first && cursor <= last ? entries[cursor] : undefined;
     if (code === 'Enter' || code === 'NumpadEnter' || code === 'KeyE' || code === 'Space') {
-      if (unlocked(cursor)) openLevel(cursor);
+      if (here && unlocked(cursor)) openLevel(cursor);
       return;
     }
     const dx = code === 'ArrowLeft' || code === 'KeyA' ? -1 : code === 'ArrowRight' || code === 'KeyD' ? 1 : 0;
     const dy = code === 'ArrowUp' || code === 'KeyW' ? -1 : code === 'ArrowDown' || code === 'KeyS' ? 1 : 0;
     if (dx === 0 && dy === 0) return;
-    const { first, last } = rangeOf(shown);
-    if (first < 0) return;
     if (dx !== 0) {
+      if (!here) return;
       cursor = Math.min(last, Math.max(first, cursor + dx));
     } else {
       // Up and down change chapter and keep the column where they can.
-      const here = entryAt(cursor).level.world;
-      const column = entries.slice(0, cursor).filter((e) => e.level.world === here).length;
-      const row = entries.map((e, i) => ({ e, i })).filter(({ e }) => e.campaign === shown && e.level.world === here + dy);
+      const world = here?.level.world ?? Number.NaN;
+      const column = entries.slice(0, cursor).filter((e) => e.level.world === world).length;
+      const row = entries.map((e, i) => ({ e, i })).filter(({ e }) => e.campaign === shown && e.level.world === world + dy);
       const target = row[Math.min(column, row.length - 1)];
       if (target) {
         cursor = target.i;
       } else {
         // Past the first or the last chapter lies the neighbouring campaign.
-        const neighbour = CAMPAIGNS[CAMPAIGNS.findIndex((campaign) => campaign.id === shown) + dy];
+        const neighbour = CAMPAIGNS[tab + dy];
         if (!neighbour) return;
         audio.play('wait');
         return showCampaign(neighbour.id);
@@ -196,14 +213,18 @@ export async function startApp(): Promise<void> {
 
   const onPlayKey = (event: KeyboardEvent): void => {
     const { code } = event;
-    if (code === 'Escape') return showSelect();
+    // What the win just opened, while its card is the thing on screen.
+    const announced = game.outcome === 'won' && sequel.kind !== 'end' ? sequel.opened[0]?.id : undefined;
+    // "Échap pour y aller": from the card that announces a campaign, the list opens on it.
+    if (code === 'Escape') return showSelect(announced);
     if (code === 'KeyN') return openLevel(levelIndex + 1);
     if (code === 'KeyP') return openLevel(levelIndex - 1);
     if (game.outcome === 'won') {
       if (code === 'Enter' || code === 'NumpadEnter') {
+        // With a level ahead, an opening is one line on the card and nothing more: the player goes on.
         if (sequel.kind === 'next') return openLevel(levelIndex + 1);
-        // A campaign just opened is shown, not walked into: the player chooses to enter it.
-        return showSelect(sequel.kind === 'unlocked' ? sequel.campaign.id : undefined);
+        // At the end of the road, a campaign just opened is shown, not walked into: the player chooses to enter it.
+        return showSelect(announced);
       }
       // Once through the door only starting over means anything.
       if (!(code === 'KeyR' && event.shiftKey)) return;
@@ -212,15 +233,17 @@ export async function startApp(): Promise<void> {
     game.keyDown(code, event.shiftKey);
   };
 
-  /** What a win leads to, given the campaigns that were already earned before it. */
-  const sequelOf = (entry: LevelEntry, earnedBefore: readonly CampaignId[]): WinSequel => {
-    const opened = CAMPAIGNS.find((campaign) => !earnedBefore.includes(campaign.id) && earned(campaign.id));
-    if (opened) return { kind: 'unlocked', campaign: opened };
-    if (entries[levelIndex + 1]?.campaign === entry.campaign) return { kind: 'next' };
+  /** What a win leads to, given the times as they stood before it. */
+  const sequelOf = (entry: LevelEntry, before: Readonly<Record<string, number>>): WinSequel => {
+    const opened = openedBetween(before, progress.times, entries).map(campaignById);
+    if (entries[levelIndex + 1]?.campaign === entry.campaign) return { kind: 'next', opened };
+    if (opened.length > 0) return { kind: 'unlocked', opened };
+    const waiting = nextWaitingOn(entry.campaign, entries, progress.times);
     return {
       kind: 'end',
       remaining: remainingIn(entry.campaign, entries, progress.times),
-      opens: CAMPAIGNS.find((campaign) => campaign.requires === entry.campaign) ?? null,
+      waiting: waiting === null ? null : { campaign: campaignById(waiting.campaign), missing: waiting.missing },
+      finished: entries.every((other) => other.id in progress.times),
     };
   };
 
@@ -238,7 +261,7 @@ export async function startApp(): Promise<void> {
     if (screen === 'title') {
       if (event.code === 'Enter' || event.code === 'NumpadEnter' || event.code === 'Space' || event.code === 'KeyE') openLevel(levelIndex);
     } else if (screen === 'select') {
-      onSelectKey(event.code);
+      onSelectKey(event.code, event.shiftKey);
     } else {
       onPlayKey(event);
     }
@@ -252,10 +275,10 @@ export async function startApp(): Promise<void> {
     const seconds = game.takeWin();
     if (seconds !== null) {
       const entry = entryAt(levelIndex);
-      const earnedBefore = CAMPAIGNS.filter((campaign) => earned(campaign.id)).map((campaign) => campaign.id);
+      const before = progress.times;
       progress = withWin(progress, entry.id, seconds);
       saveProgress(progress);
-      const after = sequelOf(entry, earnedBefore);
+      const after = sequelOf(entry, before);
       sequel = after;
       winTimer = window.setTimeout(() => hud.showWin(entry, seconds, targetSeconds(entry.level), after), WIN_CARD_AFTER_MS);
     }

@@ -1,0 +1,18 @@
+; Trois portes à la file, deux plaques sur l'anneau et un seul clone. Sur un tore, qui court sans s'arrêter ne s'arrête jamais : à chaque tour ton clone passe sur les deux plaques et tombe à travers le monde, et chaque porte s'ouvre un instant pour qui s'y appuie.
+name: Le manège
+world: 16
+clones: 1
+wrap: xy
+tip: Sur un tore, qui court sans s'arrêter repasse toujours aux mêmes endroits. Une porte contre laquelle tu pousses te laisse passer dès qu'elle s'ouvre.
+hint: Première course : cours à droite et ne lâche plus →, dix bonnes secondes : tu fais le tour, tu tombes par le trou et tu reviens par le ciel, encore et encore. Seconde course : tombe dans le trou en maintenant ← pour entrer dans la galerie du bas, et appuie-toi contre chaque porte jusqu'à ce que ton clone passe sur sa plaque.
+tape: R600 | L300
+
+z=0
+....########....
+................
+................
+...a...b......@.
+############.###
+############.###
+####..A.B.A..###
+####X.A.B.A..###

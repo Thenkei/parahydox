@@ -1,0 +1,17 @@
+; Partis dos à dos, les deux clones se retrouvent de part et d'autre du même mur, au bord du monde : l'un pèse sur la plaque, l'autre fait la marche au pied de la corniche. Chacun ne passe sa porte que si l'autre la lui tient, et celui qui tient la première doit encore repartir.
+name: Les retrouvailles
+world: 15
+clones: 2
+wrap: x
+tip: Deux portes, et la plaque de chacune est sur le chemin de l'autre. La corniche, elle, demande une tête à son pied.
+hint: Première course : cours à droite et continue de maintenir → contre la porte fermée, trois bonnes secondes. Deuxième : va à gauche sur la plaque et restes-y jusqu'à ce que ton clone ait passé sa porte ; repars à gauche et appuie-toi contre l'autre porte : elle s'ouvre quand il arrive au mur ; va buter au pied de la corniche. Troisième : cours à gauche, passe la porte dès qu'elle s'ouvre, et au pied de la corniche, quand ton second clone t'a rejoint, saute sur sa tête puis sur la corniche, par-dessus le bord de l'écran.
+tape: R200 | L22 _80 L200 | L200 J14 _20 LJ16 L40
+
+z=0
+...#............#....#..
+...#............#....#..
+...#............#....#..
+...#............#....#X.
+...#............#....###
+...C....b.@.....B...c###
+########################

@@ -3,12 +3,19 @@ import { COLORS } from '../themes';
 /**
  * The hero is drawn, not sampled from a sprite sheet: a small hooded figure whose walk,
  * squash and scarf are driven by the motion of the step. Clones are the same figure in
- * amber with closed eyes: past selves replaying what they once did.
+ * amber with closed eyes: past selves replaying what they once did. Reflections wear
+ * violet, antipodes jade and hang by their soles.
  */
 export interface CharacterLook {
   readonly role: 'player' | 'clone';
   /** A mirror clone: same figure, in the colour of glass. */
   readonly reflection: boolean;
+  /**
+   * A clone that falls upward: same figure in jade, drawn head down from its soles, so that
+   * its squash, its stride and its scarf (which lifts away from the fall) all turn over with it.
+   * It keeps its colour when it is a reflection too: which way it falls is what matters most.
+   */
+  readonly antipode: boolean;
   /** 1D: the figure folds into a point of light riding the wire. */
   readonly onWire: boolean;
   readonly facing: 1 | -1;
@@ -27,8 +34,14 @@ export interface CharacterLook {
 }
 
 export function drawCharacter(ctx: CanvasRenderingContext2D, feetX: number, feetY: number, cell: number, look: CharacterLook): void {
-  const body = look.role === 'player' ? COLORS.player : look.reflection ? COLORS.reflection : COLORS.clone;
-  const dark = look.role === 'player' ? COLORS.playerDark : look.reflection ? COLORS.reflectionDark : COLORS.cloneDark;
+  const [body, dark] =
+    look.role === 'player'
+      ? [COLORS.player, COLORS.playerDark]
+      : look.antipode
+        ? [COLORS.antipode, COLORS.antipodeDark]
+        : look.reflection
+          ? [COLORS.reflection, COLORS.reflectionDark]
+          : [COLORS.clone, COLORS.cloneDark];
   const t = look.time + look.seed * 1.7;
 
   ctx.save();
@@ -38,6 +51,13 @@ export function drawCharacter(ctx: CanvasRenderingContext2D, feetX: number, feet
     drawSpark(ctx, feetX, feetY - cell * 0.5, cell, body, look, t);
     ctx.restore();
     return;
+  }
+
+  // Head down: everything below is drawn as for anyone, mirrored about the line of the soles.
+  if (look.antipode) {
+    ctx.translate(0, feetY);
+    ctx.scale(1, -1);
+    ctx.translate(0, -feetY);
   }
 
   // Joy is a bounce on the spot.

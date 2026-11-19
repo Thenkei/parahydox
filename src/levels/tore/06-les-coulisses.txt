@@ -1,0 +1,29 @@
+; La plaque est juste derrière la sortie, deux coupes plus loin, et le mur traverse toute la profondeur. Chaque coupe est un ruban, mais on ne passe de l'une à l'autre que par le seuil : le clone fait le tour par le fond pendant que tu le fais par devant.
+name: Les coulisses
+world: 15
+clones: 1
+wrap: x
+tip: Le mur traverse toute la profondeur, mais chaque coupe est un ruban. La profondeur, elle, ne fait pas le tour.
+hint: Première course : cours buter contre le mur, déplie sur le seuil, va tout au fond, puis cours vers la gauche : tu fais le tour par la coupe du fond et tu butes contre le mur, sur la plaque. Seconde course : cours vers la gauche sans déplier, fais le tour par devant et attends devant la porte que ton clone arrive sur la plaque.
+tape: R14 E1 _4 U40 L200 | L300
+
+z=0
+.......#.#......
+.......#.#......
+.......#.#......
+.....@^#XA......
+################
+
+z=1
+#####..#########
+#####..#########
+#####..#########
+#####..#########
+################
+
+z=2
+.......#........
+.......#........
+.......#........
+.......#a.......
+################

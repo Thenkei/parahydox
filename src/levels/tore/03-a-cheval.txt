@@ -1,0 +1,16 @@
+; La corniche de la sortie est à gauche, l'escalier qui y monte est à droite : ils se font face par-dessus le bord de l'écran, et le vide qui les sépare est à cheval sur la couture.
+name: À cheval
+world: 15
+wrap: x
+tip: Le bord de l'écran n'est nulle part : un mur, une marche ou un vide s'y prolongent de l'autre côté.
+hint: Monte l'escalier de droite jusqu'en haut, et saute par-dessus le bord de l'écran : la corniche de gauche est juste en face.
+tape: R141 RJ14 R6 RJ14 R6 RJ14 R36 RJ16 R40
+
+z=0
+........................
+........................
+..X.....................
+.###................###.
+.###...............####.
+.###.@............#####.
+.######################.

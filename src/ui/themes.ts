@@ -10,12 +10,26 @@ import bgH1 from '../assets/bg-h1.jpg';
 import bgH2 from '../assets/bg-h2.jpg';
 import bgH3 from '../assets/bg-h3.jpg';
 import bgH4 from '../assets/bg-h4.jpg';
+import bgG1 from '../assets/bg-g1.jpg';
+import bgG2 from '../assets/bg-g2.jpg';
+import bgT1 from '../assets/bg-t1.jpg';
+import bgT2 from '../assets/bg-t2.jpg';
+import bgE1 from '../assets/bg-e1.jpg';
+import bgE2 from '../assets/bg-e2.jpg';
 
 /**
  * The family of textures and small scenery a chapter is built from: sandstone and grass
- * under a painted sky, or basalt and embers under a burnt one.
+ * under a painted sky, basalt and embers under a burnt one, frosted stone under snow,
+ * marble under a mosaic, or the meadow again with a second garden hanging beneath it.
  */
-export type Biome = 'meadow' | 'ember';
+export type Biome = 'meadow' | 'ember' | 'givre' | 'tore' | 'envers';
+
+/**
+ * How the specks in the air travel. `rise` and `fall` are pollen, embers and ash; `snow` is
+ * heavier and sways; `orbit` goes round the screen sideways and comes back, as everything
+ * does on a torus; `both` rises and falls at once, for a world with two grounds.
+ */
+export type MoteKind = 'drift' | 'snow' | 'orbit' | 'both';
 
 /**
  * One look per chapter. The textures of its biome are re-tinted for each so that the
@@ -41,8 +55,12 @@ export interface Theme {
   readonly outline: string;
   /** Small ironwork drawn in code, the stick of a lever, the posts of a door: it must stand out from the sky. */
   readonly metal: string;
-  /** Specks in the air: pollen rising, embers rising, ash falling. */
-  readonly mote: { readonly color: string; readonly drift: 1 | -1; readonly count: number };
+  /** Specks in the air: pollen rising, embers rising, ash falling. `kind` defaults to a plain drift. */
+  readonly mote: { readonly color: string; readonly drift: 1 | -1; readonly count: number; readonly kind?: MoteKind };
+  /** The outline is a rim of light on a dark sky: dark posts and bases are then edged with it too. */
+  readonly rim: boolean;
+  /** A world with two grounds: what grows under its blocks, where an antipode walks. Null where undersides are bare rock. */
+  readonly ceiling: { readonly light: string; readonly dark: string } | null;
   /** Root note (Hz) of the ambient scale, and whether it sings in major or minor. */
   readonly root: number;
   readonly mode: 'major' | 'minor';
@@ -58,11 +76,41 @@ const meadow = (palette: Palette): Theme => ({
   outline: 'rgba(20, 16, 30, 0.55)',
   metal: '#1b1f2e',
   mote: { color: '#fff8ea', drift: 1, count: 16 },
+  rim: false,
+  ceiling: null,
   mode: 'major',
 });
 
 /** Hardcore: basalt lit from its own seams, a rim of light for an outline, a minor key. */
-const ember = (palette: Palette & Pick<Theme, 'stoneLift' | 'outline' | 'mote'>): Theme => ({ ...palette, biome: 'ember', metal: '#d8ccc0', mode: 'minor' });
+const ember = (palette: Palette & Pick<Theme, 'stoneLift' | 'outline' | 'mote'>): Theme => ({
+  ...palette,
+  biome: 'ember',
+  metal: '#d8ccc0',
+  rim: true,
+  ceiling: null,
+  mode: 'minor',
+});
+
+/** Le givre: frosted stone under a cap of snow, snow in the air, a major key pitched high and cold. */
+const givre = (palette: Palette & Pick<Theme, 'stoneLift' | 'outline' | 'metal' | 'rim'> & { readonly snow: string }): Theme => {
+  const { snow, ...rest } = palette;
+  return { ...rest, biome: 'givre', mote: { color: snow, drift: -1, count: 46, kind: 'snow' }, ceiling: null, mode: 'major' };
+};
+
+/** Le tore: ivory marble edged in gold under a mosaic, gold dust going round and round. */
+const tore = (palette: Palette & Pick<Theme, 'outline' | 'metal'> & { readonly gold: string }): Theme => {
+  const { gold, ...rest } = palette;
+  return { ...rest, biome: 'tore', stoneLift: null, mote: { color: gold, drift: 1, count: 20, kind: 'orbit' }, rim: true, ceiling: null, mode: 'major' };
+};
+
+/** L'envers: the meadow turned over. Its blocks are dressed on both sides, and pollen goes both ways. */
+const envers = (palette: Palette & Pick<Theme, 'outline' | 'metal' | 'rim'> & { readonly ceiling: NonNullable<Theme['ceiling']> }): Theme => ({
+  ...palette,
+  biome: 'envers',
+  stoneLift: null,
+  mote: { color: '#fff8ea', drift: 1, count: 22, kind: 'both' },
+  mode: 'major',
+});
 
 export const THEMES: readonly Theme[] = [
   meadow({
@@ -210,6 +258,99 @@ export const THEMES: readonly Theme[] = [
     mote: { color: '#eafffb', drift: -1, count: 24 },
     root: 123.47,
   }),
+  // Le givre, chapters 13 and 14: a pale morning, then the night under an aurora.
+  givre({
+    background: bgG1,
+    stoneTint: '#ffffff',
+    stoneLift: null,
+    grassHue: null,
+    grassTint: '#ffffff',
+    grassLight: '#ffffff',
+    grassDark: '#a9c2e6',
+    rockDark: '#46587c',
+    haze: '#fbe6f0',
+    outline: 'rgba(22, 34, 66, 0.6)',
+    metal: '#1b2440',
+    rim: false,
+    snow: '#ffffff',
+    root: 261.63,
+  }),
+  givre({
+    background: bgG2,
+    stoneTint: '#c9d6f2',
+    stoneLift: '#0e1a3c',
+    grassHue: null,
+    grassTint: '#bcd0f6',
+    grassLight: '#e4f1ff',
+    grassDark: '#5f83c4',
+    rockDark: '#17224a',
+    haze: '#5c96d8',
+    outline: 'rgba(150, 240, 214, 0.6)',
+    metal: '#d6e6f6',
+    rim: true,
+    snow: '#e6f2ff',
+    root: 293.66,
+  }),
+  // Le tore, chapters 15 and 16: marble at dusk under a golden arc, then in a green night.
+  tore({
+    background: bgT1,
+    stoneTint: '#fff3de',
+    grassHue: null,
+    grassTint: '#ffffff',
+    grassLight: '#f6cf6a',
+    grassDark: '#17616e',
+    rockDark: '#3d2c6a',
+    haze: '#c49ae6',
+    outline: 'rgba(246, 200, 104, 0.85)',
+    metal: '#f2cc74',
+    gold: '#ffd98a',
+    root: 196,
+  }),
+  tore({
+    background: bgT2,
+    stoneTint: '#e9e2ff',
+    grassHue: null,
+    grassTint: '#ffd9f2',
+    grassLight: '#ffd27e',
+    grassDark: '#3a3f96',
+    rockDark: '#2c1f5e',
+    haze: '#49c8c0',
+    outline: 'rgba(255, 214, 130, 0.85)',
+    metal: '#ffd98a',
+    gold: '#ffe2a0',
+    root: 174.61,
+  }),
+  // L'envers, chapters 17 and 18: the first meadow under a sky turned over, then the same at sunset.
+  envers({
+    background: bgE1,
+    stoneTint: '#fff0e0',
+    grassHue: null,
+    grassTint: '#f4ffd8',
+    grassLight: '#8fd14a',
+    grassDark: '#3f8f2c',
+    rockDark: '#5a4c5e',
+    haze: '#ffd2b8',
+    outline: 'rgba(16, 20, 48, 0.6)',
+    metal: '#161a30',
+    rim: false,
+    ceiling: { light: '#ff9a8a', dark: '#c24a64' },
+    root: 220,
+  }),
+  envers({
+    background: bgE2,
+    stoneTint: '#dcc6ee',
+    grassHue: '#22c9a6',
+    grassTint: '#d6f6ee',
+    grassLight: '#58e6c4',
+    grassDark: '#1b8a7c',
+    rockDark: '#42285c',
+    haze: '#ffb49a',
+    outline: 'rgba(28, 14, 52, 0.6)',
+    metal: '#22123c',
+    rim: false,
+    ceiling: { light: '#ffd35a', dark: '#c0822a' },
+    root: 207.65,
+  }),
 ];
 
 export const themeFor = (world: number): Theme => THEMES[(world - 1) % THEMES.length] ?? (THEMES[0] as Theme);
@@ -224,6 +365,15 @@ export const COLORS = {
   cloneDark: '#d9801a',
   reflection: '#b9a6ff',
   reflectionDark: '#7a5fe0',
+  /** A clone that falls upward: jade, far from the player's blue, a clone's amber and a reflection's violet. */
+  antipode: '#3fdc98',
+  antipodeDark: '#148a62',
+  /** Ice is the same ice everywhere: its glint and the spray under whoever slides on it. */
+  ice: '#d8f6ff',
+  iceDeep: '#2f8fd8',
+  /** A joined pair of edges wears one thread: gold from left to right, rose from bottom to top. */
+  seamX: '#ffcf6b',
+  seamY: '#ff9fd0',
   wire: '#7ff2ff',
   threshold: '#c79bff',
   exit: '#ffe9a8',

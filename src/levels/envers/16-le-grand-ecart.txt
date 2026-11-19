@@ -1,0 +1,20 @@
+; Tout le chapitre d'un coup, et ton antipode est un reflet : pour qu'il coure à droite jusque sous la trappe puis avec toi, tu cours à gauche. Après la fente, la borne exige un saut, avant elle ; puis il faut lâcher → sous l'îlot, pour qu'il y monte tenir la porte pendant que tu tombes sur ton sol.
+name: Le grand écart
+world: 18
+clones: 1
+mirror: true
+antipode: true
+tip: Dernière traversée, avec un reflet la tête en bas : ouvre la trappe, soulève la paire au-dessus de la borne, et sépare-vous sous l'îlot.
+hint: Première course : file à gauche et garde ← enfoncé sept secondes : ton reflet court à droite jusque sous la trappe. Seconde course : grimpe, ouvre la trappe sans lâcher →, saute une fois avant la borne, puis lâche → au-dessus du sol, un peu avant l'îlot. Attends que la porte s'ouvre.
+tape: L420 | L30 LJ14 _10 RJ20 R40 RJ14 R90 RJ16 R40 _30 R80
+
+z=0
+##########...........###
+#........#...........###
+#........#.......###.###
+#........#.........b####
+#.......a#...........###
+#....##AA............BX#
+#..#####A......#########
+##.@.....#.....#########
+##########.....#########

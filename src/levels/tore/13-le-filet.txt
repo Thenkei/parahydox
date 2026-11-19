@@ -1,0 +1,20 @@
+; La sortie est sous ton toit, deux cases au-dessus d'une grille qui ne se ferme que si l'on pèse sur une plaque. Un clone qui tombe sans fin dans la colonne se pose sur la grille dès qu'on la ferme, et il y a une plaque dessus : son poids la tient fermée, et sa tête fait la marche.
+name: Le filet
+world: 16
+clones: 1
+wrap: y
+glyph: % = gate a
+tip: La grille du puits se ferme tant qu'on pèse sur une des deux plaques. L'une d'elles est sur la grille.
+hint: Première course : quitte le toit par la gauche et laisse-toi tomber, sans fin. Seconde course : va sur la plaque du toit ; la grille se ferme, ton clone s'y pose et la tient fermée. Laisse-toi alors tomber sur sa tête, et saute de là dans la galerie de la sortie.
+tape: L60 _30 | R24 _80 L90 _20 RJ20 R60
+
+z=0
+#........#
+#........#
+#....@.a.#
+#.########
+#........#
+#.....X..#
+#..#######
+#a.#######
+#%.#######

@@ -1,0 +1,15 @@
+; Une caisse arrêtée sur la glace y reste, même quand ce qui l'a arrêtée s'en va. Le clone sert donc deux fois : d'abord de cale au bout de la glace, pour que la caisse s'arrête sur a ; puis, la caisse en place, il monte sur la marche et va tenir b au fond du puits, où aucune caisse ne monte.
+name: La relève
+world: 14
+clones: 1
+tip: Une caisse arrêtée sur la glace y reste, même quand ce qui l'a arrêtée s'en va.
+hint: Première course : saute la caisse et glisse vers la droite en lâchant tôt : la pierre t'arrête au bout de la glace. Attends là deux bonnes secondes, puis saute sur la marche et laisse-toi tomber dans le puits. Seconde course : une fois ton clone passé, pousse la caisse : elle s'arrête contre lui, sur la plaque. Quand il est dans le puits, sors par la gauche.
+tape: R4 RJ20 R60 _150 RJ20 R30 | _30 R30 _220 L60
+
+z=0
+#################
+####............#
+####............#
+#XBA@.o.....a.#.#
+#######iiiiii##b#
+#################

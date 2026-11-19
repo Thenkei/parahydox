@@ -1,0 +1,19 @@
+; La trappe ne s'ouvre plus sous ton pied : elle s'ouvre quand un premier antipode, monté par la cheminée, atteint sa plaque tout au bout du plafond. Le départ ne dépend plus de toi, il est réglé sur lui ; le second antipode, qui attend sous la trappe, peut donc avoir sauté juste après, pour faire passer la paire sous la poutre.
+name: Le signal
+world: 18
+clones: 2
+antipode: true
+tip: Une plaque, tout au bout du plafond, ouvre la trappe. Celui qui l'atteint donne le départ : le reste se règle sur lui.
+hint: Première course : un pas à gauche, le temps que ton antipode monte par la cheminée, puis garde → enfoncé cinq secondes : il file tout en haut jusqu'à la plaque. Deuxième course : → enfoncé contre la marche ; quand la trappe s'ouvre, compte un temps et saute une fois. Troisième course : prends le fil, cours jusqu'à la trappe et attends-y sans lâcher → ; au bout du vide, saute sur le palier.
+tape: L30 R300 | R320 RJ12 R220 | L22 E1 U60 R14 E1 R360 RJ16 R60
+
+z=0
+########################
+#.....................a#
+#=*......#.....#.......#
+#=######A......#.......#
+#=.#####A............X.#
+#=.......#..........####
+#=...#...#..........####
+#*.@.#...#..........####
+##########..........####

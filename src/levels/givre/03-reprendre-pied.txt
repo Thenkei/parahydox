@@ -1,0 +1,16 @@
+; Le pilier de pierre est le seul endroit où l'on puisse s'arrêter, et le seul d'où l'on reparte d'un coup : pour se glisser sous la corniche jusqu'à la sortie, il faut quitter le pilier à pleine vitesse, ce qu'une case de glace ne donne pas.
+name: Reprendre pied
+world: 13
+tip: La pierre accroche : on s'y arrête net, et on en repart d'un coup. La glace, elle, ne te rend rien.
+hint: Cours vers la droite et lâche tout avant de retomber sur le pilier de pierre : il t'arrête net. Puis cours vers la gauche, sans sauter : tu pars à pleine vitesse et tu glisses sous la corniche jusqu'à la sortie.
+tape: R100 _40 L88
+
+z=0
+#...........
+#@..........
+#iiiiiii....
+#...........
+#........#..
+#X.......#..
+#iiiiii..#..
+#######..#..

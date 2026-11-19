@@ -1,0 +1,17 @@
+; La sortie est juste derrière le mur de la fosse. Le clone y va par le chemin court, parce que tu lui tiens la porte contre laquelle il rejoue ses touches ; toi tu fais le tour, et vous vous retrouvez de part et d'autre du même mur.
+name: Le raccourci
+world: 15
+clones: 1
+wrap: x
+tip: La plaque de la sortie est au fond de la fosse, derrière la première porte. Ton clone rejoue tes touches, pas tes déplacements.
+hint: Première course : cours vers la droite et continue de maintenir → contre la porte fermée, deux bonnes secondes. Seconde course : fais un pas à droite sur la plaque et attends ; ton clone passe la porte et tombe dans la fosse, sur la plaque de la sortie. Repars alors vers la gauche : tu fais le tour du monde et tu arrives à la sortie par l'autre côté du mur.
+tape: R150 | R10 _40 L260
+
+z=0
+...............#....#.#.
+...............#....#.#.
+...............#....#.#.
+............@b.B....#XA.
+#################..#####
+#################aa#####
+########################

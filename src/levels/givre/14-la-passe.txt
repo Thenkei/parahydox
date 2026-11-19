@@ -1,0 +1,14 @@
+; La réserve ne s'ouvre que si l'on tient a, en haut, et l'on ne peut pas à la fois la tenir et pousser. Le clone pousse donc contre la porte fermée sans rien voir bouger ; à la course suivante, porte ouverte, sa poussée devient réelle : la caisse traverse toute la glace jusqu'au mur, sur b, et lui, qui pousse encore, s'arrête contre elle, sur c.
+name: La passe
+world: 14
+clones: 1
+tip: Ce que ton clone pousse contre une porte fermée, il le poussera aussi quand elle sera ouverte.
+hint: Première course : va à droite, descends dans la réserve et pousse la caisse vers la gauche sans lâcher, cinq bonnes secondes, même si rien ne bouge. Seconde course : tiens-toi sur la plaque, en haut. La porte s'ouvre, ton clone pousse la caisse jusqu'au mur et s'arrête contre elle : les deux plaques du bas sont tenues. Sors par la gauche.
+tape: R80 L330 | L34 _340 L50
+
+z=0
+################
+#XCB.a..@......#
+##############.#
+#bc........Ao..#
+#iiiiiiiiiii####

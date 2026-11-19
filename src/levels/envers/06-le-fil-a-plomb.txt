@@ -1,0 +1,19 @@
+; Le fil descend de ta niche jusqu'au milieu de la salle, et en le lâchant chacun tombe de son côté : toi sur l'îlot, lui au plafond, d'où il court vers sa plaque en sautant le puits, un trou pour lui. L'ancre est au-dessus de ta tête : debout, E ne la prend que pour lui, puis c'est ton tour en sautant, car le puits ne mène pour toi qu'au vide.
+name: Le fil à plomb
+world: 17
+clones: 1
+antipode: true
+tip: Au bout d'un fil, chacun tombe de son côté : toi vers le bas, lui vers le haut. Debout sous l'ancre, E ne la prend que pour lui.
+hint: Première course, sans sauter : ← un instant, puis E (c'est lui qui prend le fil). Tiens →, puis ↓, puis →, une bonne seconde chacune, et E : il lâche le fil et tombe au plafond de la salle. Tiens ← et saute presque aussitôt, pour lui faire franchir le puits. Seconde course : saute et appuie sur E en l'air, fais le même trajet, lâche le fil au bout et cours à droite jusqu'à la porte.
+tape: L20 E1 R40 D60 R40 E1 L20 LJ16 L60 | J6 JE1 R40 D60 R40 E1 R130
+
+z=0
+##################
+###*==############
+###@#=############
+#####=############
+#a...=.........#.#
+#....===*......#.#
+#..............#.#
+#..............AX#
+#.......##########

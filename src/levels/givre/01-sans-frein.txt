@@ -1,0 +1,13 @@
+; Deux glissades. La première finit dans un mur : on s'y arrête sans rien faire. La seconde finit dans le vide, et la sortie est juste sous le bord : qui arrive lancé passe par-dessus.
+name: Sans frein
+world: 13
+tip: Sur la glace, lâcher la touche ne t'arrête pas : tu glisses encore. Un mur t'arrête. Un bord, non.
+hint: Glisse jusqu'au mur et saute sur la marche. Là-haut, lâche la touche bien avant le bord : laisse-toi mourir sur la glace, et tombe du bord presque à l'arrêt.
+tape: R120 RJ20 R84 _44
+
+z=0
+....................
+....................
+@..........iiiiiii..
+##iiiiiiiii#######X.
+###################.

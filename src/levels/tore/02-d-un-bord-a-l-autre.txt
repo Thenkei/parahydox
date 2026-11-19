@@ -1,0 +1,15 @@
+; La porte tient à une plaque au fond d'un trou, où personne ne reste sans la refermer en sortant. La caisse est de l'autre côté du mur : poussée hors de l'écran, elle rentre par l'autre bord et tombe dans le trou.
+name: D'un bord à l'autre
+world: 15
+wrap: x
+tip: Une caisse aussi fait le tour : poussée hors de l'écran par la droite, elle revient par la gauche.
+hint: Pousse la caisse vers la droite jusqu'à ce qu'elle sorte de l'écran : elle revient par la gauche et tombe dans le trou, sur la plaque. Saute par-dessus et passe la porte.
+tape: R262 RJ12 R70
+
+z=0
+.....#...##.............
+.....#...##.............
+.....#...##.............
+.....A.X.##..@...o......
+##a#####################
+########################

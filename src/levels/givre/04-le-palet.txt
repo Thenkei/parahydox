@@ -1,0 +1,13 @@
+; La caisse poussée file seule sur la glace jusqu'à la pierre du fond, qui la garde sur sa plaque ; mais la porte du milieu ne s'ouvre que tant qu'on tient la plaque, à l'autre bout. Il faut lancer la caisse, puis courir tenir la porte avant qu'elle n'y arrive : elle fait le reste du chemin sans toi.
+name: Le palet
+world: 13
+tip: Une caisse poussée sur la glace file toute seule jusqu'à ce que quelque chose l'arrête : un mur, une porte fermée, ou la pierre, qui la garde.
+hint: Donne une poussée à la caisse, puis fais aussitôt demi-tour et cours jusqu'à la plaque, contre la porte de gauche. La porte du milieu s'ouvre, la caisse passe toute seule et s'arrête sur la plaque du fond.
+tape: R12 L276
+
+z=0
+.#...............#..#
+.#...............#..#
+.#...............#..#
+XAb...@o.........B.a#
+#######iiiiiiiiiiii##

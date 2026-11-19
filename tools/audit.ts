@@ -3,7 +3,7 @@
  *
  *   npm run audit [-- <level.txt> ...] [--states n] [--no-solo] [--write] [--fewer]
  *
- * For each level (both campaigns by default): replays its `tape:` and says how it ends;
+ * For each level (every campaign by default): replays its `tape:` and says how it ends;
  * then looks for a run without any clone. A level without clones must have one (it is
  * printed when the level has no tape yet); a level with clones must not, or the clone is
  * decoration, and the last loop of its run must not win alone. Exits with an error if a
@@ -18,7 +18,7 @@
  * exit, for a clone that must go and wait somewhere, and "?flat" never unfolds the depth. `--write` puts what it finds, and the
  * run of a level that has no tape at all, into the level file.
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLevelErrors, parseLevel } from '../src/core/level-parser';
 import { type FlowWorld, type FrameInput, outcomeOfFlow, playerOfFlow } from '../src/flow/physics';
@@ -31,8 +31,8 @@ const option = (name: string): string | null => {
   return at >= 0 ? (args[at + 1] ?? null) : null;
 };
 const dir = 'src/levels';
-/** One directory per campaign, in play order. */
-const dirs = [dir, join(dir, 'hardcore')];
+/** One directory per campaign, in play order; a campaign that has no level yet has no directory. */
+const dirs = [dir, ...['givre', 'tore', 'envers', 'hardcore'].map((campaign) => join(dir, campaign))].filter((d) => existsSync(d));
 const named = args.filter((a) => a.endsWith('.txt'));
 const files = named.length > 0 ? named : dirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith('.txt')).sort().map((f) => join(d, f)));
 const maxStates = Number(option('states') ?? 400_000);

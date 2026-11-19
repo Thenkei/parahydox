@@ -1,0 +1,17 @@
+; La trappe s'ouvre au même instant sous toi et au-dessus de ton antipode : vous tombez l'un vers l'autre et vous vous retenez, semelle contre semelle, à mi-hauteur de la fente. Seul, chacun tombe de son côté ; ensemble, vous traversez le vide en courant.
+name: La trappe
+world: 18
+clones: 1
+antipode: true
+tip: Ton antipode et toi, en tombant l'un vers l'autre, vous arrêtez semelle contre semelle : chacun retient l'autre au-dessus du vide, et vous courez ensemble.
+hint: Première course : file à droite sous la dalle et garde → enfoncé sept secondes. Seconde course : grimpe sur la dalle et, une fois ton antipode sous la trappe, cours dessus sans lâcher → : elle s'ouvre, vous vous rejoignez dans la fente et traversez ensemble.
+tape: R420 | L30 LJ14 _10 RJ20 R60 RJ14 R140
+
+z=0
+####################
+#...........#......#
+#..........a#......#
+#.......##AA.....X.#
+#..########A.....###
+##.@........#....###
+#############....###

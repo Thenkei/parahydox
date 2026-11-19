@@ -1,6 +1,8 @@
+import type { Level } from '../../core/types';
 import type { Theme } from '../themes';
 import { type Camera, type Viewport, project } from './camera';
 import { withAlpha } from './scene';
+import { copiesOf, shifted } from './seam';
 
 /** Everything that is mood rather than level: sky, clouds, dust, sparks, the 1D night. */
 
@@ -47,6 +49,38 @@ export function drawBackdrop(
   }
   ctx.globalAlpha = 1;
 
+  // Le tore: two great hoops turning slowly behind everything, a bead of light going round
+  // each and always coming back.
+  if (theme.biome === 'tore') {
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 2; i++) {
+      const cx = width * (i === 0 ? 0.24 : 0.78) - cam.depth * (8 + i * 6);
+      const cy = height * (i === 0 ? 0.36 : 0.56);
+      const rx = Math.min(width, height) * (i === 0 ? 0.36 : 0.27);
+      const ry = rx * (0.3 + 0.07 * Math.sin(time * 0.11 + i * 2));
+      const tilt = (i === 0 ? -0.32 : 0.4) + Math.sin(time * 0.07 + i) * 0.05;
+      ctx.globalAlpha = 0.2;
+      ctx.strokeStyle = theme.mote.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, tilt, 0, Math.PI * 2);
+      ctx.stroke();
+      const angle = time * (0.22 - i * 0.07) + i * 2.4;
+      const bx = cx + Math.cos(angle) * rx * Math.cos(tilt) - Math.sin(angle) * ry * Math.sin(tilt);
+      const by = cy + Math.cos(angle) * rx * Math.sin(tilt) + Math.sin(angle) * ry * Math.cos(tilt);
+      // The half of the turn that passes behind is dimmer: the hoop has a near side and a far one.
+      ctx.globalAlpha = 0.5 + 0.4 * Math.sin(angle);
+      const bead = ctx.createRadialGradient(bx, by, 0, bx, by, 9);
+      bead.addColorStop(0, withAlpha(theme.mote.color, 0.95));
+      bead.addColorStop(1, withAlpha(theme.mote.color, 0));
+      ctx.fillStyle = bead;
+      ctx.beginPath();
+      ctx.arc(bx, by, 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Slow clouds between the sky and the islands.
   for (let i = 0; i < 6; i++) {
     const speed = 6 + i * 2.5;
@@ -69,24 +103,59 @@ export function drawBackdrop(
 
   // Specks in the air, pollen or embers rising, ash falling: the world breathes even when nothing moves.
   const { mote } = theme;
+  ctx.fillStyle = mote.color;
   for (let i = 0; i < mote.count; i++) {
+    if (mote.kind === 'snow') {
+      // Snow is heavier than ash: it falls faster, sways wider, and the near flakes are larger.
+      const near = (i % 5) / 4;
+      const travel = (time * (0.035 + near * 0.03) + i * 0.137) % 1;
+      const mx = ((i * 0.618) % 1) * width + Math.sin(time * (0.6 + near * 0.5) + i * 1.9) * (14 + near * 20) + travel * 40;
+      ctx.globalAlpha = (0.45 + 0.4 * near) * Math.min(1, Math.sin(Math.PI * travel) * 4);
+      ctx.beginPath();
+      ctx.arc(mx, height * travel, 1.3 + near * 2.1, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    if (mote.kind === 'orbit') {
+      // Gold dust going round: out by the right, back by the left, each grain on its own slow lane.
+      const lane = ((i * 0.618) % 1) * height;
+      const span = width + 60;
+      const mx = (((time * (7 + (i % 4) * 3) + i * 211) % span) + span) % span - 30;
+      const my = lane + Math.sin(time * 0.35 + i * 1.9) * 22;
+      const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(time * 0.9 + i * 2.1));
+      ctx.globalAlpha = twinkle * 0.6;
+      ctx.beginPath();
+      ctx.arc(mx, my, 1.4 + (i % 3) * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
     const travel = (time * (0.012 + (i % 4) * 0.004) + i * 0.137) % 1;
     const mx = ((i * 0.618) % 1) * width + Math.sin(time * 0.5 + i * 1.9) * 26;
     const twinkle = 0.25 + 0.75 * Math.abs(Math.sin(time * 1.3 + i * 2.1));
+    // With two grounds there are two ways to fall: half the pollen goes each way.
+    const drift = mote.kind === 'both' && i % 2 === 1 ? -mote.drift : mote.drift;
     ctx.globalAlpha = twinkle * 0.5 * Math.sin(Math.PI * travel);
     ctx.fillStyle = mote.color;
     ctx.beginPath();
-    ctx.arc(mx, height * (mote.drift > 0 ? 1 - travel : travel), 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
+    ctx.arc(mx, height * (drift > 0 ? 1 - travel : travel), 1.4 + (i % 3) * 0.7, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // The void: a sea of haze rising from below.
+  // The void: a sea of haze rising from below. Where the sky is turned over the clouds are
+  // overhead, and a thinner haze comes down from them as well.
   const sea = ctx.createLinearGradient(0, height * 0.72, 0, height);
   sea.addColorStop(0, withAlpha(theme.haze, 0));
-  sea.addColorStop(1, withAlpha(theme.haze, 0.55));
+  sea.addColorStop(1, withAlpha(theme.haze, theme.ceiling === null ? 0.55 : 0.2));
   ctx.fillStyle = sea;
   ctx.fillRect(0, height * 0.72, width, height * 0.28);
+  if (theme.ceiling !== null) {
+    const lid = ctx.createLinearGradient(0, 0, 0, height * 0.24);
+    lid.addColorStop(0, withAlpha(theme.haze, 0.4));
+    lid.addColorStop(1, withAlpha(theme.haze, 0));
+    ctx.fillStyle = lid;
+    ctx.fillRect(0, 0, width, height * 0.24);
+  }
 
   // 1D: the world is gone. Night, and a few distant points.
   const night = 1 - cam.world;
@@ -137,21 +206,21 @@ export class Effects {
     this.rings = [];
   }
 
-  /** A puff where feet or a crate hit the ground. */
-  dust(x: number, y: number, z: number, color: string): void {
+  /** A puff where feet or a crate hit the ground. `up` is -1 for soles that land on a ceiling: the puff then comes down off it. */
+  dust(x: number, y: number, z: number, color: string, up: 1 | -1 = 1): void {
     for (let i = 0; i < 7; i++) {
       const side = i % 2 === 0 ? 1 : -1;
       this.particles.push({
         x,
-        y: y + 0.04,
+        y: y + up * 0.04,
         z,
         vx: side * (0.6 + Math.random() * 1.4),
-        vy: 0.4 + Math.random() * 0.9,
+        vy: up * (0.4 + Math.random() * 0.9),
         age: 0,
         life: 0.32 + Math.random() * 0.2,
         size: 0.05 + Math.random() * 0.05,
         color,
-        gravity: 1.5,
+        gravity: up * 1.5,
       });
     }
   }
@@ -175,20 +244,20 @@ export class Effects {
     }
   }
 
-  /** One or two specks kicked up by a footstep, or shed by a spark on a wire. */
-  speck(x: number, y: number, z: number, color: string, drift: number): void {
+  /** One or two specks kicked up by a footstep, by soles or a crate sliding on ice, or shed by a spark on a wire. */
+  speck(x: number, y: number, z: number, color: string, drift: number, up: 1 | -1 = 1): void {
     for (let i = 0; i < 2; i++) {
       this.particles.push({
         x,
-        y: y + 0.03,
+        y: y + up * 0.03,
         z,
         vx: drift * (0.5 + Math.random()),
-        vy: 0.3 + Math.random() * 0.6,
+        vy: up * (0.3 + Math.random() * 0.6),
         age: 0,
         life: 0.22 + Math.random() * 0.14,
         size: 0.03 + Math.random() * 0.03,
         color,
-        gravity: 1.2,
+        gravity: up * 1.2,
       });
     }
   }
@@ -209,25 +278,34 @@ export class Effects {
     this.rings = this.rings.filter((r) => r.age < r.life);
   }
 
-  draw(ctx: CanvasRenderingContext2D, cam: Camera): void {
+  /**
+   * In a level that wraps, a puff or a ring next to a joined edge is seen on both sides of it,
+   * like the body it came from.
+   */
+  draw(ctx: CanvasRenderingContext2D, cam: Camera, level: Level): void {
     for (const p of this.particles) {
-      const at = project(cam, p.x, p.y, p.z);
       const fade = 1 - p.age / p.life;
-      ctx.globalAlpha = fade;
       ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(at.x, at.y, Math.max(1, p.size * cam.cell * (0.5 + fade * 0.5)), 0, Math.PI * 2);
-      ctx.fill();
+      for (const copy of copiesOf(level, p.x, p.x, p.y, p.y)) {
+        const at = project(shifted(cam, copy), p.x, p.y, p.z);
+        ctx.globalAlpha = fade * copy.alpha;
+        ctx.beginPath();
+        ctx.arc(at.x, at.y, Math.max(1, p.size * cam.cell * (0.5 + fade * 0.5)), 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     for (const ring of this.rings) {
-      const at = project(cam, ring.x, ring.y, ring.z);
       const u = ring.age / ring.life;
-      ctx.globalAlpha = (1 - u) * 0.9;
+      const reach = 0.25 + u * 1.5;
       ctx.strokeStyle = ring.color;
       ctx.lineWidth = Math.max(1.5, cam.cell * 0.07 * (1 - u));
-      ctx.beginPath();
-      ctx.arc(at.x, at.y, cam.cell * (0.25 + u * 1.5), 0, Math.PI * 2);
-      ctx.stroke();
+      for (const copy of copiesOf(level, ring.x - 0.25, ring.x + 0.25, ring.y - 0.25, ring.y + 0.25)) {
+        const at = project(shifted(cam, copy), ring.x, ring.y, ring.z);
+        ctx.globalAlpha = (1 - u) * 0.9 * copy.alpha;
+        ctx.beginPath();
+        ctx.arc(at.x, at.y, cam.cell * reach, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
   }
