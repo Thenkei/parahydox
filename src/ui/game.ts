@@ -215,7 +215,7 @@ export class Game {
     if (!this.session) return;
     const { level } = this.session;
     // Without clones R has nothing to record into: say so rather than throw the run away.
-    if (level.maxClones === 0) return this.say('Pas de clone dans ce niveau. U retente la boucle.');
+    if (level.maxClones === 0) return this.say('Pas de clone dans ce niveau. X retente la boucle.');
     if (this.session.current.length === 0) return;
     // Past the level's limit the oldest clone is dropped: the player must hear it, or the
     // counter reads 1/1 while they believe two of them are running.
@@ -251,9 +251,11 @@ export class Game {
           this.rewind();
         }
         return;
+      case 'KeyX':
       case 'KeyU':
       case 'Backspace':
-        // Try the loop again: the clones stay, this attempt is forgotten.
+        // Try the loop again: the clones stay, this attempt is forgotten. X is the key the bar
+        // shows: on QWERTY and AZERTY alike it sits under the left hand, beside Space and E.
         if (this.session.current.length > 0) {
           this.audio.play('undo');
           this.reset(true);
@@ -480,8 +482,8 @@ export class Game {
       if (this.help === 1 && level.tip !== null) return [level.tip, ''];
       if (this.help === 2 || (this.help === 1 && level.tip === null)) return [level.hint ?? level.tip ?? '', 'hint'];
       if (this.notice !== null) return [this.notice.text, ''];
-      if (this.checkpoint && this.world && this.world.tick - this.checkpoint.world.tick < FPS * 2) return ['Balise activée. U reprend ici avec tes clones.', ''];
-      if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. ${this.entry?.lesson ? 'Maj+H' : 'H'} donne un indice.`, ''];
+      if (this.checkpoint && this.world && this.world.tick - this.checkpoint.world.tick < FPS * 2) return ['Balise activée. X reprend ici avec tes clones.', ''];
+      if (this.stalled) return [`Bloqué ? X retente cette boucle. R la rembobine : elle devient ton ${other}. ${this.entry?.lesson ? 'Maj+H' : 'H'} donne un indice.`, ''];
       if (fresh && this.session.loops.length === 1) return [`Ton ${other} part à ta première touche${manner}.`, ''];
       if (fresh && this.session.loops.length > 1) return [`Tes ${this.session.loops.length} ${other}s partent à ta première touche${mannerOfMany}.`, ''];
       if (this.session.current.length < TIP_FRAMES && this.session.loops.length === 0 && level.tip !== null) return [level.tip, ''];

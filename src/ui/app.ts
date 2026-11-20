@@ -294,7 +294,7 @@ export async function startApp(): Promise<void> {
     };
   };
 
-  const HANDLED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'NumpadEnter', 'Escape', 'Backspace', 'Tab', 'KeyE', 'KeyB', 'KeyR', 'KeyU', 'KeyH', 'KeyM', 'KeyN', 'KeyP']);
+  const HANDLED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'NumpadEnter', 'Escape', 'Backspace', 'Tab', 'KeyE', 'KeyB', 'KeyR', 'KeyU', 'KeyX', 'KeyH', 'KeyM', 'KeyN', 'KeyP']);
 
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || !HANDLED.has(event.code)) return;
