@@ -205,6 +205,35 @@ kbd {
   background: var(--threshold);
 }
 
+/* A dimension the level has no way into: there, but out of reach. */
+.dims span.absent {
+  opacity: 0.12;
+  text-decoration: line-through;
+}
+
+/* R has just pushed the oldest clone out: the counter says so. */
+.tick.flash strong {
+  animation: tick-flash 1.1s ease-out both;
+}
+
+@keyframes tick-flash {
+  0% {
+    color: var(--clone);
+    transform: scale(1.35);
+  }
+  15% {
+    transform: translateX(-3px) scale(1.2);
+  }
+  30% {
+    transform: translateX(3px) scale(1.1);
+  }
+  45%,
+  60% {
+    color: var(--clone);
+    transform: none;
+  }
+}
+
 .hud-meters {
   display: flex;
   align-items: flex-start;
@@ -255,25 +284,111 @@ kbd {
   color: var(--clone);
 }
 
+/* Three clusters: what moves you, what plays with time, what leaves the level. */
 .keys {
   display: flex;
   flex-wrap: wrap;
   align-self: center;
   justify-content: center;
-  gap: 4px 16px;
-  padding: 5px 14px;
+  align-items: center;
+  gap: 4px 0;
+  padding: 5px 6px;
   border-radius: 999px;
   background: rgba(16, 14, 30, 0.5);
   font-size: 12px;
 }
 
-.keys span {
-  opacity: 0.8;
+.key-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 14px;
+  padding: 2px 12px;
+  border-radius: 999px;
 }
 
-.keys span.lit {
+.key-group + .key-group {
+  border-left: 1px solid rgba(255, 248, 234, 0.16);
+  border-radius: 0;
+}
+
+/* Leaving, help and sound are always there and rarely needed: they step back. */
+.key-group.meta {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.keys .key {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.keys .key-label {
+  margin-left: 3px;
+}
+
+.keys .key.lit {
   color: var(--exit);
   opacity: 1;
+}
+
+.keys .key.lit kbd {
+  border-color: var(--exit);
+}
+
+/* A held key sinks and lights: the bar answers the fingers. */
+.keys kbd {
+  transition:
+    transform 0.06s,
+    background 0.06s,
+    color 0.06s;
+}
+
+.keys kbd.down {
+  border-bottom-width: 1px;
+  background: var(--paper);
+  color: var(--ink);
+  transform: translateY(2px);
+}
+
+/* The key the player was looking for, for a moment. */
+.keys .key.nudged {
+  animation: key-nudge 1.1s ease-out both;
+}
+
+@keyframes key-nudge {
+  0%,
+  40% {
+    color: var(--exit);
+    opacity: 1;
+    box-shadow: 0 0 0 4px rgba(255, 248, 234, 0.12);
+    background: rgba(255, 248, 234, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+    background: transparent;
+  }
+}
+
+/* The arrows have just changed meaning with the dimension. */
+.key-group.move.changed {
+  animation: keys-changed 1.1s ease-out both;
+}
+
+@keyframes keys-changed {
+  0%,
+  35% {
+    background: rgba(255, 248, 234, 0.16);
+    box-shadow: 0 0 18px rgba(255, 248, 234, 0.25);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 18px transparent;
+  }
 }
 
 /* --------------------------------------------------------------------- screens */
@@ -713,6 +828,12 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .banner.run {
     animation-duration: 0.01s;
+  }
+
+  .keys .key.nudged,
+  .key-group.move.changed,
+  .tick.flash strong {
+    animation: none;
   }
 }
 

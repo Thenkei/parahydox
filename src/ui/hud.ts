@@ -16,17 +16,63 @@ function span(className: string, text: string): HTMLSpanElement {
   return node;
 }
 
-function keyEntry(keys: readonly string[], label: string, lit = false): HTMLSpanElement {
+/** A key as the bar draws it, and the physical keys that light it up while held. */
+interface Key {
+  readonly cap: string;
+  readonly codes: readonly string[];
+}
+
+const KEY = {
+  left: { cap: '←', codes: ['ArrowLeft', 'KeyA'] },
+  right: { cap: '→', codes: ['ArrowRight', 'KeyD'] },
+  up: { cap: '↑', codes: ['ArrowUp', 'KeyW'] },
+  down: { cap: '↓', codes: ['ArrowDown', 'KeyS'] },
+  space: { cap: 'Espace', codes: ['Space'] },
+  e: { cap: 'E', codes: ['KeyE', 'Enter', 'NumpadEnter'] },
+  b: { cap: 'B', codes: ['KeyB'] },
+  r: { cap: 'R', codes: ['KeyR'] },
+  u: { cap: 'U', codes: ['KeyU', 'Backspace'] },
+  shift: { cap: 'Maj', codes: ['ShiftLeft', 'ShiftRight'] },
+  h: { cap: 'H', codes: ['KeyH'] },
+  esc: { cap: 'Échap', codes: ['Escape'] },
+  m: { cap: 'M', codes: ['KeyM'] },
+} as const satisfies Record<string, Key>;
+
+/** How long the bar's one-shot glows last; matches the CSS animations. */
+const NUDGE_MS = 1100;
+
+/** What a key nudge points at: the entry the player was probably looking for. */
+export type Nudge = 'jump' | 'rewind';
+
+function keyEntry(keys: readonly Key[], label: string, options: { lit?: boolean; nudge?: Nudge } = {}): HTMLSpanElement {
   const node = document.createElement('span');
-  if (lit) node.className = 'lit';
+  node.className = 'key';
+  if (options.lit) node.classList.add('lit');
+  if (options.nudge) node.dataset.nudge = options.nudge;
   for (const key of keys) {
     const cap = document.createElement('kbd');
-    cap.textContent = key;
+    cap.textContent = key.cap;
+    cap.dataset.codes = key.codes.join(' ');
     node.append(cap);
   }
-  node.append(` ${label}`);
+  node.append(span('key-label', label));
   return node;
 }
+
+/** One cluster of the key bar: what moves you, what plays with time, what leaves the level. */
+function keyGroup(kind: 'move' | 'loop' | 'meta', entries: readonly HTMLElement[]): HTMLDivElement {
+  const group = document.createElement('div');
+  group.className = `key-group ${kind}`;
+  group.append(...entries);
+  return group;
+}
+
+/**
+ * The dimensions a level can reach at all: a wire to enter for 1D, a threshold to unfold
+ * for 3D. Whether the hero can get to them is the puzzle; whether they exist is not.
+ */
+export const reachableDims = (level: Pick<Level, 'wires' | 'cells'>): ReadonlySet<Dim> =>
+  new Set<Dim>([...(level.wires.length > 0 ? [1 as const] : []), 2, ...(level.cells.some((cell) => cell.threshold) ? [3 as const] : [])]);
 
 export interface LevelEntry {
   readonly id: string;
@@ -132,6 +178,54 @@ export class Hud {
     private readonly onPickCampaign: (campaign: CampaignId) => void,
   ) {
     element('boot').hidden = true;
+    // The bar answers the fingers: a held key lights its cap, whatever the game makes of it.
+    window.addEventListener('keydown', (event) => this.press(event.code, true));
+    window.addEventListener('keyup', (event) => this.press(event.code, false));
+    window.addEventListener('blur', () => {
+      this.held.clear();
+      this.lightKeys();
+    });
+  }
+
+  private readonly held = new Set<string>();
+  private shownDim: Dim | null = null;
+  private shownEntry: string | null = null;
+  /** When each one-shot animation of the bar started: a redraw mid-way picks it up where it was. */
+  private readonly marks = new Map<string, number>();
+
+  /** Plays (or resumes) a one-shot CSS animation on a node the bar may redraw at any time. */
+  private animate(node: HTMLElement | null, mark: string, className: string, ms: number, restart = false): void {
+    if (!node) return;
+    const now = performance.now();
+    if (restart) this.marks.set(mark, now);
+    const since = now - (this.marks.get(mark) ?? -Infinity);
+    if (since >= ms) return;
+    node.classList.remove(className);
+    void node.offsetWidth;
+    node.style.animationDelay = `${-since}ms`;
+    node.classList.add(className);
+  }
+
+  private press(code: string, down: boolean): void {
+    if (down) this.held.add(code);
+    else this.held.delete(code);
+    this.lightKeys();
+  }
+
+  private lightKeys(): void {
+    for (const cap of this.keys.querySelectorAll<HTMLElement>('kbd[data-codes]')) {
+      cap.classList.toggle('down', (cap.dataset.codes ?? '').split(' ').some((code) => this.held.has(code)));
+    }
+  }
+
+  /** Draws the eye to the key the player was looking for, for a moment. */
+  nudge(what: Nudge): void {
+    this.animate(this.keys.querySelector<HTMLElement>(`[data-nudge="${what}"]`), `nudge:${what}`, 'nudged', NUDGE_MS, true);
+  }
+
+  /** The clone counter jumps when R has just pushed the oldest clone out. */
+  flashClones(): void {
+    this.animate(this.tick.parentElement, 'flash', 'flash', NUDGE_MS, true);
   }
 
   /** Each campaign dresses the whole interface: the stylesheet reads this off the root. */
@@ -162,9 +256,14 @@ export class Hud {
     const said = rule === '' || chapter.toLowerCase().endsWith(rule);
     this.worldName.textContent = `${entry.label} · ${chapter}${said ? '' : ` · ${rule}`}`;
     this.levelName.textContent = level.name;
+    // A dimension the level has no way into is not offered: no wire, no 1D; no threshold, no 3D.
+    const reachable = reachableDims(level);
     for (const pip of this.dims.children) {
-      const dim = (pip as HTMLElement).dataset.dim;
-      if (dim !== undefined) pip.classList.toggle('on', dim === String(status.dim));
+      const dim = Number((pip as HTMLElement).dataset.dim) as Dim;
+      const absent = !reachable.has(dim);
+      pip.classList.toggle('on', dim === status.dim);
+      pip.classList.toggle('absent', absent);
+      pip.setAttribute('title', absent ? (dim === 1 ? 'Pas de fil dans ce niveau' : 'Pas de seuil dans ce niveau') : '');
     }
     // How many clones run with you, out of how many the level allows. R can always re-record.
     this.tickLabel.textContent = level.maxClones > 0 ? `${other}s` : '';
@@ -175,21 +274,33 @@ export class Hud {
     // The key bar says what the keys do here and now: the verbs change with the dimension.
     const moves =
       status.dim === 1
-        ? [keyEntry(['←', '→', '↑', '↓'], 'suivre le fil')]
+        ? [keyEntry([KEY.left, KEY.right, KEY.up, KEY.down], 'suivre le fil')]
         : status.dim === 3
-          ? [keyEntry(['←', '→', '↑', '↓'], 'courir'), keyEntry(['Espace'], 'sauter')]
-          : [keyEntry(['←', '→'], 'courir'), keyEntry(['↑', 'Espace'], 'sauter (maintenir : plus haut)')];
-    this.keys.replaceChildren(
+          ? [keyEntry([KEY.left, KEY.right], 'courir'), keyEntry([KEY.up, KEY.down], 'fond / avant'), keyEntry([KEY.space], 'sauter', { nudge: 'jump' })]
+          : [keyEntry([KEY.left, KEY.right], 'courir'), keyEntry([KEY.space], 'sauter (tenir : plus haut)', { nudge: 'jump' })];
+    const move = keyGroup('move', [
       ...moves,
-      ...(status.field ? [keyEntry(['B'], status.field, true)] : []),
-      keyEntry(['E'], status.action ?? 'dimension', status.action !== null),
-      ...(level.maxClones > 0 ? [keyEntry(['R'], `rembobiner → ${other}`)] : []),
-      keyEntry(['U'], 'retenter'),
-      keyEntry(['Maj', 'R'], 'recommencer'),
-      ...(entry.lesson ? [keyEntry(['H'], 'démo'), keyEntry(['Maj', 'H'], 'indice')] : [keyEntry(['H'], 'indice')]),
-      keyEntry(['Échap'], 'niveaux'),
-      keyEntry(['M'], 'son'),
-    );
+      ...(status.field ? [keyEntry([KEY.b], status.field, { lit: true })] : []),
+      keyEntry([KEY.e], status.action ?? 'dimension', { lit: status.action !== null }),
+    ]);
+    const loop = keyGroup('loop', [
+      ...(level.maxClones > 0 ? [keyEntry([KEY.r], `→ ${other}`, { nudge: 'rewind' })] : []),
+      keyEntry([KEY.u], 'retenter'),
+      keyEntry([KEY.shift, KEY.r], 'recommencer'),
+    ]);
+    const meta = keyGroup('meta', [
+      ...(entry.lesson ? [keyEntry([KEY.h], 'démo'), keyEntry([KEY.shift, KEY.h], 'indice')] : [keyEntry([KEY.h], 'indice')]),
+      keyEntry([KEY.esc], 'niveaux'),
+      keyEntry([KEY.m], 'son'),
+    ]);
+    this.keys.replaceChildren(move, loop, meta);
+    // Changing dimension changes what the arrows do: the moves glow so the change is seen, not discovered.
+    const turned = this.shownEntry === entry.id && this.shownDim !== null && this.shownDim !== status.dim;
+    this.animate(move, 'changed', 'changed', NUDGE_MS, turned);
+    for (const what of ['jump', 'rewind'] as const) this.animate(this.keys.querySelector<HTMLElement>(`[data-nudge="${what}"]`), `nudge:${what}`, 'nudged', NUDGE_MS);
+    this.shownEntry = entry.id;
+    this.shownDim = status.dim;
+    this.lightKeys();
   }
 
   /** The running clock of the level, with the time to beat for the lightning mark. */

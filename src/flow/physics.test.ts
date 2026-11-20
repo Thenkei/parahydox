@@ -55,9 +55,9 @@ describe('running and jumping', () => {
     expect(run(flat, 'R40 RJ20 L30 J8 R12')).toEqual(run(flat, 'R40 RJ20 L30 J8 R12'));
   });
 
-  it('the up arrow jumps in a slice, like the jump key', () => {
-    expect(hero(flat, 'U12').y).toBeCloseTo(hero(flat, 'J12').y, 6);
-    expect(hero(flat, 'U12').y).toBeGreaterThan(1.5);
+  it('only the jump key jumps: in a slice the up arrow does nothing', () => {
+    expect(hero(flat, 'J12').y).toBeGreaterThan(1.5);
+    expect(hero(flat, 'U12')).toEqual(hero(flat, '_12'));
   });
 
   it('a clone replays the keys of the loop before, frame for frame', () => {

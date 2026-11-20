@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CAMPAIGNS, type CampaignId, campaignById } from '../levels';
-import { cloneCount, openedLine } from './hud';
+import { levelFrom } from '../core/testing';
+import { cloneCount, openedLine, reachableDims } from './hud';
 import { type Unlockable, campaignOpen, levelOpen, missingFor, nextWaitingOn, openedBetween, remainingIn, solvedIn, withWin } from './progress';
 
 /** The shape of the real game, in play order: the rules read their thresholds off the real campaigns. */
@@ -157,5 +158,12 @@ describe('a win', () => {
     expect(cloneCount({ ...level, maxClones: 2, mirror: true })).toBe('2 reflets');
     expect(cloneCount({ ...level, maxClones: 1, antipode: true })).toBe('1 antipode');
     expect(cloneCount({ maxClones: 2, mirror: true, antipode: true })).toBe('2 antipodes en miroir');
+  });
+
+  it('offers only the dimensions a level has a way into', () => {
+    const dims = (grid: string): number[] => [...reachableDims(levelFrom(`name: t\nz=0\n${grid}`))].sort();
+    expect(dims('.....\n@...X\n#####')).toEqual([2]);
+    expect(dims('.....\n@*=*X\n#####')).toEqual([1, 2]);
+    expect(dims('.....\n@.^.X\n#####')).toEqual([2, 3]);
   });
 });
