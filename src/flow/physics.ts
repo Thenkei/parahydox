@@ -52,9 +52,9 @@ const EPS = 1e-4;
 export interface FrameInput {
   /** -1 left, 1 right. */
   readonly x: -1 | 0 | 1;
-  /** The up and down arrows: a jump in 2D (up), depth in 3D (1 goes deeper), the wire's own way in 1D. */
+  /** The up and down arrows: depth in 3D (1 goes deeper), the wire's own way in 1D; nothing in 2D. */
   readonly z: -1 | 0 | 1;
-  /** The jump key proper (Space). */
+  /** The jump key (Space), the only one in every dimension: the up arrow never jumps. */
   readonly jump: boolean;
   /** Change dimension on an anchor or a threshold. */
   readonly shift: boolean;
@@ -591,8 +591,9 @@ function walk(scene: Scene, before: Body, from: 2 | 3, input: FrameInput, pushed
   vz = dim === 3 ? approach(vz, input.z * pace, accel) : 0;
   if (input.x !== 0) facing = input.x;
 
-  // In a slice the up arrow has nowhere to go: it jumps.
-  const jumping = input.jump || (dim === 2 && input.z > 0);
+  // Only Space jumps. The up arrow used to jump in a slice too, but it means "deeper" one
+  // E away, and the same finger did one thing in 2D and another in 3D.
+  const jumping = input.jump;
   if (jumping && !before.jumpHeld) buffer = BUFFER;
   else if (buffer > 0) buffer--;
   if (buffer > 0 && (before.grounded || coyote > 0)) {

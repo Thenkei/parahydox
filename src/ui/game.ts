@@ -34,6 +34,8 @@ const STEP_MS = 1000 / FPS;
 const MAX_STEPS_PER_FRAME = 5;
 /** Frames the level's opening line stays up once the run has started. */
 const TIP_FRAMES = 90;
+/** How long a line answering a key stays up. */
+const NOTICE_MS = 2600;
 
 const LEFT = new Set(['ArrowLeft', 'KeyA']);
 const RIGHT = new Set(['ArrowRight', 'KeyD']);
@@ -110,6 +112,10 @@ export class Game {
   private resumeAt: number | null = null;
   /** What the HUD last showed, to leave the DOM alone when nothing changed. */
   private shown = '';
+  /** A line answering a key the player just pressed, shown for a moment over the usual ones. */
+  private notice: { readonly text: string; readonly until: number } | null = null;
+  /** The up arrow pressed in a slice, where it does nothing: said once per level. */
+  private upExplained = false;
   /** A run played by the game itself (`?demo`): the loops still to play, and the one in progress. */
   private script: FrameInput[][] | null = null;
 
@@ -131,6 +137,8 @@ export class Game {
     this.elapsedMs = 0;
     this.pendingWin = null;
     this.help = 0;
+    this.notice = null;
+    this.upExplained = false;
     this.script = null;
     this.effects.clear();
     this.reset();
@@ -204,10 +212,27 @@ export class Game {
   }
 
   private rewind(): void {
-    if (!this.session || this.session.current.length === 0) return;
+    if (!this.session) return;
+    const { level } = this.session;
+    // Without clones R has nothing to record into: say so rather than throw the run away.
+    if (level.maxClones === 0) return this.say('Pas de clone dans ce niveau. U retente la boucle.');
+    if (this.session.current.length === 0) return;
+    // Past the level's limit the oldest clone is dropped: the player must hear it, or the
+    // counter reads 1/1 while they believe two of them are running.
+    const dropped = this.session.loops.length >= level.maxClones;
     this.session = rewindFlow(this.session);
     this.audio.play('rewind');
     this.reset();
+    if (dropped) {
+      const other = cloneWord(level);
+      this.say(level.maxClones === 1 ? `Ton ${other} précédent s'efface : un seul à la fois ici.` : `Ton plus ancien ${other} s'efface : ${level.maxClones} au plus ici.`);
+      this.hud?.flashClones();
+    }
+  }
+
+  private say(text: string): void {
+    this.notice = { text, until: performance.now() + NOTICE_MS };
+    this.refreshHud();
   }
 
   keyDown(code: string, shift: boolean): void {
@@ -240,6 +265,26 @@ export class Game {
         this.audio.play('select');
         this.refreshHud();
         return;
+      case 'ArrowUp':
+      case 'KeyW':
+      case 'ArrowDown':
+      case 'KeyS':
+        // Only Space jumps. In a slice ↑ and ↓ do nothing: they do not start the loop (the
+        // clones would leave for a key that did nothing), and ↑ points at the key it was meant to be.
+        if (playerOfFlow(this.world).dim === 2) {
+          if (UP.has(code)) {
+            this.hud?.nudge('jump');
+            if (!this.upExplained) {
+              this.upExplained = true;
+              this.say('Espace pour sauter. ↑ ↓ servent en 3D et sur les fils.');
+            }
+          }
+          if (!this.running) {
+            this.held.add(code);
+            return;
+          }
+        }
+        break;
       case 'KeyB':
         if (this.world.level.gravity === 'normal') return;
         this.pendingBoots = true;
@@ -427,15 +472,18 @@ export class Game {
     const lost = level.antipode ? this.world.bodies.filter((body) => body.role === 'clone' && body.status === 'fallen').length : 0;
     // How the clones set off: a reflection the other way round, an antipode toward the sky.
     const manner = `${level.mirror ? (level.antipode ? ', en miroir,' : ", à l'envers") : ''}${level.antipode ? ' et tombe vers le haut' : ''}`;
+    const mannerOfMany = `${level.mirror ? (level.antipode ? ', en miroir,' : ", à l'envers") : ''}${level.antipode ? ' et tombent vers le haut' : ''}`;
 
     const [message, tone] = ((): [string, '' | 'fallen' | 'hint'] => {
       if (outcome === 'fallen') return [this.checkpoint ? 'Retour à la dernière balise.' : 'Tombé dans le vide. La boucle recommence.', 'fallen'];
       if (outcome === 'won') return ['', ''];
       if (this.help === 1 && level.tip !== null) return [level.tip, ''];
       if (this.help === 2 || (this.help === 1 && level.tip === null)) return [level.hint ?? level.tip ?? '', 'hint'];
+      if (this.notice !== null) return [this.notice.text, ''];
       if (this.checkpoint && this.world && this.world.tick - this.checkpoint.world.tick < FPS * 2) return ['Balise activée. U reprend ici avec tes clones.', ''];
       if (this.stalled) return [`Bloqué ? U retente cette boucle. R la rembobine : elle devient ton ${other}. ${this.entry?.lesson ? 'Maj+H' : 'H'} donne un indice.`, ''];
-      if (fresh && this.session.loops.length > 0) return [`Ton ${other} part à ta première touche${manner}.`, ''];
+      if (fresh && this.session.loops.length === 1) return [`Ton ${other} part à ta première touche${manner}.`, ''];
+      if (fresh && this.session.loops.length > 1) return [`Tes ${this.session.loops.length} ${other}s partent à ta première touche${mannerOfMany}.`, ''];
       if (this.session.current.length < TIP_FRAMES && this.session.loops.length === 0 && level.tip !== null) return [level.tip, ''];
       if (action !== null) return [`E : ${action}`, ''];
       if (lost > 0) return [`${lost > 1 ? 'Des antipodes sont tombés' : 'Ton antipode est tombé'} dans le ciel, au bout de ${lost > 1 ? 'leur' : 'son'} plafond.`, ''];
@@ -488,6 +536,10 @@ export class Game {
     const { ctx, view } = this;
     if (view.width === 0 || view.height === 0) return;
 
+    if (this.notice !== null && now >= this.notice.until) {
+      this.notice = null;
+      this.refreshHud();
+    }
     if (!this.running && this.resumeAt !== null && now >= this.resumeAt) {
       this.resumeAt = null;
       if (this.held.size > 0 && this.outcome === 'playing') this.running = true;

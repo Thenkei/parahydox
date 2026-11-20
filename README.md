@@ -63,8 +63,8 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | Touche | Action |
 | --- | --- |
 | ← → (ou A D / Q D) | courir |
-| ↑ (ou W / Z), Espace | sauter ; plus on appuie longtemps, plus le saut porte |
-| ↑ ↓ en 3D | courir vers le fond et vers l'avant (Espace saute) |
+| Espace | sauter, dans toutes les dimensions ; plus on appuie longtemps, plus le saut porte |
+| ↑ ↓ (ou W S / Z S) en 3D | courir vers le fond et vers l'avant ; en 2D, ils ne font rien |
 | ← → ↑ ↓ sur un fil | suivre le fil, avec la flèche qui va dans son sens |
 | E, Entrée | changer de dimension : sur une ancre (même en plein saut) ou sur un seuil |
 | B | chausser ou retirer les bottes dans l’Hyperspace |
@@ -112,8 +112,8 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
   coupe. La profondeur s'arrête avec la grille, devant comme derrière.
 - **Clones** : un clone rejoue les touches de sa course, image par image. Ce sont des
   touches, pas des déplacements ni des intentions : une porte ouverte là où elle était
-  fermée, une marche là où il n'y en avait pas, et la même course mène ailleurs. ↑ saute
-  en 2D, s'enfonce en 3D et monte sur un fil, pour lui comme pour toi.
+  fermée, une marche là où il n'y en avait pas, et la même course mène ailleurs. ↑ ne fait
+  rien en 2D, s'enfonce en 3D et monte sur un fil, pour lui comme pour toi.
 - **Reflet** : dans le monde 7, un clone rejoue gauche pour droite et droite pour gauche.
   Le haut, le bas et la profondeur ne sont pas inversés.
 - **Plaque et porte** : la porte est ouverte tant que quelque chose pèse sur la plaque, et
