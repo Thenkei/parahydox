@@ -658,6 +658,30 @@ kbd {
   letter-spacing: 0.04em;
 }
 
+/* How many clones the level gives: one pip each, in the colour they will wear. */
+.banner .banner-clones {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--clone);
+}
+
+.banner .banner-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--clone);
+  box-shadow: 0 0 10px var(--clone);
+}
+
+.banner .banner-count {
+  margin-left: 4px;
+}
+
 .banner.run {
   animation: banner 2.2s ease-out forwards;
 }
