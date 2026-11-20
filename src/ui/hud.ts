@@ -31,7 +31,8 @@ const KEY = {
   e: { cap: 'E', codes: ['KeyE', 'Enter', 'NumpadEnter'] },
   b: { cap: 'B', codes: ['KeyB'] },
   r: { cap: 'R', codes: ['KeyR'] },
-  u: { cap: 'U', codes: ['KeyU', 'Backspace'] },
+  /** Retry the loop: X sits under the left hand on both QWERTY and AZERTY; U and Backspace still work. */
+  retry: { cap: 'X', codes: ['KeyX', 'KeyU', 'Backspace'] },
   shift: { cap: 'Maj', codes: ['ShiftLeft', 'ShiftRight'] },
   h: { cap: 'H', codes: ['KeyH'] },
   esc: { cap: 'Échap', codes: ['Escape'] },
@@ -285,7 +286,7 @@ export class Hud {
     ]);
     const loop = keyGroup('loop', [
       ...(level.maxClones > 0 ? [keyEntry([KEY.r], `→ ${other}`, { nudge: 'rewind' })] : []),
-      keyEntry([KEY.u], 'retenter'),
+      keyEntry([KEY.retry], 'retenter'),
       keyEntry([KEY.shift, KEY.r], 'recommencer'),
     ]);
     const meta = keyGroup('meta', [

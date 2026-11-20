@@ -69,7 +69,7 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | E, Entrée | changer de dimension : sur une ancre (même en plein saut) ou sur un seuil |
 | B | chausser ou retirer les bottes dans l’Hyperspace |
 | R | rembobiner : la course qu'on vient de faire devient un clone |
-| U, Retour arrière | retenter la boucle en gardant les clones |
+| X (ou U, Retour arrière) | retenter la boucle en gardant les clones |
 | Maj+R | recommencer le niveau, sans clone |
 | H | revoir la démonstration disponible, ou rappeler la consigne puis l’indice |
 | Maj+H | afficher ou masquer directement l’indice du niveau |
