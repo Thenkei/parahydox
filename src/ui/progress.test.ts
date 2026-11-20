@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CAMPAIGNS, type CampaignId, campaignById } from '../levels';
-import { openedLine } from './hud';
+import { cloneCount, openedLine } from './hud';
 import { type Unlockable, campaignOpen, levelOpen, missingFor, nextWaitingOn, openedBetween, remainingIn, solvedIn, withWin } from './progress';
 
 /** The shape of the real game, in play order: the rules read their thresholds off the real campaigns. */
@@ -147,5 +147,15 @@ describe('a win', () => {
     expect(openedLine([campaignById('givre')])).toBe('Le givre est ouvert : Échap pour y aller.');
     expect(openedLine([campaignById('givre'), campaignById('tore')])).toBe('Le givre et Le tore sont ouverts : Échap pour y aller.');
     expect(openedLine((['givre', 'tore', 'envers'] as const).map(campaignById))).toBe("Le givre, Le tore et L'envers sont ouverts : Échap pour y aller.");
+  });
+
+  it('announces the clones a level gives, by the rule they follow', () => {
+    const level = { maxClones: 0, mirror: false, antipode: false };
+    expect(cloneCount(level)).toBeNull();
+    expect(cloneCount({ ...level, maxClones: 1 })).toBe('1 clone');
+    expect(cloneCount({ ...level, maxClones: 2 })).toBe('2 clones');
+    expect(cloneCount({ ...level, maxClones: 2, mirror: true })).toBe('2 reflets');
+    expect(cloneCount({ ...level, maxClones: 1, antipode: true })).toBe('1 antipode');
+    expect(cloneCount({ maxClones: 2, mirror: true, antipode: true })).toBe('2 antipodes en miroir');
   });
 });

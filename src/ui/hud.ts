@@ -1,6 +1,7 @@
 import type { Dim, Level } from '../core/types';
 import type { LessonId } from '../lessons';
 import { type Campaign, type CampaignId, campaignById, chapterLabel, chapterName } from '../levels';
+import { COLORS } from './themes';
 
 function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -60,6 +61,19 @@ export type WinSequel =
 
 /** What clones are called in a level: the rule they follow is in their name. An antipode that is also a reflection is first of all an antipode. */
 export const cloneWord = (level: Pick<Level, 'mirror' | 'antipode'>): string => (level.antipode ? 'antipode' : level.mirror ? 'reflet' : 'clone');
+
+/**
+ * How many clones a level gives, as its opening card says it: "1 clone", "2 reflets",
+ * "2 antipodes en miroir". Null for a level played alone.
+ */
+export const cloneCount = (level: Pick<Level, 'maxClones' | 'mirror' | 'antipode'>): string | null => {
+  if (level.maxClones <= 0) return null;
+  const n = level.maxClones;
+  return `${n} ${cloneWord(level)}${n > 1 ? 's' : ''}${level.antipode && level.mirror ? ' en miroir' : ''}`;
+};
+
+/** The colour a level's clones wear on stage, so the card announces them as they will look. */
+const cloneColour = (level: Pick<Level, 'mirror' | 'antipode'>): string => (level.antipode ? COLORS.antipode : level.mirror ? COLORS.reflection : COLORS.clone);
 
 const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? 'x' : ''}`;
 
@@ -233,7 +247,17 @@ export class Hud {
 
   /** The level's name, large, for a moment: every level opens like a new page. */
   showBanner(entry: LevelEntry): void {
-    this.banner.replaceChildren(span('eyebrow', `${entry.label} · ${chapterName(entry.level.world)}`), span('banner-name', entry.level.name));
+    const { level } = entry;
+    const count = cloneCount(level);
+    const clones: HTMLElement[] = [];
+    if (count !== null) {
+      // One pip per clone, in their colour, then the count in words.
+      const line = span('banner-clones', '');
+      line.style.setProperty('--clone', cloneColour(level));
+      line.append(...Array.from({ length: level.maxClones }, () => span('banner-pip', '')), span('banner-count', count));
+      clones.push(line);
+    }
+    this.banner.replaceChildren(span('eyebrow', `${entry.label} · ${chapterName(level.world)}`), span('banner-name', level.name), ...clones);
     this.banner.hidden = false;
     // Restart the CSS animation.
     this.banner.classList.remove('run');
