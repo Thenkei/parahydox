@@ -95,7 +95,11 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
 
 ## Sur téléphone
 
-Le jeu se joue au doigt, téléphone à l'horizontale (tenu droit, il demande qu'on le tourne).
+Le jeu se joue au doigt, et seulement à l'horizontale : tenu droit, un téléphone ne montre
+que la demande de le tourner, sur tous les écrans, et le niveau attend derrière (chrono et
+clones compris). Sur Android, la première touche passe en plein écran et verrouille
+l'horizontale. Safari sur iPhone ne permet ni l'un ni l'autre à une page : la demande fait
+le travail, et rappelle de couper le verrouillage de l'orientation s'il est activé.
 Les commandes tactiles apparaissent dès qu'on touche l'écran, et la barre des touches
 revient à la première touche du clavier (un iPad avec clavier, un portable tactile).
 

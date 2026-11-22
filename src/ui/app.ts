@@ -9,6 +9,7 @@ import { type CampaignTab, Hud, type LevelEntry, type WinSequel } from './hud';
 import { LessonPlayer } from './lesson-player';
 import { campaignOpen, levelOpen, loadProgress, missingFor, nextWaitingOn, openedBetween, remainingIn, saveProgress, withWin } from './progress';
 import { themeFor } from './themes';
+import { UPRIGHT_PHONE, lockOnFirstTouch } from './orientation';
 import { TouchControls } from './touch';
 
 type Screen = 'title' | 'select' | 'play' | 'credits' | 'lesson';
@@ -338,6 +339,15 @@ export async function startApp(): Promise<void> {
   window.addEventListener('touchend', unlockAudio, { passive: true });
 
   const touch = new TouchControls(document.getElementById('game')!, { press, release });
+  lockOnFirstTouch();
+  // A phone turned upright mid-run: the prompt covers the level, so the level waits behind it
+  // (clock, clones and all) with nothing held, instead of running on unseen.
+  const upright = window.matchMedia(UPRIGHT_PHONE);
+  upright.addEventListener('change', () => {
+    if (!upright.matches) return;
+    touch.releaseAll();
+    game.releaseAll();
+  });
   hud.follow((entry, status) => touch.update(entry, status));
 
   /** A tap on a screen that waits for Enter is that Enter. */
@@ -358,9 +368,9 @@ export async function startApp(): Promise<void> {
   const loop = (now: number): void => {
     // The level stays on screen behind the title and the level list, but only runs while it is played.
     if (screen === 'lesson') {
-      if (!lessons.frame(now)) finishLesson();
+      if (!lessons.frame(now, !upright.matches)) finishLesson();
     } else if (screen === 'credits') credits.frame(now);
-    else game.frame(now, screen === 'play');
+    else game.frame(now, screen === 'play' && !upright.matches);
     const seconds = game.takeWin();
     if (seconds !== null) {
       const entry = entryAt(levelIndex);

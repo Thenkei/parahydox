@@ -25,10 +25,13 @@ export class LessonPlayer {
     this.stage.demo(this.lesson.loops);
   }
 
-  /** False when the last caption has played through. A stalled tab never skips a beat. */
-  frame(now: number): boolean {
+  /**
+   * False when the last caption has played through. A stalled tab never skips a beat.
+   * `live` false holds the demonstration where it is (a phone turned upright hides it).
+   */
+  frame(now: number, live = true): boolean {
     if (!this.lesson) return false;
-    this.stage.frame(now);
+    this.stage.frame(now, live);
     const cue = this.lesson.cues.find(({ end }) => this.stage.playedFrames < end);
     if (!cue || this.stage.outcome !== 'playing') return false;
     if (this.line.textContent !== cue.caption) {
