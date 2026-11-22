@@ -64,7 +64,7 @@ npm run check      # typecheck + tests + build : ce que lance le déploiement
 | --- | --- |
 | ← → (ou A D / Q D) | courir |
 | Espace | sauter, dans toutes les dimensions ; plus on appuie longtemps, plus le saut porte |
-| ↑ ↓ (ou W S / Z S) en 3D | courir vers le fond et vers l'avant ; en 2D, ils ne font rien |
+| ↑ ↓ (ou W S / Z S) en 3D | courir vers le fond et vers l'avant ; en 2D, ils ne font rien, mais ↓ lance la boucle sur place : c'est la touche pour attendre |
 | ← → ↑ ↓ sur un fil | suivre le fil, avec la flèche qui va dans son sens |
 | E, Entrée | changer de dimension : sur une ancre (même en plein saut) ou sur un seuil |
 | B | chausser ou retirer les bottes dans l’Hyperspace |
@@ -105,7 +105,7 @@ revient à la première touche du clavier (un iPad avec clavier, un portable tac
 
 | Geste | Action |
 | --- | --- |
-| Pouce gauche, n'importe où sur la moitié gauche | un stick apparaît sous le doigt : ← → courent ; ↑ ↓ ne comptent que sur un fil et en 3D |
+| Pouce gauche, n'importe où sur la moitié gauche | un stick apparaît sous le doigt : ← → courent ; ↑ ↓ comptent sur un fil et en 3D ; en 2D, tout droit vers le bas, c'est ↓ pour attendre sur place |
 | SAUT | Espace : tenir pour sauter plus haut |
 | E | changer de dimension ; s'allume quand il y a quelque chose à faire |
 | R, X, B | rembobiner (niveaux à clones), retenter la boucle, bottes (Hyperspace) |
@@ -114,7 +114,11 @@ revient à la première touche du clavier (un iPad avec clavier, un portable tac
 Le stick suit le pouce : tiré au-delà du bord, son centre se déplace avec lui, si bien qu'un
 demi-tour ne demande qu'un rayon de course. Il ne presse que les flèches, comme le clavier :
 les clones rejouent une course faite au doigt exactement comme une course faite au clavier.
-Avec les commandes tactiles, le niveau est cadré à gauche du pavé de droite, pour que rien
+Les consignes et indices des niveaux sont écrits pour le clavier ; au doigt, les mots qui
+n'ont de sens qu'au clavier sont remplacés à l'affichage (Espace devient SAUT, les flèches
+le stick, Maj+H le menu ☰), par une table de `src/ui/wording.ts`. Un test vérifie qu'aucune
+consigne ne nomme plus une touche absente du téléphone. E, R, X et B restent : les boutons
+portent les mêmes lettres. Avec les commandes tactiles, le niveau est cadré à gauche du pavé de droite, pour que rien
 ne se cache sous un pouce. Sur iPhone, « Ajouter à l'écran d'accueil » lance le jeu en plein
 écran, sans les barres de Safari.
 

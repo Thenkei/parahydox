@@ -1104,9 +1104,8 @@ body {
 .stick-arrow.ArrowUp { top: 6px; left: 50%; transform: translateX(-50%); }
 .stick-arrow.ArrowDown { bottom: 6px; left: 50%; transform: translateX(-50%); }
 
-/* In a slice ↑ and ↓ do nothing: the stick does not offer them. */
-.stick:not(.vertical) .stick-arrow.ArrowUp,
-.stick:not(.vertical) .stick-arrow.ArrowDown {
+/* In a slice ↑ does nothing: the stick does not offer it. ↓ stays, the key that waits. */
+.stick:not(.vertical) .stick-arrow.ArrowUp {
   display: none;
 }
 

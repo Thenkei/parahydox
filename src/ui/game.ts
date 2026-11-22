@@ -273,15 +273,15 @@ export class Game {
       case 'KeyW':
       case 'ArrowDown':
       case 'KeyS':
-        // Only Space jumps. In a slice ↑ and ↓ do nothing: they do not start the loop (the
-        // clones would leave for a key that did nothing), and ↑ points at the key it was meant to be.
-        if (playerOfFlow(this.world).dim === 2) {
-          if (UP.has(code)) {
-            this.hud?.nudge('jump');
-            if (!this.upExplained) {
-              this.upExplained = true;
-              this.say('Espace pour sauter. ↑ ↓ servent en 3D et sur les fils.');
-            }
+        // Only Space jumps. In a slice ↑ does nothing, and does not start the loop: pressed there it
+        // is a jump the player was looking for, and the clones must not leave on it. It points at Space.
+        // ↓ does start it: in a slice it is the key that waits, and levels ask for it ("D120 R240":
+        // two seconds standing still, the clones already on their way, then run).
+        if (playerOfFlow(this.world).dim === 2 && UP.has(code)) {
+          this.hud?.nudge('jump');
+          if (!this.upExplained) {
+            this.upExplained = true;
+            this.say('Espace pour sauter. ↑ sert en 3D et sur les fils.');
           }
           if (!this.running) {
             this.held.add(code);

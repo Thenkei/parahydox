@@ -37,20 +37,24 @@ const sign = (value: number): Axis => (value > 0 ? 1 : value < 0 ? -1 : 0);
 
 /**
  * The arrows a drag of (`dx`, `dy`) from the centre holds down. Screen y grows downwards, so a
- * drag up is `z = 1`. With `vertical` off (a 2D slice, where ↑ and ↓ do nothing) only ← → are
- * read: a thumb that drifts up while running must not trip the "Espace pour sauter" reminder.
+ * drag up is `z = 1`. With `vertical` off (a 2D slice) ↑ is never read: a thumb that drifts up
+ * while running must not trip the "Espace pour sauter" reminder. ↓ is, but only straight down:
+ * in a slice it is the key that waits, the one that starts a loop without moving, and the
+ * levels ask for it. A running thumb that sags stays on ← →.
  * `previous` is what the stick held a moment ago, for the hysteresis.
  */
 export function directionOf(dx: number, dy: number, vertical: boolean, previous: Direction = NEUTRAL): Direction {
-  const holding = previous.x !== 0 || (vertical && previous.z !== 0);
+  const holding = previous.x !== 0 || previous.z !== 0;
   const threshold = holding ? RELEASE_ZONE : DEAD_ZONE;
-  if (!vertical) {
-    const x = sign(dx);
-    return { x: Math.abs(dx) > (previous.x === x && x !== 0 ? RELEASE_ZONE : DEAD_ZONE) ? x : 0, z: 0 };
-  }
-  if (Math.hypot(dx, dy) <= threshold) return NEUTRAL;
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);
+  if (!vertical) {
+    // Within 22.5° of straight down: the waiting key, alone.
+    if (dy > 0 && ax < ay * DIAGONAL && Math.hypot(dx, dy) > (previous.z === -1 ? RELEASE_ZONE : DEAD_ZONE)) return { x: 0, z: -1 };
+    const x = sign(dx);
+    return { x: ax > (previous.x === x && x !== 0 ? RELEASE_ZONE : DEAD_ZONE) ? x : 0, z: 0 };
+  }
+  if (Math.hypot(dx, dy) <= threshold) return NEUTRAL;
   return {
     x: ax > ay * DIAGONAL ? sign(dx) : 0,
     z: ay > ax * DIAGONAL ? sign(-dy) : 0,
