@@ -2,6 +2,7 @@ import type { Dim, Level } from '../core/types';
 import type { LessonId } from '../lessons';
 import { type Campaign, type CampaignId, campaignById, chapterLabel, chapterName } from '../levels';
 import { COLORS } from './themes';
+import { type InputMode, forInput } from './wording';
 
 function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -192,6 +193,9 @@ export class Hud {
   /** Whatever else draws from the play status: the touch controls offer what the key bar lists. */
   private readonly followers: Array<(entry: LevelEntry, status: PlayStatus) => void> = [];
   private shownDim: Dim | null = null;
+  /** The hand in use, and the texts as written: switching hands says them again for the other. */
+  private mode: InputMode = 'keys';
+  private written = { message: '', note: '' };
   private shownEntry: string | null = null;
   /** When each one-shot animation of the bar started: a redraw mid-way picks it up where it was. */
   private readonly marks = new Map<string, number>();
@@ -219,6 +223,14 @@ export class Hud {
     for (const cap of this.keys.querySelectorAll<HTMLElement>('kbd[data-codes]')) {
       cap.classList.toggle('down', (cap.dataset.codes ?? '').split(' ').some((code) => this.held.has(code)));
     }
+  }
+
+  /** Says the texts on screen for `mode`: a tip that names Espace on the keyboard names SAUT on touch. */
+  setInputMode(mode: InputMode): void {
+    if (this.mode === mode) return;
+    this.mode = mode;
+    this.message.textContent = forInput(this.written.message, mode);
+    element('win-extra').textContent = forInput(this.written.note, mode);
   }
 
   /** Calls `listener` with every new play status, as the key bar is redrawn. */
@@ -276,7 +288,8 @@ export class Hud {
     // How many clones run with you, out of how many the level allows. R can always re-record.
     this.tickLabel.textContent = level.maxClones > 0 ? `${other}s` : '';
     this.tick.textContent = level.maxClones > 0 ? `${status.loops}/${level.maxClones}` : '';
-    this.message.textContent = status.message;
+    this.written.message = status.message;
+    this.message.textContent = forInput(status.message, this.mode);
     this.message.dataset.tone = status.tone;
 
     // The key bar says what the keys do here and now: the verbs change with the dimension.
@@ -347,7 +360,8 @@ export class Hud {
     // The clock counts every attempt since the level was opened, falls included.
     element('win-time').textContent = swift ? `Éclair : moins de ${target} s, tentatives comprises` : target === null ? '' : `⚡ en ${target} s ou moins, tentatives comprises`;
     const note = element('win-extra');
-    note.textContent = extra;
+    this.written.note = extra;
+    note.textContent = forInput(extra, this.mode);
     note.hidden = extra === '';
     element('win-next').textContent = next;
     // Whatever announces a campaign wears its colours: the whole card when it is about nothing else, the one line otherwise.

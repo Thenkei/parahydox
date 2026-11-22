@@ -12,9 +12,18 @@ describe('directionOf', () => {
     expect(directionOf(-(DEAD_ZONE + 1), 0, true)).toEqual({ x: -1, z: 0 });
   });
 
-  it('ignores the vertical in a slice, however far the thumb drifts', () => {
+  it('never reads ↑ in a slice, however far the thumb drifts', () => {
     expect(directionOf(0, -80, false)).toEqual(NEUTRAL);
     expect(directionOf(30, -80, false)).toEqual({ x: 1, z: 0 });
+  });
+
+  it('reads ↓ in a slice only straight down: the key that waits', () => {
+    expect(directionOf(0, 40, false)).toEqual({ x: 0, z: -1 });
+    expect(directionOf(10, 40, false)).toEqual({ x: 0, z: -1 });
+    // A running thumb that sags is still running.
+    expect(directionOf(30, 40, false)).toEqual({ x: 1, z: 0 });
+    expect(directionOf(0, DEAD_ZONE - 1, false)).toEqual(NEUTRAL);
+    expect(directionOf(0, (DEAD_ZONE + RELEASE_ZONE) / 2, false, { x: 0, z: -1 })).toEqual({ x: 0, z: -1 });
   });
 
   it('reads up as ↑ (z = 1) where the vertical counts', () => {

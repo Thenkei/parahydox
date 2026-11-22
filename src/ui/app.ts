@@ -338,7 +338,7 @@ export async function startApp(): Promise<void> {
   window.addEventListener('pointerup', unlockAudio, { passive: true });
   window.addEventListener('touchend', unlockAudio, { passive: true });
 
-  const touch = new TouchControls(document.getElementById('game')!, { press, release });
+  const touch = new TouchControls(document.getElementById('game')!, { press, release }, (mode) => hud.setInputMode(mode));
   lockOnFirstTouch();
   // A phone turned upright mid-run: the prompt covers the level, so the level waits behind it
   // (clock, clones and all) with nothing held, instead of running on unseen.

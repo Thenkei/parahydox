@@ -1,4 +1,5 @@
 import { type LevelEntry, type PlayStatus, cloneWord } from './hud';
+import type { InputMode } from './wording';
 import { type Direction, NEUTRAL, type Point, STICK_RADIUS, codesOf, directionOf, follow, knobOffset } from './stick';
 
 /**
@@ -10,8 +11,6 @@ export interface InputSink {
   press(code: string, shift: boolean): void;
   release(code: string): void;
 }
-
-type InputMode = 'keys' | 'touch';
 
 /** The thumb on the stick: which pointer, where its centre is now, and what it holds down. */
 interface Grip {
@@ -79,6 +78,8 @@ export class TouchControls {
   constructor(
     private readonly root: HTMLElement,
     private readonly sink: InputSink,
+    /** Told of every switch of hands, and of the first one at start. */
+    private readonly onMode: (mode: InputMode) => void = () => {},
   ) {
     const hud = root.querySelector<HTMLElement>('#hud');
     const meters = root.querySelector<HTMLElement>('.hud-meters');
@@ -178,6 +179,7 @@ export class TouchControls {
   private setMode(mode: InputMode): void {
     if (this.root.dataset.input === mode) return;
     this.root.dataset.input = mode;
+    this.onMode(mode);
     if (mode === 'keys') {
       this.releaseAll();
       this.closeMenu();
