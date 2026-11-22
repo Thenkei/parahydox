@@ -1268,23 +1268,27 @@ body {
   min-height: 36px;
 }
 
-/* Held upright, a phone has no room for a level: ask for it sideways. Only while playing. */
+/*
+ * Held upright, a phone has no room for a level: every screen asks for it sideways, and the
+ * level holds still behind. The query is UPRIGHT_PHONE in src/ui/orientation.ts: keep them equal.
+ */
 .rotate {
   display: none;
 }
 
-@media (orientation: portrait) and (max-width: 600px) {
-  #game[data-input='touch'] .rotate {
+@media (orientation: portrait) and (max-width: 600px) and (pointer: coarse) {
+  .rotate {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 12px;
     padding: 32px;
-    background: var(--veil);
+    /* Opaque: a screen's own text showing through would cross the prompt's. */
+    background: #0b0a14;
     font-size: 18px;
     font-weight: 700;
     text-align: center;
@@ -1294,6 +1298,17 @@ body {
   .rotate-glyph {
     font-size: 54px;
     color: var(--accent);
+  }
+
+  .rotate p {
+    max-width: 320px;
+    margin: 0;
+  }
+
+  .rotate .rotate-note {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.75;
   }
 }
 

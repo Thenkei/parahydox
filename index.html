@@ -38,11 +38,6 @@
         <p id="message" class="message" role="status" aria-live="polite"></p>
 
         <footer id="keys" class="keys"></footer>
-
-        <div id="rotate" class="rotate" role="alert">
-          <span class="rotate-glyph" aria-hidden="true">⟳</span>
-          <p>Tourne ton téléphone : Parahydox se joue à l'horizontale.</p>
-        </div>
       </div>
 
       <section id="lesson" aria-labelledby="lesson-title" hidden>
@@ -88,6 +83,13 @@
       </section>
 
       <p id="boot" class="boot">Chargement…</p>
+
+      <!-- Over every screen, on a phone held upright (see src/ui/orientation.ts). -->
+      <div id="rotate" class="rotate" role="alert">
+        <span class="rotate-glyph" aria-hidden="true">⟳</span>
+        <p>Tourne ton téléphone : Parahydox se joue à l'horizontale.</p>
+        <p class="rotate-note">L'écran ne tourne pas ? Coupe le verrouillage de l'orientation dans le Centre de contrôle.</p>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
