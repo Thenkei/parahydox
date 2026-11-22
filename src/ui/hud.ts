@@ -189,6 +189,8 @@ export class Hud {
   }
 
   private readonly held = new Set<string>();
+  /** Whatever else draws from the play status: the touch controls offer what the key bar lists. */
+  private readonly followers: Array<(entry: LevelEntry, status: PlayStatus) => void> = [];
   private shownDim: Dim | null = null;
   private shownEntry: string | null = null;
   /** When each one-shot animation of the bar started: a redraw mid-way picks it up where it was. */
@@ -217,6 +219,11 @@ export class Hud {
     for (const cap of this.keys.querySelectorAll<HTMLElement>('kbd[data-codes]')) {
       cap.classList.toggle('down', (cap.dataset.codes ?? '').split(' ').some((code) => this.held.has(code)));
     }
+  }
+
+  /** Calls `listener` with every new play status, as the key bar is redrawn. */
+  follow(listener: (entry: LevelEntry, status: PlayStatus) => void): void {
+    this.followers.push(listener);
   }
 
   /** Draws the eye to the key the player was looking for, for a moment. */
@@ -302,6 +309,7 @@ export class Hud {
     this.shownEntry = entry.id;
     this.shownDim = status.dim;
     this.lightKeys();
+    for (const listener of this.followers) listener(entry, status);
   }
 
   /** The running clock of the level, with the time to beat for the lightning mark. */

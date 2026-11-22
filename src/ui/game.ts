@@ -23,7 +23,7 @@ import { type FlowSession, inputsAtFlow, newFlowSession, parseTape, rewindFlow }
 import type { Assets } from './assets';
 import type { Audio } from './audio';
 import { type Hud, type LevelEntry, cloneWord } from './hud';
-import { type Camera, type Viewport, approach, cameraTarget } from './render/camera';
+import { type Box, type Camera, type Viewport, approach, cameraTarget } from './render/camera';
 import { Effects, drawBackdrop } from './render/fx';
 import type { ActorPose, CratePose, Slide } from './render/motion';
 import { type LevelGeometry, type SceneView, buildGeometry, drawScene } from './render/scene';
@@ -124,6 +124,8 @@ export class Game {
     private readonly assets: Assets,
     private readonly hud: Hud | null,
     private readonly audio: Audio,
+    /** An element the stylesheet sizes to the part of the screen the level may use; null for all of it. */
+    private readonly stage: HTMLElement | null = null,
   ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D is not available in this browser');
@@ -506,10 +508,31 @@ export class Game {
     const ratio = window.devicePixelRatio || 1;
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
-    this.view = { width, height };
+    this.view = { width, height, ...this.framing() };
     this.canvas.width = Math.round(width * ratio);
     this.canvas.height = Math.round(height * ratio);
     this.cam = null;
+  }
+
+  /** The stage as the stylesheet lays it out, relative to the canvas; nothing when it is the whole canvas. */
+  private framing(): { stage?: Box } {
+    if (!this.stage) return {};
+    const outer = this.canvas.getBoundingClientRect();
+    const inner = this.stage.getBoundingClientRect();
+    if (inner.width <= 0 || inner.height <= 0) return {};
+    return { stage: { x: inner.left - outer.left, y: inner.top - outer.top, width: inner.width, height: inner.height } };
+  }
+
+  /**
+   * The stage changes without the canvas changing size: touch controls come and go with the
+   * hand last used. The camera then glides to the new framing instead of jumping.
+   */
+  private reframe(): void {
+    if (!this.stage) return;
+    const { stage } = this.framing();
+    const was = this.view.stage;
+    const same = stage === undefined ? was === undefined : was !== undefined && Math.abs(was.x - stage.x) < 0.5 && Math.abs(was.y - stage.y) < 0.5 && Math.abs(was.width - stage.width) < 0.5 && Math.abs(was.height - stage.height) < 0.5;
+    if (!same) this.view = { width: this.view.width, height: this.view.height, ...(stage ? { stage } : {}) };
   }
 
   /** The moment as the scene reads it: every body and crate in the cell it stands in. */
@@ -535,6 +558,7 @@ export class Game {
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
     if (this.canvas.clientWidth !== this.view.width || this.canvas.clientHeight !== this.view.height) this.resize();
+    else this.reframe();
     const { ctx, view } = this;
     if (view.width === 0 || view.height === 0) return;
 

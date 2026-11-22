@@ -9,6 +9,7 @@ import { type CampaignTab, Hud, type LevelEntry, type WinSequel } from './hud';
 import { LessonPlayer } from './lesson-player';
 import { campaignOpen, levelOpen, loadProgress, missingFor, nextWaitingOn, openedBetween, remainingIn, saveProgress, withWin } from './progress';
 import { themeFor } from './themes';
+import { TouchControls } from './touch';
 
 type Screen = 'title' | 'select' | 'play' | 'credits' | 'lesson';
 
@@ -93,7 +94,7 @@ export async function startApp(): Promise<void> {
     },
     (campaign) => showCampaign(campaign),
   );
-  const game = new Game(canvas, assets, hud, audio);
+  const game = new Game(canvas, assets, hud, audio, document.getElementById('stage'));
   const credits = new Credits(assets);
   const lessons = new LessonPlayer(assets, audio);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -255,8 +256,7 @@ export async function startApp(): Promise<void> {
     renderSelect();
   };
 
-  const onPlayKey = (event: KeyboardEvent): void => {
-    const { code } = event;
+  const onPlayKey = (code: string, shift: boolean): void => {
     // What the win just opened, while its card is the thing on screen.
     const announced = game.outcome === 'won' && sequel.kind !== 'end' ? sequel.opened[0]?.id : undefined;
     // "Échap pour y aller": from the card that announces a campaign, the list opens on it.
@@ -271,13 +271,13 @@ export async function startApp(): Promise<void> {
         return showSelect(announced);
       }
       // Once through the door only starting over means anything.
-      if (!(code === 'KeyR' && event.shiftKey)) return;
+      if (!(code === 'KeyR' && shift)) return;
     }
-    if (code === 'KeyH' && !event.shiftKey && game.outcome === 'playing' && entryAt(levelIndex).lesson) {
+    if (code === 'KeyH' && !shift && game.outcome === 'playing' && entryAt(levelIndex).lesson) {
       return showLesson(entryAt(levelIndex), false);
     }
     clearWin();
-    game.keyDown(code, event.shiftKey);
+    game.keyDown(code, shift);
   };
 
   /** What a win leads to, given the times as they stood before it. */
@@ -296,6 +296,28 @@ export async function startApp(): Promise<void> {
 
   const HANDLED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'NumpadEnter', 'Escape', 'Backspace', 'Tab', 'KeyE', 'KeyB', 'KeyR', 'KeyU', 'KeyX', 'KeyH', 'KeyM', 'KeyN', 'KeyP']);
 
+  /**
+   * One key going down, wherever it comes from: the keyboard, or the touch controls, which
+   * press the same codes. Everything a key means on each screen is decided here, once.
+   */
+  const press = (code: string, shift: boolean): void => {
+    if (code === 'KeyM') return void audio.toggleMute();
+    if (screen === 'title') {
+      if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === 'KeyE') openLevel(levelIndex);
+    } else if (screen === 'lesson') {
+      if (['Escape', 'Space', 'Enter', 'NumpadEnter'].includes(code)) finishLesson();
+    } else if (screen === 'credits') {
+      if (code === 'Escape') showSelect();
+      else if (code === 'ArrowLeft') credits.turn(-1, performance.now());
+      else if (['Enter', 'NumpadEnter', 'Space', 'ArrowRight'].includes(code) && !credits.turn(1, performance.now())) showSelect();
+    } else if (screen === 'select') {
+      onSelectKey(code, shift);
+    } else {
+      onPlayKey(code, shift);
+    }
+  };
+  const release = (code: string): void => game.keyUp(code);
+
   window.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey || !HANDLED.has(event.code)) return;
     // Tab only means something in the level list; everywhere else it stays the browser's.
@@ -304,23 +326,34 @@ export async function startApp(): Promise<void> {
     event.preventDefault();
     audio.unlock();
     if (event.repeat) return;
-    if (event.code === 'KeyM') return void audio.toggleMute();
-    if (screen === 'title') {
-      if (event.code === 'Enter' || event.code === 'NumpadEnter' || event.code === 'Space' || event.code === 'KeyE') openLevel(levelIndex);
-    } else if (screen === 'lesson') {
-      if (['Escape', 'Space', 'Enter', 'NumpadEnter'].includes(event.code)) finishLesson();
-    } else if (screen === 'credits') {
-      if (event.code === 'Escape') showSelect();
-      else if (event.code === 'ArrowLeft') credits.turn(-1, performance.now());
-      else if (['Enter', 'NumpadEnter', 'Space', 'ArrowRight'].includes(event.code) && !credits.turn(1, performance.now())) showSelect();
-    } else if (screen === 'select') {
-      onSelectKey(event.code, event.shiftKey);
-    } else {
-      onPlayKey(event);
-    }
+    press(event.code, event.shiftKey);
   });
-  window.addEventListener('keyup', (event) => game.keyUp(event.code));
+  window.addEventListener('keyup', (event) => release(event.code));
   window.addEventListener('blur', () => game.releaseAll());
+
+  // On iOS a touch only counts as a gesture that may start sound when the finger lifts: a
+  // pointerdown is too early, so the context created then stays suspended until this resumes it.
+  const unlockAudio = (): void => audio.unlock();
+  window.addEventListener('pointerup', unlockAudio, { passive: true });
+  window.addEventListener('touchend', unlockAudio, { passive: true });
+
+  const touch = new TouchControls(document.getElementById('game')!, { press, release });
+  hud.follow((entry, status) => touch.update(entry, status));
+
+  /** A tap on a screen that waits for Enter is that Enter. */
+  const tapFor = (id: string, code: string, when: () => boolean = () => true): void => {
+    document.getElementById(id)!.addEventListener('click', (event) => {
+      if (!when() || (event.target instanceof Element && event.target.closest('button'))) return;
+      audio.unlock();
+      press(code, false);
+    });
+  };
+  tapFor('title', 'Enter', () => screen === 'title');
+  tapFor('win', 'Enter', () => screen === 'play' && game.outcome === 'won');
+  tapFor('credits', 'Enter', () => screen === 'credits');
+  document.getElementById('select-back')!.addEventListener('click', () => {
+    if (screen === 'select') press('Escape', false);
+  });
 
   const loop = (now: number): void => {
     // The level stays on screen behind the title and the level list, but only runs while it is played.

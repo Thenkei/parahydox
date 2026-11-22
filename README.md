@@ -93,6 +93,27 @@ Dans le choix du niveau, Tab passe d'une campagne à l'autre (↑ et ↓ aussi, 
 liste). Une campagne fermée se regarde mais on n'y entre pas : ni N, ni `?level=` n'y
 mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
 
+## Sur téléphone
+
+Le jeu se joue au doigt, téléphone à l'horizontale (tenu droit, il demande qu'on le tourne).
+Les commandes tactiles apparaissent dès qu'on touche l'écran, et la barre des touches
+revient à la première touche du clavier (un iPad avec clavier, un portable tactile).
+
+| Geste | Action |
+| --- | --- |
+| Pouce gauche, n'importe où sur la moitié gauche | un stick apparaît sous le doigt : ← → courent ; ↑ ↓ ne comptent que sur un fil et en 3D |
+| SAUT | Espace : tenir pour sauter plus haut |
+| E | changer de dimension ; s'allume quand il y a quelque chose à faire |
+| R, X, B | rembobiner (niveaux à clones), retenter la boucle, bottes (Hyperspace) |
+| ☰ | recommencer le niveau, démo, indice, son, niveaux |
+
+Le stick suit le pouce : tiré au-delà du bord, son centre se déplace avec lui, si bien qu'un
+demi-tour ne demande qu'un rayon de course. Il ne presse que les flèches, comme le clavier :
+les clones rejouent une course faite au doigt exactement comme une course faite au clavier.
+Avec les commandes tactiles, le niveau est cadré à gauche du pavé de droite, pour que rien
+ne se cache sous un pouce. Sur iPhone, « Ajouter à l'écran d'accueil » lance le jeu en plein
+écran, sans les barres de Safari.
+
 ## Règles
 
 - **Corps** : on court à environ cinq cases par seconde. Un saut tenu monte d'un peu plus
@@ -147,7 +168,8 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
   niveau, plus une marge pour une main humaine. Le chrono compte toutes les tentatives
   depuis l'ouverture du niveau ; Maj+R le remet à zéro.
 - La barre du bas dit ce que font les touches ici et maintenant : elle change avec la
-  dimension, et E s'allume quand il y a quelque chose à faire là où l'on se tient.
+  dimension, et E s'allume quand il y a quelque chose à faire là où l'on se tient. Au doigt,
+  le pavé tactile la remplace et suit les mêmes règles.
 
 ## Architecture
 
@@ -170,6 +192,10 @@ mènent, seul `?unlock` l'ouvre sans l'avoir gagnée.
   ouvert (une campagne, un niveau) ; `render/` est le dessin en Canvas 2D : une seule
   projection oblique dont la profondeur se replie, si bien que changer de dimension
   déplace la caméra au lieu de changer d'écran.
+- `src/ui/touch.ts` — les commandes tactiles : elles pressent les mêmes codes de touche que
+  le clavier, par le même point d'entrée de `app.ts`, si bien que ni la physique ni les
+  clones ne savent qu'elles existent. `stick.ts` est l'arithmétique du stick (zone morte,
+  hystérésis, centre qui suit le pouce), sans DOM, testée à part.
 - `src/ui/themes.ts` — un décor par monde. Un thème appartient à un biome (un par
   campagne) qui choisit ses textures et ses détails dessinés (herbe et fleurs, croûte et
   braises, neige et glaçons…), et donne la tonalité de la musique.
