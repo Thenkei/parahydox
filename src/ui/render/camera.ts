@@ -42,10 +42,25 @@ export const project = (cam: Camera, x: number, y: number, z: number): Point => 
 export const layerAlpha = (cam: Camera, z: number): number =>
   Math.min(1, Math.max(cam.depth, 1 - Math.abs(z - cam.zRef)));
 
-export interface Viewport {
+export interface Box {
+  readonly x: number;
+  readonly y: number;
   readonly width: number;
   readonly height: number;
 }
+
+export interface Viewport {
+  readonly width: number;
+  readonly height: number;
+  /**
+   * The part of the canvas the level is framed in, in CSS pixels; the whole canvas when absent.
+   * Controls laid over an edge (the touch pad) take it out, so no part of the level sits under a thumb.
+   */
+  readonly stage?: Box;
+}
+
+/** Where the level is framed: the stage when there is one, the whole canvas otherwise. */
+export const stageOf = (view: Viewport): Box => view.stage ?? { x: 0, y: 0, width: view.width, height: view.height };
 
 const MAX_CELL = 84;
 const MIN_CELL = 18;
@@ -57,7 +72,8 @@ export function cellSizeFor(level: Level, view: Viewport): number {
   // Past a joined edge the far side of the level is shown again: leave it room.
   const spanX = w + (deep ? DEPTH_X * d : 0) + 2 + (level.wrap.x ? GHOST_CELLS : 0);
   const spanY = h + (deep ? DEPTH_Y * d : 0) + 3.2 + (level.wrap.y ? GHOST_CELLS : 0);
-  return Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(view.width / spanX, view.height / spanY))));
+  const stage = stageOf(view);
+  return Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(stage.width / spanX, stage.height / spanY))));
 }
 
 /** Where the camera wants to be for this world: slice, volume or wire, centred on the level. */
@@ -81,14 +97,15 @@ export function cameraTarget(level: Level, hero: { readonly dim: Dim; readonly c
   const maxX = w + DEPTH_X * depth * d;
   const minY = 0;
   const maxY = h + DEPTH_Y * depth * d;
+  const stage = stageOf(view);
   return {
     cell,
     depth,
     zRef,
     world: player.dim === 1 ? 0 : 1,
-    ox: view.width / 2 - ((minX + maxX) / 2) * cell,
+    ox: stage.x + stage.width / 2 - ((minX + maxX) / 2) * cell,
     // Slightly below centre: the HUD sits on top and islands hang below their ground.
-    oy: view.height / 2 + ((minY + maxY) / 2) * cell + cell * 0.2,
+    oy: stage.y + stage.height / 2 + ((minY + maxY) / 2) * cell + cell * 0.2,
   };
 }
 

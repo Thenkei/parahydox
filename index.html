@@ -2,13 +2,19 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0a14" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>Parahydox</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <main id="game">
       <canvas id="view" aria-label="Vue du niveau"></canvas>
+      <div id="stage" class="stage" aria-hidden="true"></div>
 
       <div id="hud" hidden>
         <header class="hud-top">
@@ -32,13 +38,18 @@
         <p id="message" class="message" role="status" aria-live="polite"></p>
 
         <footer id="keys" class="keys"></footer>
+
+        <div id="rotate" class="rotate" role="alert">
+          <span class="rotate-glyph" aria-hidden="true">⟳</span>
+          <p>Tourne ton téléphone : Parahydox se joue à l'horizontale.</p>
+        </div>
       </div>
 
       <section id="lesson" aria-labelledby="lesson-title" hidden>
         <canvas id="lesson-view" aria-hidden="true"></canvas>
         <header class="lesson-header">
           <div><span class="eyebrow">Démonstration</span><h2 id="lesson-title"></h2></div>
-          <button id="lesson-skip" type="button">Passer <kbd>Échap</kbd></button>
+          <button id="lesson-skip" type="button">Passer <kbd class="for-keys">Échap</kbd></button>
         </header>
         <div class="lesson-caption" role="status">
           <kbd id="lesson-key"></kbd><span id="lesson-line"></span>
@@ -52,7 +63,7 @@
         <p id="win-stats" class="stats"></p>
         <p id="win-time" class="stats"></p>
         <p id="win-extra" class="stats note" hidden></p>
-        <p class="hint"><kbd>Entrée</kbd> <span id="win-next">niveau suivant</span> · <kbd>Maj</kbd>+<kbd>R</kbd> rejouer</p>
+        <p class="hint"><kbd class="for-keys">Entrée</kbd><span class="for-touch">Touche ici :</span> <span id="win-next">niveau suivant</span><span class="for-keys"> · <kbd>Maj</kbd>+<kbd>R</kbd> rejouer</span></p>
       </section>
 
       <div id="banner" class="banner" hidden></div>
@@ -60,19 +71,20 @@
       <section id="title" class="screen">
         <h1>PARAHYDOX</h1>
         <p id="tagline" class="tagline">Un seul monde. Trois façons de le lire.</p>
-        <p class="hint blink"><kbd>Entrée</kbd> pour jouer</p>
+        <p class="hint blink"><span class="for-keys"><kbd>Entrée</kbd> pour jouer</span><span class="for-touch">Touche l'écran pour jouer</span></p>
       </section>
 
       <section id="select" class="screen" hidden>
+        <button id="select-back" class="back for-touch" type="button">← Retour</button>
         <div id="select-tabs" class="tabs" role="tablist" aria-label="Campagne"></div>
         <p id="select-pitch" class="pitch"></p>
         <div id="select-grid" class="select-grid"></div>
-        <p class="hint"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> choisir · <kbd>Tab</kbd> changer de campagne · <kbd>Entrée</kbd> jouer · <kbd>Échap</kbd> retour</p>
+        <p class="hint"><span class="for-keys"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> choisir · <kbd>Tab</kbd> changer de campagne · <kbd>Entrée</kbd> jouer · <kbd>Échap</kbd> retour</span><span class="for-touch">Touche un niveau pour le jouer</span></p>
       </section>
 
       <section id="credits" aria-label="Générique de fin" hidden>
         <canvas id="credits-view" role="img" aria-live="polite"></canvas>
-        <footer><span id="credits-caption"></span><span><kbd>←</kbd><kbd>→</kbd> parcourir · <kbd>Échap</kbd> niveaux</span></footer>
+        <footer><span id="credits-caption"></span><span class="for-keys"><kbd>←</kbd><kbd>→</kbd> parcourir · <kbd>Échap</kbd> niveaux</span><span class="for-touch">Touche pour continuer</span></footer>
       </section>
 
       <p id="boot" class="boot">Chargement…</p>
