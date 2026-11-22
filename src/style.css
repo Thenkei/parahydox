@@ -1297,40 +1297,40 @@ body {
   }
 }
 
-/* A phone on its side is short: the HUD and the win card give the level its height back. */
+/* A phone on its side is short: with touch controls, the HUD and the win card give the level its height back. */
 @media (max-height: 500px) {
-  .hud-title,
-  .hud-meters {
+  #game[data-input='touch'] .hud-title,
+  #game[data-input='touch'] .hud-meters {
     padding: 5px 10px;
   }
 
-  .hud-title strong,
-  .tick strong {
+  #game[data-input='touch'] .hud-title strong,
+  #game[data-input='touch'] .tick strong {
     font-size: 15px;
   }
 
-  .card {
+  #game[data-input='touch'] .card {
     bottom: max(12px, env(safe-area-inset-bottom));
     padding: 14px 22px;
   }
 
-  .card h2 {
+  #game[data-input='touch'] .card h2 {
     font-size: 22px;
   }
 
-  .stars {
+  #game[data-input='touch'] .stars {
     font-size: 24px;
   }
 
-  .stats {
+  #game[data-input='touch'] .stats {
     margin-bottom: 8px;
   }
 
-  .screen h1 {
+  #game[data-input='touch'] .screen h1 {
     font-size: clamp(36px, 9vw, 72px);
   }
 
-  .tagline {
+  #game[data-input='touch'] .tagline {
     margin-bottom: 6px;
     font-size: 16px;
   }
