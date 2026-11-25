@@ -180,6 +180,67 @@ export function drawScene(frame: SceneFrame): void {
     }
   };
 
+  /**
+   * One cell of a layer, as the sweep paints it. `ux` and `uy` run past a joined edge, where
+   * the far side of the level is shown again, fading.
+   */
+  const paintCell = (z: number, ux: number, uy: number, alpha: number): void => {
+    const j = Math.floor(uy / h);
+    const y = uy - j * h;
+    const outY = uy < 0 ? -uy - 0.5 : uy >= h ? uy - h + 0.5 : 0;
+    const i = Math.floor(ux / w);
+    const x = ux - i * w;
+    const outX = ux < 0 ? -ux - 0.5 : ux >= w ? ux - w + 0.5 : 0;
+    const here = i === 0 && j === 0;
+    const shown = here ? alpha : alpha * ghostAlpha(Math.hypot(outX, outY));
+    if (shown <= 0.01) return;
+    const cell = cellAt(level, vec(x, y, z));
+    if (!cell) return;
+    const at = here ? frame : frameAt({ dx: i * w, dy: j * h });
+    if (cell.solid) {
+      // A crumbled slab is simply gone.
+      if (!isSolid(world, vec(x, y, z))) return;
+      // Walls standing between the camera and the player turn to glass in 3D.
+      const veils = cam.depth > 0.5 && z < player.pos.z && y >= player.pos.y;
+      ctx.globalAlpha = veils ? shown * 0.3 : shown;
+      if (cell.fragile) drawSlab(at, x, y, z);
+      else drawBlock(at, x, y, z);
+    } else {
+      // Doors standing in front of the player are veiled like walls, so they never hide it.
+      const veils = cell.door !== null && cam.depth > 0.5 && z < player.pos.z;
+      ctx.globalAlpha = veils ? shown * 0.35 : shown;
+      drawFeatures(at, cell, x, y, z, false);
+    }
+  };
+
+  /**
+   * A crate is painted after the terrain of its layer, yet in the unfolded view its top and
+   * its right side reach into the cells above it and to its right, which stand nearer the
+   * camera. Those cells are painted once more, inside the crate's outline only: the wall in
+   * front covers the crate, and nothing outside the crate is touched. Painting the crate in
+   * the sweep instead would be wrong whenever it straddles two cells, falling or pushed.
+   */
+  const paintInFront = (crate: CratePose, copy: Pick<Copy, 'dx' | 'dy'>, z: number, alpha: number): void => {
+    if (cam.depth <= 0.02 || alpha <= 0.01) return;
+    const box = crateBox(crate);
+    const x0 = box.x0 + copy.dx;
+    const x1 = box.x1 + copy.dx;
+    const y0 = box.y0 + copy.dy;
+    const y1 = box.y1 + copy.dy;
+    ctx.save();
+    crateOutline(ctx, frameAt(copy).cam, crate);
+    ctx.clip();
+    // Two boxes that do not meet are ordered by any axis that parts them: a cell wholly to the
+    // right of the crate, or wholly above it, is in front. The crate's faces reach less than a
+    // cell further, so the cells just past its far edges are the last that can cover it.
+    for (let uy = Math.max(-gy, Math.floor(y0)); uy <= Math.min(h + gy - 1, Math.floor(y1) + 1); uy++) {
+      for (let ux = Math.max(-gx, Math.floor(x0)); ux <= Math.min(w + gx - 1, Math.floor(x1) + 1); ux++) {
+        if (ux >= x1 || uy >= y1) paintCell(z, ux, uy, alpha);
+      }
+    }
+    ctx.restore();
+  };
+
   for (let z = d - 1; z >= 0; z--) {
     const visible = layerAlpha(cam, z);
     if (visible < 0.01) continue;
@@ -205,36 +266,7 @@ export function drawScene(frame: SceneFrame): void {
         for (const belly of geometry.bellies) if (belly.z === z) drawBelly(frameAt(ghost), belly);
         ctx.restore();
       }
-      for (let uy = -gy; uy < h + gy; uy++) {
-        const j = Math.floor(uy / h);
-        const y = uy - j * h;
-        const outY = uy < 0 ? -uy - 0.5 : uy >= h ? uy - h + 0.5 : 0;
-        for (let ux = -gx; ux < w + gx; ux++) {
-          const i = Math.floor(ux / w);
-          const x = ux - i * w;
-          const outX = ux < 0 ? -ux - 0.5 : ux >= w ? ux - w + 0.5 : 0;
-          const here = i === 0 && j === 0;
-          const shown = here ? alpha : alpha * ghostAlpha(Math.hypot(outX, outY));
-          if (shown <= 0.01) continue;
-          const cell = cellAt(level, vec(x, y, z));
-          if (!cell) continue;
-          const at = here ? frame : frameAt({ dx: i * w, dy: j * h });
-          if (cell.solid) {
-            // A crumbled slab is simply gone.
-            if (!isSolid(world, vec(x, y, z))) continue;
-            // Walls standing between the camera and the player turn to glass in 3D.
-            const veils = cam.depth > 0.5 && z < player.pos.z && y >= player.pos.y;
-            ctx.globalAlpha = veils ? shown * 0.3 : shown;
-            if (cell.fragile) drawSlab(at, x, y, z);
-            else drawBlock(at, x, y, z);
-          } else {
-            // Doors standing in front of the player are veiled like walls, so they never hide it.
-            const veils = cell.door !== null && cam.depth > 0.5 && z < player.pos.z;
-            ctx.globalAlpha = veils ? shown * 0.35 : shown;
-            drawFeatures(at, cell, x, y, z, false);
-          }
-        }
-      }
+      for (let uy = -gy; uy < h + gy; uy++) for (let ux = -gx; ux < w + gx; ux++) paintCell(z, ux, uy, alpha);
       for (const segment of geometry.segments) {
         if (segment.layer !== z) continue;
         const mx = (segment.a.x + segment.b.x) / 2 + 0.5;
@@ -252,9 +284,11 @@ export function drawScene(frame: SceneFrame): void {
       if (crate.cell.z !== z) continue;
       const solidity = bodyAlpha(crate.cell);
       if (solidity <= 0.01) continue;
-      for (const copy of copiesOf(level, crate.x + 0.06, crate.x + 0.94, crate.y, crate.y + CRATE_SIZE)) {
+      const box = crateBox(crate);
+      for (const copy of copiesOf(level, box.x0, box.x1, box.y0, box.y1)) {
         ctx.globalAlpha = solidity * copy.alpha;
         drawCrate(frameAt(copy), crate);
+        paintInFront(crate, copy, z, alpha);
       }
     }
     const actors = frame.actors.filter((a) => a.cell.z === z).sort((a, b) => a.y - b.y || a.x - b.x);
@@ -1423,6 +1457,46 @@ function drawWire(frame: SceneFrame, segment: Segment, focused: boolean): void {
 
 /** Side of a crate, in cells. */
 const CRATE_SIZE = 0.88;
+
+/** Where a crate stands in its cell, in world cells: centred along x and z, resting on its floor. */
+function crateBox(crate: CratePose): { x0: number; x1: number; y0: number; y1: number; z0: number; z1: number } {
+  const inset = (1 - CRATE_SIZE) / 2;
+  return {
+    x0: crate.x + inset,
+    x1: crate.x + inset + CRATE_SIZE,
+    y0: crate.y,
+    y1: crate.y + CRATE_SIZE,
+    z0: crate.z + inset,
+    z1: crate.z + inset + CRATE_SIZE,
+  };
+}
+
+/**
+ * The crate's silhouette as a path: front face, top and right side, which the oblique view
+ * shows as one hexagon. Grown by a pixel so that its anti-aliased rim is covered too.
+ */
+function crateOutline(ctx: CanvasRenderingContext2D, cam: Camera, crate: CratePose): void {
+  const { x0, x1, y0, y1, z0, z1 } = crateBox(crate);
+  const corners = [
+    project(cam, x0, y0, z0),
+    project(cam, x0, y1, z0),
+    project(cam, x0, y1, z1),
+    project(cam, x1, y1, z1),
+    project(cam, x1, y0, z1),
+    project(cam, x1, y0, z0),
+  ];
+  const cx = corners.reduce((sum, p) => sum + p.x, 0) / corners.length;
+  const cy = corners.reduce((sum, p) => sum + p.y, 0) / corners.length;
+  ctx.beginPath();
+  corners.forEach((p, i) => {
+    const reach = Math.hypot(p.x - cx, p.y - cy) || 1;
+    const x = p.x + (p.x - cx) / reach;
+    const y = p.y + (p.y - cy) / reach;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+}
 
 function drawCrate(frame: SceneFrame, crate: CratePose): void {
   const { ctx, cam, tiles } = frame;
