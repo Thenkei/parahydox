@@ -158,33 +158,117 @@ export function drawScene(frame: SceneFrame): void {
   const ghosts: Pick<Copy, 'dx' | 'dy'>[] = [];
   for (const j of gy > 0 ? [-1, 0, 1] : [0]) for (const i of gx > 0 ? [-1, 0, 1] : [0]) if (i !== 0 || j !== 0) ghosts.push({ dx: i * w, dy: j * h });
 
-  /** A body at every place it is seen, its shadow first. */
-  const drawBody = (pose: ActorPose, alpha: number, shadow: boolean): void => {
+  /**
+   * A body at every place it is seen, its shadow first. `cover` is the shade of its layer when
+   * the terrain in front of it must cover it, null when it is drawn over everything.
+   */
+  const drawBody = (pose: ActorPose, alpha: number, shadow: boolean, cover: number | null): void => {
     if (alpha <= 0.01) return;
+    const covered = cover !== null && pose.dim !== 1;
     if (shadow && pose.dim !== 1) {
       const landing = pose.airborne ? landingOf(frame, pose) : pose.y;
       if (landing !== null) {
         const drop = Math.max(0, (pose.y - landing) * pose.up);
         // Found through a joined bottom and top, the place lies past the edge: the shadow is on this side of the seam.
         const ground = seamCell(level, 0, landing, 0).y;
-        for (const copy of copiesOf(level, pose.x + 0.24, pose.x + 0.76, ground, ground)) {
-          ctx.globalAlpha = alpha * copy.alpha;
-          drawShadow(frameAt(copy), pose, ground, drop);
+        const box = { x0: pose.x + 0.24, x1: pose.x + 0.76, y0: ground, y1: ground };
+        for (const copy of copiesOf(level, box.x0, box.x1, box.y0, box.y1)) {
+          const covers = covered ? terrainInFront(pose, box, copy) : [];
+          const anchor = { x: pose.x + 0.5, y: ground, z: pose.z + 0.5 };
+          paintBehind(copy, anchor, alpha * copy.alpha, covers, cover, pose.cell.z, (at) => drawShadow(at, pose, ground, drop));
         }
       }
     }
     const head = pose.dim === 1 ? pose.y + TALL : pose.y + pose.up * TALL;
-    for (const copy of copiesOf(level, pose.x + 0.2, pose.x + 0.8, Math.min(pose.y, head), Math.max(pose.y, head))) {
-      ctx.globalAlpha = alpha * copy.alpha;
-      drawActor(frameAt(copy), pose);
+    const box = { x0: pose.x + 0.2, x1: pose.x + 0.8, y0: Math.min(pose.y, head), y1: Math.max(pose.y, head) };
+    for (const copy of copiesOf(level, box.x0, box.x1, box.y0, box.y1)) {
+      const covers = covered ? terrainInFront(pose, box, copy) : [];
+      const anchor = { x: pose.x + 0.5, y: pose.y, z: pose.z + 0.5 };
+      paintBehind(copy, anchor, alpha * copy.alpha, covers, cover, pose.cell.z, (at) => drawActor(at, pose));
     }
+  };
+
+  /**
+   * The solid cells standing in front of a body or its shadow, in the order the sweep paints
+   * them. Both are flat, halfway into the layer, and in the unfolded view they reach up and to
+   * the right into the cells beyond: a wall the body walks into, a ceiling above its head.
+   * An antipode's soles are on a ceiling, as anyone's are on the ground: the block it stands on
+   * is not counted, or it would swallow its feet and its shadow.
+   */
+  const terrainInFront = (pose: ActorPose, box: { x0: number; x1: number; y0: number; y1: number }, copy: Pick<Copy, 'dx' | 'dy'>): { ux: number; uy: number }[] => {
+    if (cam.depth <= 0.02) return [];
+    const z = pose.cell.z;
+    const x0 = box.x0 + copy.dx;
+    const x1 = box.x1 + copy.dx;
+    const y0 = box.y0 + copy.dy;
+    const y1 = box.y1 + copy.dy;
+    const cells: { ux: number; uy: number }[] = [];
+    for (let uy = Math.max(-gy, Math.floor(y0)); uy <= Math.min(h + gy - 1, Math.floor(y1) + 1); uy++) {
+      for (let ux = Math.max(-gx, Math.floor(x0)); ux <= Math.min(w + gx - 1, Math.floor(x1) + 1); ux++) {
+        const above = pose.up === 1 && uy >= y1;
+        if ((ux >= x1 || above) && isSolid(world, vec(ux, uy, z))) cells.push({ ux, uy });
+      }
+    }
+    return cells;
+  };
+
+  /**
+   * Paints something flat that terrain may stand in front of. With nothing in front, it is simply
+   * drawn. Otherwise it is drawn alone on a scratch canvas, the terrain is painted over it there
+   * with source-atop, which keeps only its own pixels, and the result joins the scene. Nothing
+   * around it is painted twice, so a wall turned to glass stays as clear as it was.
+   */
+  const paintBehind = (
+    copy: Pick<Copy, 'dx' | 'dy'>,
+    anchor: Vec3,
+    alpha: number,
+    covers: readonly { ux: number; uy: number }[],
+    shade: number | null,
+    z: number,
+    paint: (at: SceneFrame) => void,
+  ): void => {
+    const at = frameAt(copy);
+    const scratch = covers.length > 0 && shade !== null ? scratchFor(ctx) : null;
+    if (scratch === null || shade === null) {
+      ctx.globalAlpha = alpha;
+      paint(at);
+      return;
+    }
+    const c = cam.cell;
+    const centre = project(at.cam, anchor.x, anchor.y, anchor.z);
+    // Room for a body upright or upside down, its arms, and the air it leaves behind.
+    const rect = { x: centre.x - 1.2 * c, y: centre.y - 2 * c, width: 2.4 * c, height: 4 * c };
+    const m = ctx.getTransform();
+    const sx = Math.max(0, Math.floor(m.a * rect.x + m.e));
+    const sy = Math.max(0, Math.floor(m.d * rect.y + m.f));
+    const sw = Math.min(ctx.canvas.width, Math.ceil(m.a * (rect.x + rect.width) + m.e)) - sx;
+    const sh = Math.min(ctx.canvas.height, Math.ceil(m.d * (rect.y + rect.height) + m.f)) - sy;
+    if (sw <= 0 || sh <= 0) return;
+
+    scratch.save();
+    scratch.setTransform(m);
+    scratch.beginPath();
+    scratch.rect(rect.x, rect.y, rect.width, rect.height);
+    scratch.clip();
+    scratch.clearRect(rect.x, rect.y, rect.width, rect.height);
+    scratch.globalAlpha = 1;
+    paint({ ...at, ctx: scratch });
+    scratch.globalCompositeOperation = 'source-atop';
+    for (const { ux, uy } of covers) paintCell(z, ux, uy, shade, scratch);
+    scratch.restore();
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(scratch.canvas, sx, sy, sw, sh, sx, sy, sw, sh);
+    ctx.restore();
   };
 
   /**
    * One cell of a layer, as the sweep paints it. `ux` and `uy` run past a joined edge, where
    * the far side of the level is shown again, fading.
    */
-  const paintCell = (z: number, ux: number, uy: number, alpha: number): void => {
+  const paintCell = (z: number, ux: number, uy: number, alpha: number, into: CanvasRenderingContext2D = ctx): void => {
     const j = Math.floor(uy / h);
     const y = uy - j * h;
     const outY = uy < 0 ? -uy - 0.5 : uy >= h ? uy - h + 0.5 : 0;
@@ -196,19 +280,20 @@ export function drawScene(frame: SceneFrame): void {
     if (shown <= 0.01) return;
     const cell = cellAt(level, vec(x, y, z));
     if (!cell) return;
-    const at = here ? frame : frameAt({ dx: i * w, dy: j * h });
+    const seen = here ? frame : frameAt({ dx: i * w, dy: j * h });
+    const at = into === ctx ? seen : { ...seen, ctx: into };
     if (cell.solid) {
       // A crumbled slab is simply gone.
       if (!isSolid(world, vec(x, y, z))) return;
       // Walls standing between the camera and the player turn to glass in 3D.
       const veils = cam.depth > 0.5 && z < player.pos.z && y >= player.pos.y;
-      ctx.globalAlpha = veils ? shown * 0.3 : shown;
+      into.globalAlpha = veils ? shown * 0.3 : shown;
       if (cell.fragile) drawSlab(at, x, y, z);
       else drawBlock(at, x, y, z);
     } else {
       // Doors standing in front of the player are veiled like walls, so they never hide it.
       const veils = cell.door !== null && cam.depth > 0.5 && z < player.pos.z;
-      ctx.globalAlpha = veils ? shown * 0.35 : shown;
+      into.globalAlpha = veils ? shown * 0.35 : shown;
       drawFeatures(at, cell, x, y, z, false);
     }
   };
@@ -294,7 +379,7 @@ export function drawScene(frame: SceneFrame): void {
     const actors = frame.actors.filter((a) => a.cell.z === z).sort((a, b) => a.y - b.y || a.x - b.x);
     for (const pose of actors) {
       // Clones stay readable from a wire: where they are is the whole point of a timeline.
-      drawBody(pose, onFocusWire(pose.cell) ? visible : visible * (ACTOR_GHOST + (1 - ACTOR_GHOST) * cam.world), true);
+      drawBody(pose, onFocusWire(pose.cell) ? visible : visible * (ACTOR_GHOST + (1 - ACTOR_GHOST) * cam.world), true, alpha);
     }
   }
 
@@ -311,11 +396,25 @@ export function drawScene(frame: SceneFrame): void {
   // 3D: the hero is drawn once more over everything, faintly, so that a crate or a wall
   // standing in front never hides where it is.
   const hero = frame.actors.find((a) => a.role === 'player');
-  if (hero && cam.depth > 0.5 && hero.alpha > 0.5) drawBody(hero, 0.3 * cam.depth, true);
+  if (hero && cam.depth > 0.5 && hero.alpha > 0.5) drawBody(hero, 0.3 * cam.depth, true, null);
 
   ctx.globalAlpha = 1;
   drawSeams(frame);
   ctx.globalAlpha = 1;
+}
+
+/** A canvas the size of the scene's, where a body is drawn alone before it joins the scene. */
+let scratchCanvas: CanvasRenderingContext2D | null = null;
+
+function scratchFor(main: CanvasRenderingContext2D): CanvasRenderingContext2D | null {
+  if (scratchCanvas === null) scratchCanvas = document.createElement('canvas').getContext('2d');
+  if (scratchCanvas === null) return null;
+  const { width, height } = main.canvas;
+  if (scratchCanvas.canvas.width !== width || scratchCanvas.canvas.height !== height) {
+    scratchCanvas.canvas.width = width;
+    scratchCanvas.canvas.height = height;
+  }
+  return scratchCanvas;
 }
 
 /** How much of the world is left on screen from inside a wire. */
