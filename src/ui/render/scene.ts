@@ -298,29 +298,66 @@ export function drawScene(frame: SceneFrame): void {
     }
   };
 
+  /** How solidly a layer's terrain is drawn: only the slice in 2D, and a ghost of it in 1D. */
+  const shadeOf = (z: number): number => {
+    const visible = layerAlpha(cam, z);
+    // In 1D the world does not vanish: it stays as a ghost, so the wire is still somewhere.
+    return visible < 0.01 ? 0 : visible * (WORLD_GHOST + (1 - WORLD_GHOST) * cam.world);
+  };
+  /** How solidly a body is drawn. Clones stay readable from a wire: where they are is the whole point of a timeline. */
+  const bodyShade = (pose: ActorPose): number => {
+    const visible = layerAlpha(cam, pose.cell.z);
+    if (visible < 0.01) return 0;
+    return onFocusWire(pose.cell) ? visible : visible * (ACTOR_GHOST + (1 - ACTOR_GHOST) * cam.world);
+  };
+
+  /**
+   * The layer a crate is drawn with: the nearest one it reaches into. At rest that is its own;
+   * pushed toward the camera it already overlaps the next one, whose ground and walls behind
+   * it must be drawn before it, not over it.
+   */
+  const crateLayer = (crate: CratePose): number => Math.min(d - 1, Math.max(0, Math.floor(crateBox(crate).z0)));
+
   /**
    * A crate is painted after the terrain of its layer, yet in the unfolded view its top and
    * its right side reach into the cells above it and to its right, which stand nearer the
    * camera. Those cells are painted once more, inside the crate's outline only: the wall in
    * front covers the crate, and nothing outside the crate is touched. Painting the crate in
    * the sweep instead would be wrong whenever it straddles two cells, falling or pushed.
+   *
+   * A crate moving between layers is drawn with the nearer one, after everything of the deeper
+   * one: what stands in front of it there is painted again too, layer by layer from the back,
+   * the cells and then whoever stands on or beside the crate.
    */
-  const paintInFront = (crate: CratePose, copy: Pick<Copy, 'dx' | 'dy'>, z: number, alpha: number): void => {
-    if (cam.depth <= 0.02 || alpha <= 0.01) return;
+  const paintInFront = (crate: CratePose, copy: Pick<Copy, 'dx' | 'dy'>, z: number): void => {
+    if (cam.depth <= 0.02) return;
     const box = crateBox(crate);
     const x0 = box.x0 + copy.dx;
     const x1 = box.x1 + copy.dx;
     const y0 = box.y0 + copy.dy;
     const y1 = box.y1 + copy.dy;
+    const deepest = Math.min(d - 1, Math.floor(box.z1 - 1e-6));
     ctx.save();
     crateOutline(ctx, frameAt(copy).cam, crate);
     ctx.clip();
-    // Two boxes that do not meet are ordered by any axis that parts them: a cell wholly to the
-    // right of the crate, or wholly above it, is in front. The crate's faces reach less than a
-    // cell further, so the cells just past its far edges are the last that can cover it.
-    for (let uy = Math.max(-gy, Math.floor(y0)); uy <= Math.min(h + gy - 1, Math.floor(y1) + 1); uy++) {
-      for (let ux = Math.max(-gx, Math.floor(x0)); ux <= Math.min(w + gx - 1, Math.floor(x1) + 1); ux++) {
-        if (ux >= x1 || uy >= y1) paintCell(z, ux, uy, alpha);
+    for (let layer = deepest; layer >= z; layer--) {
+      const shade = shadeOf(layer);
+      if (shade <= 0.01) continue;
+      // Two boxes that do not meet are ordered by any axis that parts them: a cell wholly to the
+      // right of the crate, or wholly above it, is in front. The crate's faces reach less than a
+      // cell further, so the cells just past its far edges are the last that can cover it.
+      for (let uy = Math.max(-gy, Math.floor(y0)); uy <= Math.min(h + gy - 1, Math.floor(y1) + 1); uy++) {
+        for (let ux = Math.max(-gx, Math.floor(x0)); ux <= Math.min(w + gx - 1, Math.floor(x1) + 1); ux++) {
+          if (ux >= x1 || uy >= y1) paintCell(layer, ux, uy, shade);
+        }
+      }
+      // The bodies of the crate's own drawing layer come after it anyway.
+      if (layer === z) continue;
+      for (const pose of frame.actors) {
+        if (pose.cell.z !== layer) continue;
+        // Beside the crate on its right, or on top of it: nearer the camera than the crate.
+        const bottom = pose.up === 1 ? pose.y : pose.y - TALL;
+        if (pose.x + 0.2 + copy.dx >= x1 || bottom + copy.dy >= y1 - 0.01) drawBody(pose, bodyShade(pose), true, shade);
       }
     }
     ctx.restore();
@@ -365,22 +402,21 @@ export function drawScene(frame: SceneFrame): void {
 
     // What sits on the player's wire stays fully there in 1D; the rest fades with the world.
     const bodyAlpha = (cell: Vec3): number => (onFocusWire(cell) ? visible : alpha);
-    for (const crate of frame.crates) {
-      if (crate.cell.z !== z) continue;
+    // From the bottom up, left to right and back to front, as the terrain is: a crate stacked
+    // on another, or pushed against one, is drawn after it.
+    const crates = frame.crates.filter((crate) => crateLayer(crate) === z).sort((a, b) => a.y - b.y || a.x - b.x || b.z - a.z);
+    for (const crate of crates) {
       const solidity = bodyAlpha(crate.cell);
       if (solidity <= 0.01) continue;
       const box = crateBox(crate);
       for (const copy of copiesOf(level, box.x0, box.x1, box.y0, box.y1)) {
         ctx.globalAlpha = solidity * copy.alpha;
         drawCrate(frameAt(copy), crate);
-        paintInFront(crate, copy, z, alpha);
+        paintInFront(crate, copy, z);
       }
     }
     const actors = frame.actors.filter((a) => a.cell.z === z).sort((a, b) => a.y - b.y || a.x - b.x);
-    for (const pose of actors) {
-      // Clones stay readable from a wire: where they are is the whole point of a timeline.
-      drawBody(pose, onFocusWire(pose.cell) ? visible : visible * (ACTOR_GHOST + (1 - ACTOR_GHOST) * cam.world), true, alpha);
-    }
+    for (const pose of actors) drawBody(pose, bodyShade(pose), true, alpha);
   }
 
   // 1D: only the wire exists. Redraw it, and what it carries, over the faded world.
