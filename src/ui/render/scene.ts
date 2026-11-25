@@ -189,27 +189,48 @@ export function drawScene(frame: SceneFrame): void {
   };
 
   /**
-   * The solid cells standing in front of a body or its shadow, in the order the sweep paints
-   * them. Both are flat, halfway into the layer, and in the unfolded view they reach up and to
-   * the right into the cells beyond: a wall the body walks into, a ceiling above its head.
-   * An antipode's soles are on a ceiling, as anyone's are on the ground: the block it stands on
-   * is not counted, or it would swallow its feet and its shadow.
+   * What stands in front of a body or its shadow, in the order the layer paints it: the rock
+   * hanging under the blocks nearby, then the solid cells. Both body and shadow are flat,
+   * halfway into the layer, and in the unfolded view they reach up and to the right into the
+   * cells beyond: a wall the body walks into, a ceiling above its head. The rock hangs on the
+   * front plane of the layer, in front of anything in it.
+   * An antipode's soles are on a ceiling, as anyone's are on the ground: the block it stands on,
+   * and the rock under it, are not counted, or they would swallow its feet and its shadow.
    */
-  const terrainInFront = (pose: ActorPose, box: { x0: number; x1: number; y0: number; y1: number }, copy: Pick<Copy, 'dx' | 'dy'>): { ux: number; uy: number }[] => {
+  const terrainInFront = (pose: ActorPose, box: { x0: number; x1: number; y0: number; y1: number }, copy: Pick<Copy, 'dx' | 'dy'>): Cover[] => {
     if (cam.depth <= 0.02) return [];
     const z = pose.cell.z;
+    const covers: Cover[] = bellyNear(z, box).filter((belly) => pose.up === 1 || Math.abs(belly.y - pose.y) > 0.5).map((belly) => ({ belly }));
     const x0 = box.x0 + copy.dx;
     const x1 = box.x1 + copy.dx;
     const y0 = box.y0 + copy.dy;
     const y1 = box.y1 + copy.dy;
-    const cells: { ux: number; uy: number }[] = [];
     for (let uy = Math.max(-gy, Math.floor(y0)); uy <= Math.min(h + gy - 1, Math.floor(y1) + 1); uy++) {
       for (let ux = Math.max(-gx, Math.floor(x0)); ux <= Math.min(w + gx - 1, Math.floor(x1) + 1); ux++) {
         const above = pose.up === 1 && uy >= y1;
-        if ((ux >= x1 || above) && isSolid(world, vec(ux, uy, z))) cells.push({ ux, uy });
+        if ((ux >= x1 || above) && isSolid(world, vec(ux, uy, z))) covers.push({ ux, uy });
       }
     }
-    return cells;
+    return covers;
+  };
+
+  /**
+   * The hanging rock of a layer that can overlap a box on screen. It hangs from the front plane
+   * of the layer, in front of everything in it, so any of it that overlaps the box covers it.
+   */
+  const bellyNear = (z: number, box: { x0: number; x1: number; y0: number; y1: number }): Belly[] =>
+    geometry.bellies.filter(
+      (belly) => belly.z === z && belly.x0 < box.x1 + 1 && belly.x0 + belly.length > box.x0 - 1 && belly.y - belly.reach < box.y1 + 1 && belly.y > box.y0 - 1,
+    );
+
+  /** Paints one thing that covers a body or a crate, into `into`; a belly is in home coordinates, seen through `copy`. */
+  const paintCover = (cover: Cover, z: number, shade: number, into: CanvasRenderingContext2D, copy: Pick<Copy, 'dx' | 'dy'>): void => {
+    if ('belly' in cover) {
+      into.globalAlpha = shade;
+      drawBelly({ ...frameAt(copy), ctx: into }, cover.belly);
+    } else {
+      paintCell(z, cover.ux, cover.uy, shade, into);
+    }
   };
 
   /**
@@ -222,7 +243,7 @@ export function drawScene(frame: SceneFrame): void {
     copy: Pick<Copy, 'dx' | 'dy'>,
     anchor: Vec3,
     alpha: number,
-    covers: readonly { ux: number; uy: number }[],
+    covers: readonly Cover[],
     shade: number | null,
     z: number,
     paint: (at: SceneFrame) => void,
@@ -254,7 +275,7 @@ export function drawScene(frame: SceneFrame): void {
     scratch.globalAlpha = 1;
     paint({ ...at, ctx: scratch });
     scratch.globalCompositeOperation = 'source-atop';
-    for (const { ux, uy } of covers) paintCell(z, ux, uy, shade, scratch);
+    for (const cover of covers) paintCover(cover, z, shade, scratch, copy);
     scratch.restore();
 
     ctx.save();
@@ -346,6 +367,9 @@ export function drawScene(frame: SceneFrame): void {
     for (let layer = deepest; layer >= z; layer--) {
       const shade = shadeOf(layer);
       if (shade <= 0.01) continue;
+      // The rock hanging on the front plane of the crate's nearest layer is in front of it; that
+      // of a deeper layer cuts through it, and the crate's front is nearer.
+      if (layer === z) for (const belly of bellyNear(layer, box)) paintCover({ belly }, layer, shade, ctx, copy);
       // Two boxes that do not meet are ordered by any axis that parts them: a cell wholly to the
       // right of the crate, or wholly above it, is in front. The crate's faces reach less than a
       // cell further, so the cells just past its far edges are the last that can cover it.
@@ -463,6 +487,9 @@ function scratchFor(main: CanvasRenderingContext2D): CanvasRenderingContext2D | 
   }
   return scratchCanvas;
 }
+
+/** What may stand in front of a body or a crate: a cell of the sweep, or the rock hanging under blocks. */
+type Cover = { readonly ux: number; readonly uy: number } | { readonly belly: Belly };
 
 /** How much of the world is left on screen from inside a wire. */
 const WORLD_GHOST = 0.2;
