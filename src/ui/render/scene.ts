@@ -327,8 +327,11 @@ export function drawScene(frame: SceneFrame): void {
    *
    * A crate moving between layers is drawn with the nearer one, after everything of the deeper
    * one: what stands in front of it there is painted again too, layer by layer from the back,
-   * the cells and then whoever stands on or beside the crate.
+   * the cells, then the crates and whoever stand on or beside it.
    */
+  /** From the bottom up, left to right and back to front, as the terrain is. */
+  const drawOrder = (a: CratePose, b: CratePose): number => a.y - b.y || a.x - b.x || b.z - a.z;
+
   const paintInFront = (crate: CratePose, copy: Pick<Copy, 'dx' | 'dy'>, z: number): void => {
     if (cam.depth <= 0.02) return;
     const box = crateBox(crate);
@@ -351,8 +354,17 @@ export function drawScene(frame: SceneFrame): void {
           if (ux >= x1 || uy >= y1) paintCell(layer, ux, uy, shade);
         }
       }
-      // The bodies of the crate's own drawing layer come after it anyway.
+      // The crates and bodies of the crate's own drawing layer come after it anyway.
       if (layer === z) continue;
+      // A crate of a deeper layer resting on this one, or beside it on its right, stays in front
+      // of it: drawn again, with what covers it in turn.
+      for (const other of frame.crates.filter((c) => c !== crate && crateLayer(c) === layer).sort(drawOrder)) {
+        const near = crateBox(other);
+        if (!(near.x0 + copy.dx >= x1 - 0.01 || near.y0 + copy.dy >= y1 - 0.01)) continue;
+        ctx.globalAlpha = onFocusWire(other.cell) ? layerAlpha(cam, layer) : shade;
+        drawCrate(frameAt(copy), other);
+        paintInFront(other, copy, layer);
+      }
       for (const pose of frame.actors) {
         if (pose.cell.z !== layer) continue;
         // Beside the crate on its right, or on top of it: nearer the camera than the crate.
@@ -402,9 +414,8 @@ export function drawScene(frame: SceneFrame): void {
 
     // What sits on the player's wire stays fully there in 1D; the rest fades with the world.
     const bodyAlpha = (cell: Vec3): number => (onFocusWire(cell) ? visible : alpha);
-    // From the bottom up, left to right and back to front, as the terrain is: a crate stacked
-    // on another, or pushed against one, is drawn after it.
-    const crates = frame.crates.filter((crate) => crateLayer(crate) === z).sort((a, b) => a.y - b.y || a.x - b.x || b.z - a.z);
+    // A crate stacked on another, or pushed against one, is drawn after it.
+    const crates = frame.crates.filter((crate) => crateLayer(crate) === z).sort(drawOrder);
     for (const crate of crates) {
       const solidity = bodyAlpha(crate.cell);
       if (solidity <= 0.01) continue;
